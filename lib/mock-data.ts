@@ -1,9 +1,9 @@
 import type { TattooDesign } from "@/lib/products";
 
 /**
- * Sea Dragons preview paths are preconfigured for the artwork files that will
- * be uploaded to public/images/products. Secure checkout remains unavailable
- * until matching private download assets are configured in lib/secure-assets.ts.
+ * Each public preview path points to one isolated artwork image, never a
+ * multi-panel infographic or a graphic with baked-in labels. Secure checkout
+ * stays disabled until the matching private download assets are configured.
  */
 export const tattooDesigns: TattooDesign[] = [
   {
@@ -12,11 +12,11 @@ export const tattooDesigns: TattooDesign[] = [
     slug: "sea-dragons",
     category: "Original Tattoo Artwork",
     description:
-      "A golden-black composition of two sea dragons forming mirrored spirals. Explore the colour artwork, monochrome linework, and natural-skin placement preview.",
+      "A golden-black composition of two sea dragons forming mirrored spirals. Switch between the clean colour artwork, monochrome linework, and a single natural-skin placement photo.",
     media: {
-      colour: "/images/products/sea-dragons-colour.png",
-      blackAndWhite: "/images/products/sea-dragons-bw.png",
-      onSkin: "/images/products/sea-dragons-on-skin.jpg",
+      colour: "/images/products/sea-dragons-pure-colour.png",
+      blackAndWhite: "/images/products/sea-dragons-pure-bw.png",
+      onSkin: "/images/products/sea-dragons-pure-skin.jpg",
     },
     sizes: {
       mini: {
