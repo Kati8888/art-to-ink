@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { LICENSES, type DesignSize } from "@/lib/products";
+import { DESIGN_SIZE_ORDER, LICENSES, type DesignSize } from "@/lib/products";
 import { tattooDesigns } from "@/lib/mock-data";
 import { getSecureDownloadObject } from "@/lib/secure-assets";
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
-const allowedSizes = new Set<DesignSize>(["mini", "small", "detailed", "premium"]);
+const allowedSizes = new Set<DesignSize>(DESIGN_SIZE_ORDER);
 
 function siteOrigin(request: Request): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
