@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       const fileName = slash >= 0 ? objectPath.slice(slash + 1) : objectPath;
       const { data: storedFiles, error: storageError } = await supabase.storage.from(bucket).list(folder, { limit: 100, search: fileName });
       if (storageError) throw storageError;
-      if (!storedFiles.some((file) => file.name === fileName)) throw new Error("Purchased artwork is not present in private storage.");
+      if (!(storedFiles ?? []).some((file) => file.name === fileName)) throw new Error("Purchased artwork is not present in private storage.");
       token = randomBytes(32).toString("base64url");
       downloadExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       const tokenHash = createHash("sha256").update(token).digest("hex");
