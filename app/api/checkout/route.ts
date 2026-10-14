@@ -31,7 +31,7 @@ async function privateObjectExists(objectPath: string): Promise<boolean> {
     search: fileName,
   });
   if (error) throw error;
-  return data.some((item) => item.name === fileName);
+  return (data ?? []).some((item) => item.name === fileName);
 }
 
 export async function POST(request: Request) {
