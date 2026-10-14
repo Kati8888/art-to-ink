@@ -1,32 +1,35 @@
-# ART TO INK commerce foundation
+# ART TO INK commerce
 
-This branch adds the first Next.js App Router commerce foundation alongside the existing static site. It is intentionally **not production-ready for accepting orders yet**: no design is published until its three image states and private download asset have been matched and checked. Checkout refuses unpublished designs rather than selling mismatched files.
+The Next.js App Router commerce flow uses Stripe Checkout, verified Stripe webhooks, private Supabase Storage, expiring download tokens, and Resend transactional email. Product prices are read server-side from `lib/mock-data.ts`; the client never supplies a trusted price.
 
-## Structure
+## Routes and services
 
-- `app/page.tsx` — English homepage and studio licence cards.
-- `components/TattooDesignGallery.tsx` — accessible Colour / Black & White / On Skin gallery and pre-checkout intended-use confirmation.
-- `lib/products.ts` — canonical `TattooDesign` TypeScript contract and licence catalogue.
-- `lib/mock-data.ts` — safe catalogue data source; currently empty pending verified artwork mappings.
-- `app/api/checkout/route.ts` — server-side Checkout Session creation; never trusts a client-supplied price.
-- `app/api/webhooks/stripe/route.ts` — raw-body Stripe signature verification and payment fulfillment.
-- `app/api/download/[token]/route.ts` — hash-verified, expiring download token; streams a private Storage object without exposing its URL.
-- `supabase/migrations/001_initial_schema.sql` — order schema and restrictive row-level security.
+- `app/api/checkout/route.ts` validates product, variant, intended use, file format, and the existence of the private artwork before creating a Checkout Session.
+- `app/api/webhooks/stripe/route.ts` validates Stripe signatures against the raw request body, stores paid orders, and sends the English confirmation email.
+- `app/api/download/issue/route.ts` verifies the paid Checkout Session and issues a random, hashed, seven-day download token.
+- `app/api/download/[token]/route.ts` checks the token and order, creates a short-lived signed Storage URL server-side, and streams the file without exposing the storage URL.
+- `app/thank-you/page.tsx` verifies the Checkout Session and displays the one-click download interface.
+- `supabase/migrations/001_initial_schema.sql` creates the restricted orders table.
+- `supabase/migrations/002_secure_download_links.sql` adds the artwork format and secure download link table.
 
-## Required setup before testing payments
+## Required production configuration
 
-1. Create a Supabase project and apply the SQL migration.
-2. Create a **private** Storage bucket (default name `tattoo-downloads`) and upload only approved transparent PNG/TIFF downloads.
-3. Configure all server environment variables from `.env.example` in local development and Vercel. Never commit secrets.
-4. In Stripe, configure a webhook endpoint at `/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; add its signing secret as `STRIPE_WEBHOOK_SECRET`.
-5. Create and verify the three yearly recurring Stripe prices and set their Price IDs in the environment. Do not use test IDs in production.
+1. Apply both SQL migrations to the Supabase project used by the site.
+2. Create a **private** Storage bucket named by `SUPABASE_DOWNLOAD_BUCKET` (default recommendation: `tattoo-downloads`).
+3. Upload the approved transparent artwork files to these exact private object keys:
+   - `sea-dragons/sea-dragons-pure-colour.png`
+   - `sea-dragons/sea-dragons-pure-bw.png`
+4. Set the server-only environment variables from `.env.example` in local development and Vercel. Never use `NEXT_PUBLIC_` for secret keys.
+5. Configure Stripe's webhook endpoint at `/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`, and set its signing secret as `STRIPE_WEBHOOK_SECRET`.
 6. Configure a verified Resend sender domain and `RESEND_FROM_EMAIL`.
-7. Add each design to `lib/mock-data.ts` only after its matching colour, monochrome, skin mockup and private download file are visually verified; add the corresponding private object paths in `lib/secure-assets.ts`.
-8. Run `npm install`, `npm run typecheck`, `npm run lint`, and `npm run build`. Test using Stripe test mode first, including webhook retries and expired download links.
+7. Run `npm run typecheck`, `npm run lint`, and `npm run build`; test in Stripe test mode before enabling live payments.
 
-## Important notes
+## Security behaviour
 
-- The current repository's image filenames do not consistently match their contents. This branch intentionally does not publish the existing mismatched image set as purchasable products.
-- The email fulfillment path requires Supabase and Resend configuration; Stripe webhook responses stay unsuccessful when fulfillment fails so Stripe can retry. Monitor Stripe webhook delivery and Resend failures before launch.
-- The `/thank-you` page retrieves the Checkout Session server-side. The download issuance endpoint additionally checks the email entered by the customer against the email on the verified Stripe session and only issues a link after fulfillment is complete.
-- Review consumer law, VAT/tax settings, privacy disclosures, refunds and licence wording with qualified advisers before taking live payments.
+- Checkout refuses to start if the selected private artwork file is not present. No payment is taken in that case.
+- Product, variant, price, and private object keys are validated server-side. The raw Storage object key is not included in Stripe metadata or browser responses.
+- Download tokens are random, stored only as SHA-256 hashes, and expire after seven days. The Storage signed URL is short-lived and never returned to the browser.
+- Supabase tables deny direct access to anonymous and authenticated clients; application code uses the server-only service-role key.
+- All payment, webhook, and fulfillment failures are logged server-side and return safe user-facing errors. Stripe webhook failures return non-2xx responses so Stripe can retry.
+
+Before live launch, configure Stripe tax and payment settings and review VAT, consumer rights, refund terms, privacy disclosures, and licence wording with qualified advisers.
