@@ -9,13 +9,10 @@ const allowedSizes = new Set<DesignSize>(["mini", "small", "detailed", "premium"
 
 function siteOrigin(request: Request): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configured) return new URL(configured).origin;
-  const origin = request.headers.get("origin");
-  if (origin) {
-    const parsed = new URL(origin);
-    if (parsed.protocol === "https:" || parsed.hostname === "localhost") return parsed.origin;
-  }
-  throw new Error("Set NEXT_PUBLIC_SITE_URL to the canonical HTTPS website URL.");
+  if (!configured) throw new Error("Set NEXT_PUBLIC_SITE_URL to the canonical HTTPS website URL.");
+  const parsed = new URL(configured);
+  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS.");
+  return parsed.origin;
 }
 
 export async function POST(request: Request) {
@@ -75,7 +72,10 @@ export async function POST(request: Request) {
       line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: Math.round(variant.price * 100), product_data: { name: `${design.title} — ${variant.label}`, description: variant.details, metadata: { product_slug: design.slug, size } } } }],
       billing_address_collection: "auto",
       customer_creation: "always",
-      custom_fields: placementNote ? [{ key: "placement_note", label: { type: "custom", custom: "Optional placement note" }, type: "text", optional: true, text: { maximum_length: 500 } }] : [],
+      custom_fields: [
+        { key: "customer_name", label: { type: "custom", custom: "Full name" }, type: "text", optional: false, text: { maximum_length: 120 } },
+        { key: "placement_note", label: { type: "custom", custom: "Optional placement note" }, type: "text", optional: true, text: { maximum_length: 500 } },
+      ],
       success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled#gallery`,
       metadata: { purchase_type: "design", product_slug: design.slug, size, intended_use: intendedUse, intended_use_confirmed: "true", placement_note: placementNote, download_object: downloadObject },
