@@ -4,6 +4,8 @@ import Stripe from "stripe";
 import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getStripe } from "@/lib/stripe";
+import { getSecureDownloadObject, type ArtworkFormat } from "@/lib/secure-assets";
+import { DESIGN_SIZE_ORDER, type DesignSize } from "@/lib/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,14 +59,15 @@ export async function POST(request: Request) {
       customer_email: email,
       customer_name: session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
       purchase_type: purchaseType,
-      product_slug: session.metadata?.product_slug ?? null,
-      variant: session.metadata?.size ?? null,
+      product_slug: session.metadata?.productId ?? session.metadata?.product_slug ?? null,
+      variant: (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? null),
+      artwork_format: session.metadata?.artworkFormat ?? null,
       license_id: session.metadata?.license_id ?? null,
       amount_total: session.amount_total,
       currency: session.currency,
-      intended_use: session.metadata?.intended_use ?? null,
+      intended_use: session.metadata?.customerIntent ?? session.metadata?.intended_use ?? null,
       intended_use_confirmed: session.metadata?.intended_use_confirmed === "true",
-      placement_note: session.custom_fields?.find((field) => field.key === "placement_note")?.text?.value || session.metadata?.placement_note || null,
+      placement_note: session.custom_fields?.find((field) => field.key === "placement_note")?.text?.value || session.metadata?.placementNote || session.metadata?.placement_note || null,
       fulfillment_status: "processing",
       updated_at: new Date().toISOString(),
     };
@@ -77,8 +80,24 @@ export async function POST(request: Request) {
     let downloadExpiresAt: string | null = null;
     let downloadUrl: string | null = null;
     if (purchaseType === "design") {
-      const objectPath = session.metadata?.download_object;
-      if (!objectPath || objectPath.startsWith("/") || objectPath.includes("..")) throw new Error("Secure download object path is missing or invalid.");
+      const productId = session.metadata?.productId ?? session.metadata?.product_slug;
+      const rawVariantId = session.metadata?.variantId ?? session.metadata?.size;
+      const size = (rawVariantId?.replace(/^var_/, "") ?? "") as DesignSize;
+      const format = (session.metadata?.artworkFormat ?? "colour") as ArtworkFormat;
+      if (!productId || !DESIGN_SIZE_ORDER.includes(size) || !["colour", "blackAndWhite"].includes(format)) {
+        throw new Error("Verified Checkout Session is missing valid product, variant, or format metadata.");
+      }
+      const objectPath = getSecureDownloadObject(productId, size, format);
+      if (!objectPath || objectPath.startsWith("/") || objectPath.split("/").includes("..")) {
+        throw new Error("Secure download object is not configured for this product variant.");
+      }
+      const bucket = requiredEnv("SUPABASE_DOWNLOAD_BUCKET");
+      const slash = objectPath.lastIndexOf("/");
+      const folder = slash >= 0 ? objectPath.slice(0, slash) : "";
+      const fileName = slash >= 0 ? objectPath.slice(slash + 1) : objectPath;
+      const { data: storedFiles, error: storageError } = await supabase.storage.from(bucket).list(folder, { limit: 100, search: fileName });
+      if (storageError) throw storageError;
+      if (!storedFiles.some((file) => file.name === fileName)) throw new Error("Purchased artwork is not present in private storage.");
       token = randomBytes(32).toString("base64url");
       downloadExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       const tokenHash = createHash("sha256").update(token).digest("hex");
@@ -94,7 +113,7 @@ export async function POST(request: Request) {
     const from = requiredEnv("RESEND_FROM_EMAIL");
     const subject = purchaseType === "design" ? "Your ART TO INK artwork is ready" : "Your ART TO INK studio licence is active";
     const html = purchaseType === "design"
-      ? `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed. Your secure artwork download is available for seven days.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:14px 20px;background:#d5a957;color:#080807;text-decoration:none">Download your artwork</a></p><p>Please save your file securely and share it only as permitted by your licence.</p><p>Kateřina Pohnetalová · ART TO INK</p></div>`
+      ? `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for supporting original artwork!</h1><p>Your payment has been confirmed. Your tattoo files are ready.</p><p>Your secure artwork download link is valid for seven days.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:14px 20px;background:#d5a957;color:#080807;text-decoration:none">Download your artwork</a></p><p>Please save your file securely and share it only as permitted by your licence.</p><p>Kateřina Pohnetalová · ART TO INK</p></div>`
       : `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed and your studio licence is active.</p><p>Licence: <strong>${session.metadata?.license_id ?? "Studio licence"}</strong></p><p>Keep this email as your purchase confirmation. The licence is non-exclusive and does not transfer copyright.</p><p>Kateřina Pohnetalová · ART TO INK</p></div>`;
     const { error: emailError } = await resend.emails.send({ from, to: email, subject, html });
     if (emailError) throw new Error(`Transactional email failed: ${emailError.message}`);
