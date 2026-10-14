@@ -9,8 +9,6 @@ export interface TattooDesign {
     colour: string;
     blackAndWhite: string;
     onSkin: string;
-    highResTransparentWatermarked: string;
-    finalSecureDownloadUrl: string;
   };
   sizes: {
     mini: { price: number; label: string; details: string };
