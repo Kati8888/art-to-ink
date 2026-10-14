@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  if (session.payment_status !== "paid" && session.mode === "payment") {
+  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return NextResponse.json({ received: true, awaitingPayment: true });
   }
   if (!session.customer_details?.email && !session.customer_email) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
       customer_email: email,
-      customer_name: session.customer_details?.name ?? null,
+      customer_name: session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
       purchase_type: purchaseType,
       product_slug: session.metadata?.product_slug ?? null,
       variant: session.metadata?.size ?? null,
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       currency: session.currency,
       intended_use: session.metadata?.intended_use ?? null,
       intended_use_confirmed: session.metadata?.intended_use_confirmed === "true",
-      placement_note: session.metadata?.placement_note ?? session.custom_fields?.find((field) => field.key === "placement_note")?.text?.value ?? null,
+      placement_note: session.custom_fields?.find((field) => field.key === "placement_note")?.text?.value || session.metadata?.placement_note || null,
       fulfillment_status: "processing",
       updated_at: new Date().toISOString(),
     };
