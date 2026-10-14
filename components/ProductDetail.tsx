@@ -14,9 +14,10 @@ const mediaViews: { key: MediaView; label: string }[] = [
 
 export default function ProductDetail({ product, onClose }: { product: TattooDesign; onClose: () => void }) {
   const [activeView, setActiveView] = useState<MediaView>("colour");
+  const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
   const [size, setSize] = useState<DesignSize>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
-  const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
+  const [intendedUse, setIntendedUse] = useState("personal-tattoo");
   const [placementNote, setPlacementNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -42,8 +43,10 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "design",
-          productSlug: product.slug,
-          size,
+          productId: product.id,
+          variantId: "var_" + size,
+          artworkFormat,
+          customerIntent: intendedUse,
           intendedUseConfirmed: true,
           intendedUse,
           placementNote: placementNote.trim().slice(0, 500),
@@ -113,6 +116,10 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
             ))}
           </div>
           <p className="mb-2 text-xs uppercase tracking-widest text-zinc-400">{activeLabel}</p>
+          <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Download file format">
+            <button type="button" aria-pressed={artworkFormat === "colour"} onClick={() => setArtworkFormat("colour")} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Colour file</button>
+            <button type="button" aria-pressed={artworkFormat === "blackAndWhite"} onClick={() => setArtworkFormat("blackAndWhite")} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Black &amp; white file</button>
+          </div>
           <div className="w-full aspect-square overflow-hidden border border-zinc-800 bg-white flex items-center justify-center">
             <img
               key={getCurrentImage()}
@@ -162,8 +169,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
                 onChange={(event) => setIntendedUse(event.target.value)}
                 className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white"
               >
+                <option value="personal-tattoo">Personal tattoo</option>
                 <option value="professional-client-tattoo">Tattooing a client</option>
-                <option value="personal-reference">Personal reference</option>
+                <option value="personal-reference">Personal reference only</option>
               </select>
             </label>
             <label className="mb-4 block text-sm text-zinc-300">
