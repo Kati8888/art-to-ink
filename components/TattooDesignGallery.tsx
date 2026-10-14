@@ -10,6 +10,7 @@ const mediaLabels: Record<MediaState, string> = { colour: "Original / Colour", b
 const mediaKey: Record<MediaState, keyof TattooDesign["media"]> = { colour: "colourPreview", bw: "bwPreview", skin: "onSkinPreview" };
 
 export function TattooDesignGallery({ designs }: { designs: TattooDesign[] }) {
+  const [activeProduct, setActiveProduct] = useState<TattooDesign | null>(null);
   if (designs.length === 0) {
     return <div className="empty-catalogue" role="status"><strong>New original designs are being prepared.</strong><p>We publish a design only after its original artwork, black-and-white version and on-skin preview have all been checked to match.</p></div>;
   }
@@ -18,7 +19,6 @@ export function TattooDesignGallery({ designs }: { designs: TattooDesign[] }) {
 
 function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => void }) {
   const [state, setState] = useState<MediaState>("colour");
-  const [activeProduct, setActiveProduct] = useState<TattooDesign | null>(null);
   const [size, setSize] = useState<(typeof DESIGN_SIZE_ORDER)[number]>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
   const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
