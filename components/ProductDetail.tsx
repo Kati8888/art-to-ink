@@ -38,9 +38,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   }
 
   const views = [
-    { key: "colourPreview" as const, label: "Colour" },
-    { key: "bwPreview" as const, label: "Black & White" },
-    { key: "onSkinPreview" as const, label: "On Skin" },
+    { key: "colour" as const, label: "Colour" },
+    { key: "blackAndWhite" as const, label: "Black & White" },
+    { key: "onSkin" as const, label: "On Skin" },
   ];
 
   return (
