@@ -1,8 +1,40 @@
 import type { DesignSize } from "@/lib/products";
 
-/** Private Supabase Storage object paths, never public URLs. Add an entry only after checking the source artwork and final export. */
-const secureDownloadObjects: Record<string, Partial<Record<DesignSize, string>>> = {};
+export type ArtworkFormat = "colour" | "blackAndWhite";
 
-export function getSecureDownloadObject(slug: string, size: DesignSize): string | null {
-  return secureDownloadObjects[slug]?.[size] ?? null;
+/**
+ * Private Supabase Storage object keys. These names are deliberately not public
+ * URLs. Checkout verifies the object exists before creating a paid session.
+ */
+const secureDownloadObjects: Record<string, Partial<Record<DesignSize, Record<ArtworkFormat, string>>>> = {
+  "sea-dragons": {
+    mini: {
+      colour: "sea-dragons/sea-dragons-pure-colour.png",
+      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+    },
+    small: {
+      colour: "sea-dragons/sea-dragons-pure-colour.png",
+      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+    },
+    detailed: {
+      colour: "sea-dragons/sea-dragons-pure-colour.png",
+      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+    },
+    premium: {
+      colour: "sea-dragons/sea-dragons-pure-colour.png",
+      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+    },
+    collection: {
+      colour: "sea-dragons/sea-dragons-pure-colour.png",
+      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+    },
+  },
+};
+
+export function getSecureDownloadObject(
+  productId: string,
+  size: DesignSize,
+  format: ArtworkFormat,
+): string | null {
+  return secureDownloadObjects[productId]?.[size]?.[format] ?? null;
 }
