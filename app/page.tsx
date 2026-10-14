@@ -4,7 +4,32 @@ import { LICENSES, formatEuro } from "@/lib/products";
 
 export default function HomePage() {
   return <>
-    <header className="site-header"><nav className="nav-shell" aria-label="Main navigation"><a className="brand" href="#home">ART <em>TO</em> INK<small>KATEŘINA POHNETALOVÁ</small></a><div className="nav-links"><a href="#gallery">Artwork</a><a href="#licences">Studio licences</a><a href="#artist">The artist</a></div></nav></header>
+    <header className="site-header">
+      <nav className="nav-shell" aria-label="Main navigation">
+        <a className="brand" href="#home" aria-label="ART TO INK — Kateřina Pohnetalová, home">
+          <span className="brand-name">ART <em>TO</em> INK</span>
+          <span className="brand-subtitle">KATEŘINA POHNETALOVÁ</span>
+        </a>
+        <div className="nav-links">
+          <a href="#gallery">Artwork</a>
+          <a href="#licences">Studio licences</a>
+          <a href="#artist">The artist</a>
+        </div>
+        <div className="nav-tools" aria-label="Language and quick links">
+          <div className="language-switch" aria-label="Choose language">
+            <a href="?lang=en" aria-current="page" lang="en">EN</a>
+            <span aria-hidden="true">/</span>
+            <a href="?lang=cs" lang="cs">CZ</a>
+          </div>
+          <a className="nav-icon" href="#gallery" aria-label="Browse artwork" title="Browse artwork">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m16 16 4.2 4.2"/></svg>
+          </a>
+          <a className="nav-icon" href="#artist" aria-label="Meet the artist" title="Meet the artist">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.2 20c.4-3.6 3.1-5.8 6.8-5.8s6.4 2.2 6.8 5.8"/></svg>
+          </a>
+        </div>
+      </nav>
+    </header>
     <main>
       <section className="hero" id="home"><div className="hero-copy"><span className="eyebrow">Original tattoo art · by Kateřina Pohnetalová</span><h1>Same shape.<br/><em>New story.</em></h1><p>Original artwork created to become personal, meaningful tattoos. Explore each design in colour, black and white, and realistic placement previews.</p><a className="button" href="#gallery">Explore the artwork</a></div></section>
       <section className="section" id="gallery"><div className="section-inner"><div className="section-head"><div><span className="eyebrow">The collection</span><h2>Choose your design</h2></div><p className="muted">Every published design includes clearly labelled image views and transparent, secure digital delivery for the purchased file.</p></div><TattooDesignGallery designs={tattooDesigns}/></div></section>
