@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     const html = purchaseType === "design"
       ? `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for supporting original artwork!</h1><p>Your payment has been confirmed. Your tattoo files are ready.</p><p>Your secure artwork download link is valid for seven days.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:14px 20px;background:#d5a957;color:#080807;text-decoration:none">Download your artwork</a></p><p>Please save your file securely and share it only as permitted by your licence.</p><p>Thank you personally for supporting my original artwork.</p><p>With gratitude,<br/>Kateřina Pohnetalová<br/>ART TO INK</p></div>`
       : `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed and your studio licence is active.</p><p>Licence: <strong>${session.metadata?.license_id ?? "Studio licence"}</strong></p><p>Keep this email as your purchase confirmation. The licence is non-exclusive and does not transfer copyright.</p><p>Kateřina Pohnetalová · ART TO INK</p></div>`;
-    const { error: emailError } = await resend.emails.send({ from, to: email, subject, html, idempotencyKey: `art-to-ink-customer-${session.id}` });
+    const { error: emailError } = await resend.emails.send({ from, to: email, subject, html }, { idempotencyKey: `art-to-ink-customer-${session.id}` });
     if (emailError) throw new Error(`Transactional customer email failed: ${emailError.message}`);
 
     // Send the shop owner a separate order notification without exposing the secure download token.
@@ -133,8 +133,7 @@ export async function POST(request: Request) {
         subject: `Nová zaplacená objednávka ART TO INK · ${amount} ${currency}`,
         html: ownerHtml,
         text: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${email}. Session: ${session.id}.`,
-        idempotencyKey: `art-to-ink-owner-order-${session.id}`,
-      });
+      }, { idempotencyKey: `art-to-ink-owner-order-${session.id}` });
       if (ownerEmailError) console.error("ART TO INK owner notification failed:", ownerEmailError.message);
     } catch (ownerNotificationError) {
       console.error("ART TO INK owner notification failed:", ownerNotificationError);
