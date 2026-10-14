@@ -3,11 +3,12 @@ export interface TattooDesign {
   id: string;
   title: string;
   slug: string;
+  category: string;
   description: string;
   media: {
-    colourPreview: string;
-    bwPreview: string;
-    onSkinPreview: string;
+    colour: string;
+    blackAndWhite: string;
+    onSkin: string;
     highResTransparentWatermarked: string;
     finalSecureDownloadUrl: string;
   };
@@ -16,12 +17,13 @@ export interface TattooDesign {
     small: { price: number; label: string; details: string };
     detailed: { price: number; label: string; details: string };
     premium: { price: number; label: string; details: string };
+    collection: { price: number; label: string; details: string };
   };
 }
 
 export type DesignSize = keyof TattooDesign["sizes"];
 
-export const DESIGN_SIZE_ORDER: DesignSize[] = ["mini", "small", "detailed", "premium"];
+export const DESIGN_SIZE_ORDER: DesignSize[] = ["mini", "small", "detailed", "premium", "collection"];
 
 export const LICENSES = [
   {
