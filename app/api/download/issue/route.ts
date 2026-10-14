@@ -8,9 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { sessionId?: unknown };
+    const body = await request.json() as { sessionId?: unknown; email?: unknown };
     const sessionId = typeof body.sessionId === "string" ? body.sessionId : "";
     if (!sessionId.startsWith("cs_")) return NextResponse.json({ error: "Invalid checkout session." }, { status: 400 });
+    const requestedEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!requestedEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(requestedEmail)) return NextResponse.json({ error: "Enter the email address used at checkout." }, { status: 400 });
     const session = await getStripe().checkout.sessions.retrieve(sessionId);
     if (session.status !== "complete" || (session.mode === "payment" && session.payment_status !== "paid")) {
       return NextResponse.json({ error: "Payment is not confirmed." }, { status: 403 });
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
     const { data: order, error } = await supabase.from("orders").select("id,fulfillment_status,customer_email").eq("stripe_checkout_session_id", sessionId).maybeSingle();
     if (error) throw error;
     const verifiedEmail = session.customer_details?.email ?? session.customer_email;
-    if (!order || order.fulfillment_status !== "fulfilled" || !verifiedEmail || order.customer_email.toLowerCase() !== verifiedEmail.toLowerCase()) {
+    if (!order || order.fulfillment_status !== "fulfilled" || !verifiedEmail || order.customer_email.toLowerCase() !== verifiedEmail.toLowerCase() || requestedEmail !== verifiedEmail.toLowerCase()) {
       return NextResponse.json({ error: "Your secure download is still being prepared. Please refresh this page shortly." }, { status: 409 });
     }
     const token = randomBytes(32).toString("base64url");
