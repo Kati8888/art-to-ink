@@ -7,7 +7,7 @@ import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 
 type MediaState = "colour" | "bw" | "skin";
 const mediaLabels: Record<MediaState, string> = { colour: "Original / Colour", bw: "Black & White", skin: "On Skin" };
-const mediaKey: Record<MediaState, keyof TattooDesign["media"]> = { colour: "colourPreview", bw: "bwPreview", skin: "onSkinPreview" };
+const mediaKey: Record<MediaState, keyof TattooDesign["media"]> = { colour: "colour", bw: "blackAndWhite", skin: "onSkin" };
 
 export function TattooDesignGallery({ designs }: { designs: TattooDesign[] }) {
   const [activeProduct, setActiveProduct] = useState<TattooDesign | null>(null);
@@ -25,7 +25,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [placementNote, setPlacementNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const currentMedia = useMemo(() => design.media[mediaKey[state]], [design, state]);
+  const currentMedia = design.media[mediaKey[state]];
 
   async function checkout() {
     setError("");
