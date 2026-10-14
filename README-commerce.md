@@ -28,5 +28,5 @@ This branch adds the first Next.js App Router commerce foundation alongside the 
 
 - The current repository's image filenames do not consistently match their contents. This branch intentionally does not publish the existing mismatched image set as purchasable products.
 - The email fulfillment path requires Supabase and Resend configuration; Stripe webhook responses stay unsuccessful when fulfillment fails so Stripe can retry. Monitor Stripe webhook delivery and Resend failures before launch.
-- The initial success page is not included in this foundation; implement it next to verify the Checkout Session server-side and provide a secure download link without trusting query-string data.
+- The `/thank-you` page retrieves the Checkout Session server-side. The download issuance endpoint additionally checks the email entered by the customer against the email on the verified Stripe session and only issues a link after fulfillment is complete.
 - Review consumer law, VAT/tax settings, privacy disclosures, refunds and licence wording with qualified advisers before taking live payments.
