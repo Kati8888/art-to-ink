@@ -16,7 +16,7 @@ export default async function ThankYouPage({ searchParams }: { searchParams: Sea
   try {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.payment_status !== "paid" && session.status !== "complete") {
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
       return <main className="section"><div className="section-inner"><span className="eyebrow">ART TO INK</span><h1>Payment not confirmed yet.</h1><p className="muted">Your payment status has not been confirmed. If you have just paid, refresh this page in a moment.</p><Link className="button secondary" href="/">Return to the gallery</Link></div></main>;
     }
     const { data: order, error } = await getSupabaseAdmin().from("orders").select("purchase_type,fulfillment_status,product_slug,variant,license_id").eq("stripe_checkout_session_id", sessionId).maybeSingle();
