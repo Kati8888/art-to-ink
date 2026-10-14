@@ -140,7 +140,7 @@ document.querySelectorAll('.product[data-image]').forEach(card=>{const openCard=
   };
   nameEl.textContent=activeProduct.name;
   const gallery=document.getElementById('placement-gallery');
-  const gallerySources=[card.dataset.preview1,card.dataset.preview2,card.dataset.preview3,card.dataset.preview4].filter(Boolean);
+  const gallerySources=[1,2,3,4].map(n=>card.getAttribute('data-preview-'+n)).filter(Boolean);
   gallery.innerHTML=gallerySources.map((src,index)=>'<figure><img src="'+src+'" alt="" loading="lazy"></figure>').join('');
   gallery.style.display='grid';
   imageEl.style.display='none';
