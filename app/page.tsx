@@ -15,6 +15,14 @@ export default function HomePage() {
           <a href="#licences">Studio licences</a>
           <a href="#artist">The artist</a>
         </div>
+        <details className="mobile-menu">
+          <summary aria-label="Open navigation menu"><span></span><span></span><span></span></summary>
+          <div className="mobile-menu-panel">
+            <a href="#gallery">Artwork</a>
+            <a href="#licences">Studio licences</a>
+            <a href="#artist">The artist</a>
+          </div>
+        </details>
         <div className="nav-tools" aria-label="Language and quick links">
           <div className="language-switch" aria-label="Choose language">
             <a href="?lang=en" aria-current="page" lang="en">EN</a>
