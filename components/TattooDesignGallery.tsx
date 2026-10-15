@@ -25,7 +25,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [placementNote, setPlacementNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const currentMedia = design.media[mediaKey[state]];
+  const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
 
   async function checkout() {
     setError("");
