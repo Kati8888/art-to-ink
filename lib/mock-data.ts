@@ -51,7 +51,7 @@ export const tattooDesigns: TattooDesign[] = [
     category: "Original Tattoo Artwork",
     description: "Original Lion Heart tattoo artwork, with the main colour design and presentation collage.",
     media: {
-      colour: image("images/Sn%C3%ADmek%20obrazovky%202026-10-15%20112028.png"),
+      colour: image("images/Kol%C3%A1%C5%BE%20abstraktn%C3%ADch%20lv%C3%ADch%20tetov%C3%A1n%C3%AD.png"),
       blackAndWhite: image("images/Kol%C3%A1%C5%BE%20abstraktn%C3%ADch%20lv%C3%ADch%20tetov%C3%A1n%C3%AD.png"),
       onSkin: image("images/Kol%C3%A1%C5%BE%20abstraktn%C3%ADch%20lv%C3%ADch%20tetov%C3%A1n%C3%AD.png"),
     },
