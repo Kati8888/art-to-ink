@@ -5,6 +5,10 @@ export interface TattooDesign {
   slug: string;
   category: string;
   description: string;
+  /** Explicit listing thumbnail; avoids accidental reuse of another product image. */
+  gridImage?: string;
+  /** Image shown first in the product detail / checkout preview. */
+  checkoutImage?: string;
   media: {
     colour: string;
     blackAndWhite: string;
