@@ -32,6 +32,19 @@ const sharedSizes = {
 
 export const tattooDesigns: TattooDesign[] = [
   {
+    id: "brain-heart",
+    title: "Brain Heart",
+    slug: "brain-heart",
+    category: "Original Tattoo Artwork",
+    description: "Original Brain Heart tattoo artwork with its own colour portrait and presentation collage.",
+    media: {
+      colour: image("images/V%C3%BDrazn%C3%BD%20portr%C3%A9t%20v%20proudu%20barev.png"),
+      blackAndWhite: image("images/Abstraktn%C3%AD%20portr%C3%A9ty%20v%20tetov%C3%A1n%C3%AD.png"),
+      onSkin: image("images/Abstraktn%C3%AD%20portr%C3%A9ty%20v%20tetov%C3%A1n%C3%AD.png"),
+    },
+    sizes: sharedSizes,
+  },
+  {
     id: "lion-heart",
     title: "Lion Heart",
     slug: "lion-heart",
