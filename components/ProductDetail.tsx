@@ -126,7 +126,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               key={getCurrentImage()}
               src={getCurrentImage()}
               alt={`${product.title} — ${activeLabel}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain" style={{ filter: "brightness(1.28) contrast(1.06)" }}
             />
           </div>
         </div>
