@@ -1,0 +1,1 @@
+Upload the product artwork images into this folder. Use the exact filenames referenced by the website.
