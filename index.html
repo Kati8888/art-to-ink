@@ -1,201 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ART TO INK — Galerie</title>
-    <style>
-        /* ZÁKLADNÍ STYL A DESIGN */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #0b0b0b; color: #ffffff; padding: 40px 20px; }
-        h1 { text-align: center; margin-bottom: 40px; font-weight: 300; letter-spacing: 2px; }
-        
-        /* MŘÍŽKA GALERIE */
-        .gallery-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 30px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
-        }
-        
-        /* KARTA PRODUKTU (Přední strana) */
-        .product-card { 
-            background: #161616; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            cursor: pointer; 
-            transition: transform 0.2s; 
-        }
-        .product-card:hover { transform: translateY(-5px); }
-        .product-card img { width: 100%; height: 350px; object-fit: cover; display: block; }
-        .product-info { padding: 15px; text-align: center; }
-        .product-title { font-size: 1.1rem; font-weight: 400; }
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070706"><meta name="description" content="ART TO INK — originální motivy pro tetování od Kateřiny Pohnetalové."><title>ART TO INK — Luxusní galerie tetovacích motivů</title>
+<style>
+:root{--bg:#080807;--cream:#f4ecdf;--muted:#b9ad9c;--red:#e3262e;--gold:#d5a957;--line:#5d4930;--panel:#10100e;--max:1440px}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:92px}body{margin:0;background:var(--bg);color:var(--cream);font:14px/1.45 Arial,sans-serif}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}.serif,h1,h2,h3,.brand{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.02em}.topline{height:3px;background:linear-gradient(90deg,var(--red),var(--gold),var(--red))}.header{position:sticky;top:0;z-index:10;background:#080807;backdrop-filter:none;border-bottom:1px solid #332718}.nav{height:88px;max-width:var(--max);margin:auto;padding:0 34px;display:flex;align-items:center;gap:30px}.brand{font-size:31px;line-height:.8;white-space:nowrap}.brand i{font-style:italic;color:var(--red)}.brand small{display:block;font:9px Arial;letter-spacing:3px;margin-top:12px;color:var(--muted)}.menu{display:flex;gap:29px;align-items:center;margin-left:auto}.menu a{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:#ded4c6}.menu a:hover,.menu a.active{color:var(--gold)}.tools{display:flex;gap:14px;align-items:center;margin-left:8px}.icon{font-size:19px}.lang{border:1px solid var(--gold);border-radius:25px;padding:8px 14px;font-size:11px;min-width:64px}.mobile-menu{display:none}.hero{height:clamp(600px,43.3vw,825px);min-height:0;display:flex;align-items:flex-start;padding:0 max(24px,calc((100% - var(--max))/2));position:relative;isolation:isolate;overflow:hidden;background-color:#080807;background-image:radial-gradient(ellipse at 27% 38%,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 23%,rgba(0,0,0,.16) 43%,rgba(0,0,0,.42) 100%),linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),url('assets/wide_cinematic_high_end_promotional_website_bann%20(1).png');background-position:center center;background-size:cover;background-repeat:no-repeat}.hero-content{display:none}.hero-logo,.hero-categories{display:none!important}.hero-logo{position:absolute;z-index:2;left:max(40px,calc((100% - var(--max))/2 + 24px));top:clamp(72px,8.5vw,160px);width:clamp(260px,21vw,400px);height:clamp(250px,18vw,340px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;text-decoration:none;color:#f7f0e7;font:700 clamp(76px,6.4vw,116px)/.76 Georgia,"Times New Roman",serif;letter-spacing:-.075em;text-shadow:0 4px 24px #000,0 1px 3px #000;border-radius:50%;isolation:isolate}.hero-logo:before,.hero-logo:after{content:"";position:absolute;z-index:-1;inset:4%;border:2px solid rgba(213,169,87,.88);border-radius:50%;transform:rotate(-18deg);box-shadow:0 0 15px #0009,inset 0 0 12px #0008}.hero-logo:after{inset:0 8%;border-width:1px;border-color:rgba(213,169,87,.58);transform:rotate(17deg) scaleX(1.06);border-left-color:transparent;border-bottom-color:rgba(213,169,87,.8)}.hero-logo{gap:0}.hero-logo .logo-art{display:block;line-height:.8}.hero-logo .logo-bottom{display:flex;align-items:center;justify-content:center;gap:0;white-space:nowrap;line-height:.8}.hero-logo .logo-brush-to{display:block;width:48%;height:auto;flex:0 0 48%;overflow:visible;margin:0 -5px 0 -10px;transform:rotate(-8deg);filter:drop-shadow(0 3px 10px #000)}.hero-logo .logo-ink{display:block;font-size:1em;line-height:.8;margin:0;letter-spacing:-.075em}.hero-categories{position:absolute;z-index:3;left:max(24px,calc((100% - var(--max))/2));right:max(24px,calc((100% - var(--max))/2));bottom:5%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border:1.5px solid rgba(213,169,87,.98);border-radius:28px;background:rgba(8,5,3,.76);backdrop-filter:blur(9px);box-shadow:0 8px 28px #0007;overflow:hidden}.hero-category{height:145px;position:relative;display:flex;align-items:flex-end;gap:8px;padding:12px 14px 14px;border:0;border-right:1px solid rgba(213,169,87,.58);border-radius:0;background:rgba(5,5,5,.14);color:#f0e1c5;overflow:hidden;transition:background .2s,border-color .2s}.hero-category:last-child{border-right:0}.hero-category:hover{background:rgba(10,8,5,.86);border-color:#d5a957}.hero-category svg{position:absolute;left:7px;top:5px;width:54%;height:86%;color:rgba(213,169,87,.92);overflow:visible;filter:drop-shadow(0 1px 4px #0008)}.hero-category span{position:relative;z-index:1;margin-left:auto;font:15px/1.35 Georgia,serif;text-align:left;color:#fff0c2;text-shadow:0 0 4px #ffd36a,0 0 9px rgba(255,190,55,.9),0 0 18px rgba(255,160,30,.65),0 2px 8px #000;white-space:nowrap}.hero-category i{color:#ff3434;text-shadow:0 0 7px rgba(255,35,35,.85),0 0 15px rgba(255,35,35,.5)}.hero-category:hover span{color:#fff8df;text-shadow:0 0 5px #ffe08a,0 0 12px #ffbf45,0 0 24px rgba(255,165,35,.85),0 2px 8px #000}.hero-category i{position:relative;z-index:1;color:#e3262e;font-style:normal;font-size:25px;margin-left:auto}.kicker{color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase}.hero h1{font-size:clamp(104px,12vw,174px);line-height:.78;letter-spacing:-.055em;margin:18px 0 24px;text-transform:uppercase;text-shadow:0 4px 32px #0008}.hero h1 span{display:inline-block;color:var(--red);font-style:italic;font-family:Georgia,'Times New Roman',serif;font-weight:400;transform:skewX(-12deg) scaleX(1.04);transform-origin:left center;letter-spacing:-.065em}.hero p{font:18px/1.5 Georgia,serif;max-width:470px;color:#eee2d4}.actions{display:flex;gap:12px;margin-top:28px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 21px;border:1px solid var(--gold);background:var(--gold);color:#110f0a;text-transform:uppercase;font-size:10px;font-weight:bold;letter-spacing:1.2px}.btn:hover{background:var(--cream);border-color:var(--cream)}.btn.ghost{background:transparent;color:var(--cream)}.benefits{position:absolute;z-index:2;left:max(22px,calc((100% - var(--max))/2));right:max(22px,calc((100% - var(--max))/2));bottom:22px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid rgba(213,169,87,.72);border-radius:18px;background:rgba(5,5,5,.58);backdrop-filter:blur(8px);box-shadow:0 8px 30px #0006;overflow:hidden}.benefit{min-width:0;padding:16px 12px;display:flex;gap:12px;align-items:center;justify-content:center;border-right:1px solid rgba(213,169,87,.45);text-transform:uppercase;font:11px Georgia,serif;letter-spacing:.6px}.benefit:last-child{border-right:0}.benefit b{font-size:27px;color:#f1d59a;font-weight:400;flex-shrink:0}.section{padding:74px 34px}.wrap{max-width:var(--max);margin:auto}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:25px}.section h2{font-size:42px;margin:8px 0 0;line-height:1}.section-head p{max-width:430px;color:var(--muted);margin:0}.categories{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.category{min-width:0;min-height:138px}.category[aria-pressed="true"]{border-color:var(--red);background:linear-gradient(145deg,#21120f,#090908);box-shadow:inset 0 0 0 1px #e3262e55}.gallery-status{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 18px;padding:12px 16px;border:1px solid #3e3021;background:#0d0c0a;color:var(--muted);font-size:12px}.gallery-status strong{color:var(--gold);font-weight:400;letter-spacing:1px;text-transform:uppercase}.reset-filter{border:1px solid #5d4930;padding:7px 10px;color:var(--cream);cursor:pointer}.empty-product{cursor:default;transform:none!important}.empty-product .placeholder{border-bottom:1px solid #3e3021}.empty-product .add{display:flex;align-items:center;justify-content:center;font-size:22px}.category{height:138px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:end;padding:17px;background:linear-gradient(145deg,#15120c,#090908);transition:.2s}.category:hover{border-color:var(--gold);transform:translateY(-3px)}.category .symbol{font-size:42px;color:var(--gold);margin:auto}.category span{text-transform:uppercase;font:12px Georgia,serif;letter-spacing:.6px}.category b{color:var(--red);float:right;font-size:17px}.gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.product{border:1px solid #574a39;background:#11110f;transition:.25s;cursor:pointer}.product:hover{border-color:var(--gold);transform:translateY(-4px)}.product-img{height:285px;background:#121210;display:flex;align-items:center;justify-content:center;overflow:hidden}.product-img img{width:100%;height:100%;object-fit:contain}.product-body{padding:16px}.product .tag{color:var(--gold);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}.product h3{font-size:23px;margin:8px 0}.product p{color:var(--muted);min-height:43px;margin:0}.product-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #3c3023;margin-top:15px;padding-top:13px}.price{color:var(--gold);font:19px Georgia,serif}.add{border:1px solid var(--gold);border-radius:50%;width:34px;height:34px;font-size:22px;color:var(--gold)}.placeholder{height:285px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9b8d7c;text-transform:uppercase;letter-spacing:1px;font-size:11px}.placeholder strong{font-size:38px;color:var(--gold);font-weight:300;margin-bottom:8px}.story{display:grid;grid-template-columns:1.1fr 1fr;gap:50px;align-items:center;border-top:1px solid #463726;border-bottom:1px solid #463726}.story-visual{min-height:0;aspect-ratio:16/10;background:#080807;border:1px solid #5d4930;display:block;overflow:hidden}.story-visual video{display:block;width:100%;height:100%;object-fit:contain;background:#080807}.video-pending{display:flex;min-height:370px;align-items:center;justify-content:center;text-align:center;padding:24px;color:#d5a957;font:20px Georgia,serif;letter-spacing:2px}.story h2{font-size:52px;line-height:1;margin:12px 0 22px}.story p{color:var(--muted);max-width:500px;font-size:16px}.funnel{background:linear-gradient(120deg,#15100a,#090908);border-top:1px solid var(--gold);border-bottom:1px solid var(--gold)}.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.plan{border:1px solid #56432b;padding:27px 22px;background:#0d0d0b}.plan.featured{border-color:var(--red);background:linear-gradient(150deg,#21110e,#0e0d0b)}.plan h3{font-size:25px;margin:10px 0}.plan .price{font-size:29px}.plan p{color:var(--muted);min-height:60px}.note{color:#968b7e;font-size:12px;margin-top:25px}.footer{padding:30px 34px;border-top:1px solid #403222}.foot{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}.drawer{position:fixed;inset:0;z-index:20;display:none;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:20px}.drawer.open{display:flex}.detail{width:min(1100px,100%);max-height:90vh;overflow:auto;background:#11110f;border:1px solid var(--gold);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr)}.detail-media-column{min-width:0;padding:12px}.detail-media-column .detail-image{width:100%}.detail-media-column .preview-strip{margin:12px 0}.detail-media-column .placement-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-media-column .detail-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-image{min-height:520px;background:#0a0a08;display:flex;align-items:center;justify-content:center}.detail-image img{width:100%;height:100%;object-fit:contain}.detail-copy{padding:38px}.detail-copy h2{font-size:44px;line-height:1;margin:12px 0}.close{position:absolute;top:22px;right:28px;font-size:30px}.option{width:100%;padding:13px;margin:7px 0;border:1px solid #574831;text-align:left;display:flex;justify-content:space-between}.option:hover,.option.selected{border-color:var(--gold);background:#211a10}.translate{position:fixed;right:20px;bottom:20px;z-index:15;border:1px solid var(--gold);background:#17130d;padding:10px 14px;font-size:11px}
+@media(max-width:900px){.hero{min-height:680px}.hero-content{display:none}.hero{height:clamp(600px,70vw,760px)}.hero-logo{top:44px;left:18px;width:clamp(170px,30vw,240px);height:clamp(170px,30vw,240px);font-size:clamp(45px,8vw,66px)}.hero-categories{left:18px;right:18px;bottom:6%;grid-template-columns:repeat(3,minmax(0,1fr))}.hero-category{height:100px}.hero-category span{font-size:11px}.hero-logo .logo-brush-to{width:48%;flex-basis:48%}.hero-categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.hero-category{height:120px}.menu{gap:12px}.menu a{font-size:9px}.categories{grid-template-columns:repeat(3,1fr)}.gallery{grid-template-columns:repeat(2,1fr)}.benefits{grid-template-columns:repeat(3,1fr);left:18px;right:18px;bottom:18px}.benefit{padding:12px 8px;font-size:9px}.plans{grid-template-columns:repeat(2,1fr)}.detail{grid-template-columns:1fr}.detail-image{min-height:300px}}
+@media(max-width:620px){.nav{height:72px;padding:0 18px}.brand{font-size:23px}.brand small{font-size:7px}.menu{display:none}.mobile-menu{display:block;margin-left:auto;font-size:24px}.hero{min-height:calc(100svh - 72px);padding:28px 20px;align-items:flex-start;background-position:58% top;background-size:auto 100%}.hero:before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(0,0,0,.9),rgba(0,0,0,.64) 58%,rgba(0,0,0,.14))}.hero-content{display:none}.hero{height:680px}.hero-logo{top:18px;left:12px;width:150px;height:150px;font-size:43px}.hero-logo .logo-brush-to{width:48%;flex-basis:48%}.hero-categories{left:10px;right:10px;bottom:4%;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:16px}.hero-category{height:78px;padding:6px}.hero-category span{font-size:9px}.hero-category svg{width:48%;height:85%}.hero-categories{left:10px;right:10px;bottom:10px;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.hero-category{height:88px;padding:8px 6px}.hero-category svg{width:70%;height:78%;left:3px;top:2px}.hero-category span{font-size:9px}.hero-category i{font-size:15px}.categories{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-status{align-items:flex-start;flex-direction:column}.benefits{grid-template-columns:repeat(2,minmax(0,1fr));left:12px;right:12px;bottom:12px;border-radius:12px}.benefit{padding:10px 7px;font-size:8px;gap:6px}.benefit b{font-size:20px}.benefit{padding:14px 12px;font-size:9px}.section{padding:52px 20px}.section-head{display:block}.section-head p{margin-top:18px}.section h2{font-size:36px}.categories,.gallery,.plans{grid-template-columns:1fr}.category{height:106px}.product-img,.placeholder{height:340px}.story{grid-template-columns:1fr;gap:25px}.story-visual{aspect-ratio:4/3;min-height:0}.video-pending{min-height:250px}.foot{display:block;line-height:2}}
+.product[data-image]{cursor:pointer}.product-image{display:block;width:100%;height:auto;aspect-ratio:auto;background:#090807;overflow:hidden;border-bottom:1px solid rgba(213,169,87,.35);padding:0}.product-image img{display:block;width:100%;height:auto;max-height:720px;object-fit:contain;transition:filter .35s}.product[data-image]:hover .product-image img{filter:brightness(1.06)}.variant-label{display:block;margin:18px 0 8px;color:var(--gold);font-size:11px;letter-spacing:.12em;text-transform:uppercase}.variant-select{width:100%;padding:13px;background:#10100e;color:#f4ecdf;border:1px solid #59472e;font:14px Georgia,serif}.selected-price{margin-top:18px;font-size:22px;color:var(--gold)}.purchase-note{font-size:12px;opacity:.7;line-height:1.5;margin-top:12px}.product[role=button]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.preview-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0}.preview{padding:0;border:1px solid #574831;background:#090908;color:var(--cream);text-align:left;overflow:hidden}.preview.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.preview img{display:block;width:100%;height:94px;object-fit:cover;background:#080807}.preview span{display:block;padding:8px 6px;font-size:10px;line-height:1.25}.bw-thumb,.bw-preview{filter:grayscale(1) contrast(1.12)}.detail-image{display:flex;flex-direction:column;gap:10px;padding:16px;overflow:auto}.detail-image img{display:block;max-width:100%;max-height:70vh;width:auto;height:auto;object-fit:contain;margin:auto}.checkout-button{background:var(--gold);color:#110f0a;font-weight:bold}.plan .btn{max-width:100%;white-space:normal;text-align:center}.plans{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:900px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}.preview img{height:84px}}@media(max-width:620px){.plans{grid-template-columns:1fr}.preview img{height:90px}.detail-copy{padding:22px}.detail-copy h2{font-size:34px}.detail-image{min-height:220px}}
 
-        /* VYSKAKOVACÍ OKNO (MODAL) */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); 
-            z-index: 1000; 
-            justify-content: center; 
-            align-items: center; 
-            padding: 20px;
-        }
-        .modal-content { 
-            background: #161616; 
-            max-width: 500px; 
-            width: 100%; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            position: relative; 
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
-        }
-        .close-btn { 
-            position: absolute; top: 15px; right: 20px; 
-            font-size: 30px; color: white; cursor: pointer; z-index: 10; 
-        }
+/* Artwork-first presentation: descriptive copy intentionally left for the artist to write later. */
+.plan{min-height:155px}.plan h3{margin-bottom:20px}.plans{align-items:stretch}.section-head{align-items:end}.preview-strip{margin-top:24px}.preview{transition:border-color .2s,transform .2s}.preview:hover{border-color:var(--gold);transform:translateY(-2px)}.detail-copy .variant-label{margin-top:22px}.funnel .section-head{margin-bottom:30px}
 
-        /* PREZENTACE OBRÁZKŮ (SLIDER) */
-        .slider-container { position: relative; width: 100%; height: 400px; background: #000; }
-        .slider-container img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        .nav-btn { 
-            position: absolute; top: 50%; transform: translateY(-50%); 
-            background: rgba(0,0,0,0.6); color: white; border: none; 
-            padding: 12px 16px; cursor: pointer; font-size: 18px; font-weight: bold;
-        }
-        .prev-btn { left: 10px; border-radius: 4px; }
-        .next-btn { right: 10px; border-radius: 4px; }
+/* ART TO INK — artwork-first product presentation */
+.preview-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:20px 0}.preview{padding:0;border:1px solid #574831;background:#090908;color:var(--cream);text-align:left;overflow:hidden;cursor:pointer}.preview.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.preview img{display:block;width:100%;height:100px;object-fit:cover;background:#080807}.preview span{display:block;padding:8px 6px;font-size:10px;line-height:1.25}.bw-thumb,.bw-preview{filter:grayscale(1) contrast(1.12)}.detail-image{display:flex;flex-direction:column;gap:10px;padding:16px;overflow:auto}.detail-image img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;object-fit:contain;margin:auto}.checkout-button{background:var(--gold);color:#110f0a;font-weight:bold}.plans{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}.plan{min-height:150px}.plan h3{margin-bottom:20px}.plan p:empty{display:none}.section-head{align-items:end}.funnel .section-head{margin-bottom:30px}@media(max-width:900px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}.preview img{height:85px}}@media(max-width:620px){.plans{grid-template-columns:1fr}.preview img{height:78px}.detail-copy{padding:22px}.detail-copy h2{font-size:32px}.detail-image{min-height:220px}}
 
-        /* DETAILY A POKYNY K PLATBĚ */
-        .modal-details { padding: 25px; }
-        .modal-title { font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        
-        .payment-box { 
-            background: #222; 
-            padding: 15px; 
-            border-left: 4px solid #fff; 
-            border-radius: 4px; 
-            margin-top: 15px; 
-        }
-        .payment-box h4 { margin-bottom: 8px; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-        .payment-box p { font-size: 0.95rem; line-height: 1.5; color: #eee; }
-    </style>
-</head>
-<body>
+/* Artwork preview: keep the artwork large and clearly visible. Licences are chosen in their own section below, not in the personal-artwork selector. */
+.detail{grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);align-items:start;gap:24px}.detail-image{min-height:68vh;max-height:78vh;padding:10px;display:flex;align-items:center;justify-content:center;background:#050505}.detail-image img{width:100%;height:100%;max-width:100%;max-height:76vh;object-fit:contain}.detail-copy{min-width:0}.preview-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:24px 0}.preview img{height:clamp(125px,17vw,220px);width:100%;object-fit:contain;background:#070707}.preview span{font-size:11px;letter-spacing:.04em;padding:10px 7px}.bw-thumb,.bw-preview{filter:grayscale(1) contrast(1.2)}.variant-select{color:#f4ead7;background:#100f0d;border:1px solid #6c5631;min-height:46px;font-size:16px;padding:10px 14px}.variant-select option{background:#100f0d;color:#f4ead7}.plan .price{margin-bottom:14px}.plan h3{min-height:2.2em}@media(max-width:760px){.detail{grid-template-columns:1fr}.detail-media-column{order:1}.detail-copy{order:2}.detail-image{min-height:0;max-height:none;height:clamp(280px,45vh,420px)}.detail-image img{max-height:100%}.preview img{height:clamp(80px,20vw,130px)}}
 
-    <h1>ART TO INK</h1>
-    
-    <!-- Sem se automaticky vykreslí všechny motivy z dat níže -->
-    <div class="gallery-grid" id="galleryGrid"></div>
+/* Clean artwork previews: no poster lettering and no unrelated mockup. */
+.detail-image{background:#050505;min-height:68vh;max-height:78vh;display:flex;align-items:center;justify-content:center}.detail-image>img{width:100%;height:100%;max-width:100%;max-height:76vh;object-fit:contain;object-position:center}.preview img{object-fit:contain;background:#050505}.preview .skin-thumb{object-fit:cover;object-position:22% 88%}.preview .bw-thumb,.bw-preview{filter:grayscale(1) contrast(1.2)}.skin-preview{width:100%!important;height:100%!important;max-height:76vh!important;object-fit:cover!important;object-position:20% 88%!important}.detail-image:has(.skin-preview){overflow:hidden;background:#090807}.detail-image:has(.skin-preview) .skin-preview{min-height:68vh}@media(max-width:760px){.detail-image{min-height:0;max-height:none}.detail-image>img{max-height:62vh}.detail-image:has(.skin-preview) .skin-preview{min-height:52vh}}
 
-    <!-- Vyskakovací okno pro detail produktu -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            
-            <!-- Prezentace dvou obrázků -->
-            <div class="slider-container">
-                <button class="nav-btn prev-btn" onclick="changeSlide(-1)">&#10094;</button>
-                <img id="modalImg" src="" alt="Prezentace motivu">
-                <button class="nav-btn next-btn" onclick="changeSlide(1)">&#10095;</button>
-            </div>
-            
-            <!-- Info a Pokyny k platbě -->
-            <div class="modal-details">
-                <h3 class="modal-title" id="modalTitle">Název motivu</h3>
-                
-                <div class="payment-box">
-                    <h4>Pokyny k platbě</h4>
-                    <p>Pro zakoupení tohoto motivu zašlete částku na účet: <b>123456789 / 0300</b>.<br>
-                    Do poznámky pro příjemce uveďte <b>váš e-mail</b> a název motivu.<br>
-                    Po připsání platby vám obratem zašleme soubory v plném rozlišení.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+/* Avoid unrelated artwork: use the Assimilation asset consistently. */
+.detail-image{background:#050505}.detail-image>img{object-fit:contain;object-position:center;max-width:100%;max-height:76vh;width:100%;height:auto}.preview img{object-fit:contain;background:#050505}.preview .skin-thumb{object-fit:cover;object-position:center}.skin-preview{object-fit:cover!important;object-position:center!important}
 
-    <script>
-        // --- SEZNAM PRODUKTŮ A CESTY K OBRÁZKŮM ---
-        // Všechny obrázky máte nahrané ve složce "images" na GitHubu.
-        // Koncovka "-1.jpg" se ukáže na hlavní zdi, po rozkliknutí se dá přepnout i na "-2.jpg".
-        const products = [
-            {
-                id: 1,
-                title: "Seahorses Grandparents",
-                img1: "images/seahorses-grandparents-1.jpg",
-                img2: "images/seahorses-grandparents-2.jpg"
-            },
-            {
-                id: 2,
-                title: "Assimilation",
-                img1: "images/assimilation-1.jpg",
-                img2: "images/assimilation-2.jpg"
-            },
-            {
-                id: 3,
-                title: "MRS Beer",
-                img1: "images/mrs-beer-1.jpg",
-                img2: "images/mrs-beer-2.jpg"
-            }
-        ];
+/* Interactive magnifier for artwork detail */
+.zoom-stage{position:relative;overflow:hidden;cursor:crosshair;isolation:isolate}.zoom-stage>img{display:block}.zoom-lens{display:none;position:absolute;z-index:4;width:min(34vw,230px);height:min(34vw,230px);border:2px solid #d7ad59;border-radius:50%;box-shadow:0 8px 35px #000b,0 0 0 5px #08080788;pointer-events:none;transform:translate(-50%,-50%);background-repeat:no-repeat;background-color:#090807}.zoom-toggle{position:absolute;z-index:5;right:14px;top:14px;width:44px;height:44px;border:1px solid #d7ad59;border-radius:50%;background:#080807e8;color:#e4b85f;font-size:28px;cursor:pointer;display:grid;place-items:center}.zoom-toggle.active{background:#d7ad59;color:#080807}.zoom-stage.zoomed>img{cursor:crosshair}.zoom-stage.zoomed .zoom-lens{display:block}@media(max-width:700px){.zoom-lens{width:145px;height:145px}.zoom-toggle{width:38px;height:38px;right:8px;top:8px}}
 
-        // --- VYGENEROVÁNÍ GALERIE NA WEBU ---
-        const galleryGrid = document.getElementById('galleryGrid');
-        
-        products.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.onclick = () => openModal(product);
-            
-            card.innerHTML = `
-                <img src="${product.img1}" alt="${product.title}">
-                <div class="product-info">
-                    <div class="product-title">${product.title}</div>
-                </div>
-            `;
-            galleryGrid.appendChild(card);
-        });
+/* Crop the source presentation to the artwork itself, never show its printed headings in the preview. */
+.detail-image{position:relative;overflow:hidden;min-height:0;height:clamp(420px,68vh,760px);background:#050505;display:flex;align-items:center;justify-content:center}.detail-image>img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:50% 34%;}.detail-image>img.bw-preview{filter:grayscale(1) contrast(1.12);object-position:50% 34%}.detail-image>img.skin-preview{object-position:50% 82%;object-fit:cover}.preview img{width:100%;height:100%;object-fit:cover;object-position:50% 34%;background:#050505}.preview .bw-thumb{filter:grayscale(1) contrast(1.12)}.preview .skin-thumb{object-position:50% 83%;filter:none}.zoom-lens{background-size:200% 200%;background-position:center;}
+@media(max-width:760px){.detail-image{height:clamp(300px,58vh,540px)}.detail-image>img{object-position:50% 34%}.detail-image>img.skin-preview{object-position:50% 82%}}
 
-        // --- OVLÁDÁNÍ PREZENTACE (SLIDERU) V MODALU ---
-        let currentSlides = [];
-        let currentSlideIndex = 0;
-
-        function openModal(product) {
-            const modal = document.getElementById('productModal');
-            document.getElementById('modalTitle').innerText = product.title;
-            
-            // Nastavení obrázku 1 a obrázku 2 do prezentace
-            currentSlides = [product.img1, product.img2];
-            currentSlideIndex = 0;
-            
-            updateSlide();
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('productModal').style.display = 'none';
-        }
-
-        function changeSlide(direction) {
-            currentSlideIndex += direction;
-            if (currentSlideIndex >= currentSlides.length) currentSlideIndex = 0;
-            if (currentSlideIndex < 0) currentSlideIndex = currentSlides.length - 1;
-            updateSlide();
-        }
-
-        function updateSlide() {
-            document.getElementById('modalImg').src = currentSlides[currentSlideIndex];
-        }
-
-        // Zavření okna kliknutím mimo obsah modalu
-        window.onclick = function(event) {
-            const modal = document.getElementById('productModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-    </script>
-</body>
-</html>
+.tier-description{border-left:2px solid var(--gold);padding:12px 14px;margin:12px 0 16px;background:#17130d;color:#d6c9b0;font-size:13px;line-height:1.65}.checkout-fields{border:1px solid #493a24;padding:14px;margin-top:18px;background:#0b0a08}.form-heading{font-size:10px;letter-spacing:.18em;color:var(--gold);margin-bottom:8px}.form-note{font-size:12px;line-height:1.5;color:#b9ae9a;margin:0 0 10px}.form-line{display:flex;gap:9px;font-size:12px;color:#e5dbc8;padding:5px 0}.form-line span:first-child{color:var(--gold)}.pricing-subhead{font-family:inherit;font-size:18px;letter-spacing:.04em;margin:28px 0 8px;color:var(--cream)}.pricing-note{color:#b9ae9a;max-width:720px;font-size:13px;line-height:1.6;margin:0 0 18px}.plan p{font-size:12px;line-height:1.6;color:#c8bda8;margin:10px 0 18px}.plans{align-items:stretch}.plan{display:flex;flex-direction:column}.plan .btn{margin-top:auto}
+\n/* Seahorses Grandparents: compact placement and detail galleries */\n.placement-gallery,.detail-gallery{display:grid;gap:9px;margin:14px 0 20px}.placement-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.placement-gallery figure,.detail-gallery figure{margin:0;min-width:0;border:1px solid #493a27;background:#090908;overflow:hidden}.placement-gallery img{display:block;width:100%;height:145px;object-fit:cover}.detail-gallery img{display:block;width:100%;height:92px;object-fit:cover}.placement-gallery figcaption,.detail-gallery figcaption{padding:7px 8px;color:#d5a957;font-size:10px;letter-spacing:.5px}.detail-copy{min-width:0}@media(max-width:620px){.placement-gallery img{height:112px}.detail-gallery img{height:76px}.placement-gallery figcaption,.detail-gallery figcaption{font-size:9px;padding:6px}}\n/* Product detail: four artwork views, no captions; preserve checkout and pricing. */
+/* Keep the original artwork in one large preview; zoom controls stay active. */#drawer .preview-strip,#placement-gallery,#detail-gallery{display:none!important}#detail-image{display:flex!important;min-height:68vh;max-height:78vh;height:68vh;padding:12px;background:#050505;align-items:center;justify-content:center;overflow:hidden;position:relative}#detail-image img{display:block!important;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;margin:auto}#detail-image .zoom-toggle{display:block!important;z-index:3}#detail-image .zoom-lens{z-index:2}@media(max-width:760px){#detail-image{height:42vh;min-height:280px;max-height:50vh}}
+</style></head>
+<body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Domů</a><a href="#gallery">Galerie</a><a href="#motifs">Tetovací motivy</a><a href="#collections">Kolekce</a><a href="#about">O mně</a><a href="#contact">Kontakt</a></div><div class="tools"><button class="icon" aria-label="Hledat">⌕</button><button class="icon" aria-label="Košík">♧</button><button class="lang" id="lang">CZ⌄</button></div><button class="mobile-menu" aria-label="Menu">☰</button></nav></header>
+<main id="home"><section class="hero"><a href="#home" class="hero-logo" aria-label="ART TO INK — domů"><span class="logo-art">ART</span><span class="logo-bottom"><svg class="logo-brush-to" viewBox="0 0 190 78" role="img" aria-label="TO"><path d="M8 15 Q42 7 77 5 Q67 14 52 17 L41 68 Q37 76 29 73 L43 17 Q25 20 8 23 Q3 22 8 15Z" fill="#e3262e"/><path d="M89 18 C102 2 131 0 146 13 C160 25 151 52 131 65 C111 78 89 69 84 51 C80 39 82 27 89 18Z" fill="none" stroke="#e3262e" stroke-width="13" stroke-linecap="round"/><path d="M93 20 C106 9 127 8 138 18 C149 28 142 48 128 58 C113 68 98 60 94 48 C91 39 91 28 99 20" fill="none" stroke="#e3262e" stroke-width="5" stroke-linecap="round"/><path d="M10 18 1 25 M33 63 25 76 M144 14 155 7 M92 62 84 72" fill="none" stroke="#e3262e" stroke-width="2.5" stroke-linecap="round"/></svg><span class="logo-ink">INK</span></span></a><nav class="hero-categories" aria-label="Kategorie motivů">
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M35 92c-4-18 0-30 11-39-5-12-1-25 8-33l7 9 8-18 7 14 11-7 2 15c12 8 16 22 8 35 9 13 12 23 8 32M45 48l13-7 9 4 8-6 13 7M48 60l12-3 8 4 12-5 11 4M56 71l11-2 7 5 10-4M61 82l7-3 8 4 7-4M50 30l-9-5m50 2 9-8M59 92l-2 6m24-6 3 6"/><path d="M55 43l4 3m25-3-4 4M62 57l4 1m17-1-4 2" stroke-width="1"/></g></svg><span>PORTRÉTY<br>A EMOCE</span><i>→</i></a>
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 88c2-24 6-49 24-65l9 6 12-13 13 10 11-7 12 10c17 19 23 37 26 59l-17-9-12 8-12-8-12 10-12-8-13 8z"/><path d="M37 34l13 5 9-5 11 5 12-6 12 5M31 47l13-4 11 5 10-4 11 4 12-4 13 6M36 60l12-4 10 5 11-4 10 4 12-5 10 5M43 73l10-4 10 5 10-4 10 4 9-4M48 84l8-4 9 4 8-4 9 4M51 29l7-8m34 7-7-8"/></g></svg><span>ZVÍŘATA<br>A SÍLA</span><i>→</i></a>
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 85 32 48l12 14 26-39 23 30 12-12 39 44z"/><path d="M15 85l24-21 11 9 20-26 19 18 9-9 27 19M61 34l9-11 8 11M24 59l8-11 9 13M89 52l4-7 7 10M15 85h122"/><path d="M70 23l-5 10 6-3 4 7 2-7 8 2-7-9"/></g></svg><span>PŘÍRODA<br>A KRAJINY</span><i>→</i></a>
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="53" cy="49" r="25"/><circle cx="53" cy="49" r="16"/><circle cx="53" cy="49" r="6"/><path d="M53 24V9m0 80V74M28 49H9m88 0H72M36 32 23 19m60 60L70 66M70 32l16-14M36 66 21 81M53 9l-4 7m4-7 5 7M97 49l-9-5m9 5-9 5M53 89l-4-7m4 7 5-7M9 49l7-4m-7 4 7 4"/><path d="M53 49l31-27M53 49l33 21M53 49 27 70"/></g></svg><span>ABSTRAKCE<br>A PŘÍBĚHY</span><i>→</i></a>
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M75 10c-6 12-16 19-16 31 0 8 7 14 16 14s16-6 16-14C91 29 81 22 75 10zM75 55v38M75 72C56 49 42 51 32 57c10 17 24 24 43 21M75 72c19-23 33-21 43-15-10 17-24 24-43 21M75 84C60 69 52 71 47 76c8 10 17 14 28 13M75 84c15-15 23-13 28-8-8 10-17 14-28 13M75 29l-5 10 5 7 5-7zM75 93l-5 5m5-5 5 5"/><path d="M75 57 58 43m17 14 17-14M56 57l-9-8m47 8 9-8"/></g></svg><span>POSTAVY<br>A SYMBOLY</span><i>→</i></a>
+<a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M47 24h56l-5 10H52zM52 34l-8 26h62l-7-26M44 60c-12 5-12 15-2 19 8 3 15-4 11-11m53-8c12 5 12 15 2 19-8 3-15-4-11-11M52 24l6-10h34l6 10M58 14V8h34v6M51 39h49M48 49h54M48 57h54"/><path d="M59 14l-5-5m43 5 5-5M60 39l-4 10m35-10 4 10M58 69c4 4 7 7 10 8m24-8c-4 4-7 7-10 8M68 84l7 8 7-8"/></g></svg><span>ZÁTIŠÍ<br>A FANTAZIE</span><i>→</i></a>
+</nav></section><section id="gallery" class="section" style="padding-top:20px"><div class="wrap"><div class="section-head"><div><div class="kicker">Nejnovější motivy</div><h2>Vyberte své tetování</h2></div></div><div class="gallery-status" aria-live="polite"><span><strong id="active-category">Všechny motivy</strong></span><button type="button" class="reset-filter" id="reset-filter">Zobrazit vše</button></div><div class="gallery" id="products">
+<article class="product" data-image="/assets/01-seahorses-colour-transparent-original.png" data-detail-image="/assets/01-seahorses-colour-transparent-original.png" data-name="Assimilation — Tattoo Design Collection" data-preview-colour="/assets/01-seahorses-colour-transparent-original.png" data-preview-bw="/assets/seahorses-black-white-presentation.jpg" data-preview-skin="/assets/shoulder-color-reference.jpg" data-preview-1="/assets/shoulder-color-reference.jpg" data-preview-2="/assets/back-color-reference.jpg" data-preview-3="/assets/shoulder-black-white-reference.jpg" data-preview-4="/assets/seahorses-black-white-presentation.jpg" data-product-id="sea-dragons" tabindex="0" role="button" aria-label="Open Assimilation tattoo design collection"><div class="product-image"><img src="/assets/01-seahorses-colour-transparent-original.png" alt="Assimilation original artwork" loading="lazy"></div><div class="product-body"><span class="tag">TATTOO DESIGN COLLECTION</span><h3>Assimilation</h3><div class="product-foot"><span class="price">View artwork</span><span aria-hidden="true" class="add">↗</span></div></div></article>
+<article class="product" data-image="/assets/mrs-beer-concept.png" data-detail-image="/assets/mrs-beer-concept.png" data-name="MRS Beer — Tattoo Design Collection" data-preview-colour="/assets/mrs-beer-concept.png" data-preview-bw="/assets/mrs-beer.jpg" data-preview-skin="/assets/mrs-beer-concept.png" data-preview-1="/assets/mrs-beer-concept.png" data-preview-2="https://raw.githubusercontent.com/Kati8888/art-to-ink/main/assets/mrs-beer-concept.png" data-preview-3="/assets/mrs-beer.jpg" data-preview-4="/assets/mrs-beer.jpg" data-product-id="mrs-beer" tabindex="0" role="button" aria-label="Open MRS Beer tattoo design collection"><div class="product-image"><img src="/assets/mrs-beer-concept.png" alt="MRS Beer artwork" loading="lazy"></div><div class="product-body"><span class="tag">TATTOO DESIGN COLLECTION</span><h3>MRS Beer</h3><div class="product-foot"><span class="price">View artwork</span><span aria-hidden="true" class="add">↗</span></div></div></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article>
+<article class="product empty-product" aria-hidden="true" style="display:none"></article></div></div></section>
+<section id="about" class="section story"><div class="wrap story"><div class="story-visual"><video controls preload="metadata" playsinline aria-label="Video Můj stánek"><source src="/Muj_stanek_25MB%20(2).mp4" type="video/mp4">Váš prohlížeč nepodporuje přehrávání videa.</video></div><div><div class="kicker">O umělkyni</div><h2>Stejný tvar.<br>Nový příběh.</h2><p>Jsem Kateřina Pohnetalová. V ART TO INK převádím své obrazy do motivů, které si můžete stáhnout, upravit s tatérem a nosit po svém.</p><p>Každý produkt má vlastní detailní stránku s barevnou verzí, černobílou verzí, velikostmi a licencí.</p><a class="btn ghost" href="#gallery">Prozkoumat motivy →</a></div></div></section>
+<section id="motifs" class="section funnel"><div class="wrap">
+<div class="section-head"><div><div class="kicker">ART TO INK</div><h2>Tattoo studio licences</h2></div></div>
+<h3 class="pricing-subhead">Licences for tattoo artists & studios</h3>
+<p class="pricing-note">All licences renew yearly and cover professional use on clients under the limits below. The licence includes the available colour and black-and-white artwork files and resolutions published for each selected design. It does not transfer copyright.</p>
+<div class="plans">
+<article class="plan"><div class="kicker">01 · ARTIST</div><h3>Independent Artist License</h3><div class="price">€249 / year</div><p><strong>5 designs per year</strong> chosen from the catalogue, for one tattoo artist. Includes the available colour and black-and-white files for those designs, in the published resolutions. For client tattoos by the licensed artist only.</p><a class="btn" href="#licences" data-license-id="artist">Choose →</a></article>
+<article class="plan"><div class="kicker">02 · STUDIO</div><h3>Tattoo Studio License</h3><div class="price">€499 / year</div><p><strong>20 designs per year</strong> chosen from the catalogue, for up to 5 tattoo artists at one studio location. Includes available colour and black-and-white files in the published resolutions. No resale or redistribution of source files.</p><a class="btn" href="#licences" data-license-id="studio">Choose →</a></article>
+<article class="plan"><div class="kicker">03 · FULL CATALOGUE</div><h3>Full Catalogue Studio License</h3><div class="price">€1,500 / year</div><p><strong>All published designs in the catalogue</strong> for one studio location, for all tattoo artists working at that location. Includes every available colour and black-and-white version and all file resolutions supplied for each design. Commercial studio use is non-exclusive; copyright stays with the artist.</p><a class="btn" href="#licences" data-license-id="full-catalogue">Choose →</a></article>
+</div>
+<p class="pricing-note">Exclusive rights to a specific design are not included in these licences. They require a separate written agreement defining the exact design, territory, duration and rights.</p></div></div></section><section id="contact" class="section" style="text-align:center"><div class="wrap"><div class="kicker">ART TO INK</div><h2>Najděte motiv,<br>který je váš.</h2><a class="btn" href="#gallery">Prohlédnout kolekci →</a></div></section></main><footer class="footer"><div class="wrap foot"><span>© ART TO INK · Kateřina Pohnetalová</span><span>Originální umění · osobní význam · mezinárodní kolekce</span><a href="#home">Nahoru ↑</a></div></footer>
+<div class="drawer" id="drawer" aria-hidden="true"><button class="close" id="close" aria-label="Close">×</button><div class="detail"><div class="detail-media-column"><div class="detail-image zoom-stage" id="detail-image"><img alt="Selected tattoo artwork" hidden><div class="zoom-lens" id="zoom-lens" aria-hidden="true"></div><button class="zoom-toggle" id="zoom-toggle" type="button" aria-label="Toggle image zoom" title="Zoom">⌕</button></div>
+<div class="preview-strip" aria-label="Artwork previews" style="display:none">
+<button type="button" class="preview active" data-mode="colour"><img alt="Colour version" hidden><span>Colour</span></button>
+<button type="button" class="preview" data-mode="bw"><img class="bw-thumb" alt="Black and white version" hidden><span>Black & white</span></button>
+<button type="button" class="preview" data-mode="skin"><img class="skin-thumb" alt="Tattoo placement preview" hidden><span>On skin</span></button>
+</div>
+<div class="placement-gallery" id="placement-gallery" aria-label="Tattoo placement previews" style="display:none"><figure><img src="/assets/shoulder-color-reference.jpg" alt="Colour tattoo placement on upper arm" loading="lazy"><figcaption>Colour · upper arm</figcaption></figure><figure><img src="/assets/shoulder-black-white-reference.jpg" alt="Black and white tattoo on skin" loading="lazy"><figcaption>Black & white · skin</figcaption></figure><figure><img src="/assets/back-color-reference.jpg" alt="Colour tattoo on back" loading="lazy"><figcaption>Back placement</figcaption></figure><figure><img src="/assets/seahorses-original-artwork.jpg" alt="Original artwork" loading="lazy"><figcaption>Original artwork</figcaption></figure></div>
+<div class="detail-gallery" id="detail-gallery" aria-label="Artwork detail views" style="display:none"><figure><img src="/assets/detail-01.jpg" alt="Artwork close-up" loading="lazy"><figcaption>Detail 1</figcaption></figure><figure><img src="/assets/detail-02.jpg" alt="Artwork close-up" loading="lazy"><figcaption>Detail 2</figcaption></figure><figure><img src="/assets/detail-03.jpg" alt="Artwork close-up" loading="lazy"><figcaption>Detail 3</figcaption></figure></div></div><div class="detail-copy"><div class="kicker">ORIGINAL ARTWORK</div><h2 id="detail-name">Seahorses Grandparents</h2>
+<label class="variant-label" for="purchase-tier">ARTWORK SIZE & FILES</label><select class="variant-select" id="purchase-tier">
+<option value="mini">Mini Design — €9</option><option value="small">Small Design — €19</option><option value="detailed" selected>Detailed Design — €39</option><option value="premium">Premium Artwork — €79</option><option value="collection">Premium Collection — €149</option>
+</select>
+<div class="tier-description" id="tier-description" aria-live="polite">Standard design file · up to 2048 px on the long edge · 300 DPI · colour artwork.</div>
+<div class="selected-price" id="selected-price">€39</div>
+<div class="checkout-fields"><div class="form-heading">ORDER DETAILS</div><label for="customer-intent">Intended use</label><select class="variant-select" id="customer-intent"><option value="personal-tattoo">My own tattoo</option><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference</option></select><label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;line-height:1.5"><input id="intended-use-confirmed" type="checkbox" style="width:auto;min-width:16px;margin-top:3px"><span>I confirm the intended use above and agree to the design licence terms.</span></label></div>
+<a class="btn checkout-button" style="width:100%;margin-top:16px" target="_blank" rel="noopener" href="#checkout" id="detail-cta">Continue to checkout →</a>
+</div></div></div><button class="translate" id="translate">EN / CZ</button><script>
+const drawer=document.getElementById('drawer'),nameEl=document.getElementById('detail-name'),imageEl=document.getElementById('detail-image');
+const mainImage=()=>imageEl.querySelector('img');
+const previewButtons=[...document.querySelectorAll('.preview')];
+const zoomLens=document.getElementById('zoom-lens'), zoomToggle=document.getElementById('zoom-toggle');
+let zoomEnabled=false;
+let activeProduct=null;
+let activeMode='colour';
+const mediaModes={colour:'colour',bw:'blackAndWhite',skin:'onSkin'};
+function resetZoom(){zoomEnabled=false;imageEl.classList.remove('zoomed');if(zoomLens){zoomLens.style.display='none';zoomLens.style.backgroundImage='';}if(zoomToggle)zoomToggle.classList.remove('active');}
+function setZoomImage(img){if(!zoomLens||!img||!img.src)return;zoomLens.style.backgroundImage='url("'+img.src+'")';zoomLens.style.backgroundSize=(img.naturalWidth*2)+'px '+(img.naturalHeight*2)+'px';}
+function moveZoom(e){if(!zoomEnabled||!zoomLens)return;const img=mainImage();if(!img||!img.src)return;const r=imageEl.getBoundingClientRect();const x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));const y=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));zoomLens.style.display='block';zoomLens.style.left=(x*100)+'%';zoomLens.style.top=(y*100)+'%';zoomLens.style.backgroundPosition=(x*100)+'% '+(y*100)+'%';}
+function renderActivePreview(mode){
+  if(!activeProduct)return;
+  activeMode=mode;
+  const src=activeProduct.media[mediaModes[mode]];
+  const img=mainImage();
+  resetZoom();
+  previewButtons.forEach(btn=>{
+    const selected=btn.dataset.mode===mode;
+    btn.classList.toggle('active',selected);
+    const thumb=btn.querySelector('img');
+    const thumbSrc=activeProduct.media[mediaModes[btn.dataset.mode]];
+    if(thumbSrc){thumb.src=thumbSrc;thumb.hidden=false;}else{thumb.removeAttribute('src');thumb.hidden=true;}
+  });
+  if(src){img.src=src;img.alt=activeProduct.name+' — '+({colour:'Colour',bw:'Black and white',skin:'On skin'}[mode]);img.hidden=false;img.className=mode==='bw'?'bw-preview':mode==='skin'?'skin-preview':'';img.onload=()=>setZoomImage(img);if(img.complete)setZoomImage(img);}
+  else{img.removeAttribute('src');img.hidden=true;img.alt=activeProduct.name+' — image unavailable';}
+  if(zoomLens)imageEl.appendChild(zoomLens);
+  if(zoomToggle)imageEl.appendChild(zoomToggle);
+}
+if(zoomToggle)zoomToggle.addEventListener('click',()=>{zoomEnabled=!zoomEnabled;imageEl.classList.toggle('zoomed',zoomEnabled);zoomToggle.classList.toggle('active',zoomEnabled);if(zoomEnabled){const img=mainImage();if(img&&img.src){setZoomImage(img);zoomLens.style.display='block';}}else resetZoom();});
+imageEl.addEventListener('mousemove',moveZoom);imageEl.addEventListener('touchmove',e=>{if(zoomEnabled&&e.touches[0])moveZoom(e.touches[0]);},{passive:true});
+previewButtons.forEach(btn=>btn.addEventListener('click',()=>renderActivePreview(btn.dataset.mode)));
+const tiers={
+mini:{label:'€9',details:'Mini PNG · 1024 × 683 px · about 8.7 × 5.8 cm when printed at 300 DPI · colour artwork.'},
+small:{label:'€19',details:'Small PNG · 1536 × 1024 px · about 13 × 8.7 cm when printed at 300 DPI · colour artwork.'},
+detailed:{label:'€39',details:'Detailed PNG · 2048 × 1365 px · about 17.3 × 11.6 cm when printed at 300 DPI · detailed colour artwork.'},
+premium:{label:'€79',details:'Premium PNG · 3072 × 2048 px · about 26 × 17.3 cm when printed at 300 DPI · high-detail colour artwork.'},
+collection:{label:'€149',details:'Collection pack · multiple PNG files up to 3072 × 2048 px. Print dimensions depend on the DPI selected.'}
+};
+const tierSelect=document.getElementById('purchase-tier'),priceEl=document.getElementById('selected-price'),cta=document.getElementById('detail-cta'),tierDescription=document.getElementById('tier-description');
+function updateTier(){const t=tiers[tierSelect.value];priceEl.textContent=t.label;tierDescription.textContent=t.details;cta.href='#checkout';cta.textContent='Continue to checkout · '+t.label}
+async function startCheckout(payload,button){const previous=button.textContent;button.setAttribute('aria-busy','true');button.style.opacity='.65';button.style.pointerEvents='none';button.textContent=button.id==='detail-cta'?'Opening secure checkout…':'Opening…';try{const response=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok||!data.url)throw new Error(data.error||'Secure checkout could not be started.');window.location.assign(data.url);}catch(error){alert(error instanceof Error?error.message:'Secure checkout could not be started.');button.textContent=previous;button.removeAttribute('aria-busy');button.style.opacity='';button.style.pointerEvents='';}}
+cta.addEventListener('click',event=>{event.preventDefault();if(!activeProduct){alert('Please choose an artwork first.');return;}const confirmed=document.getElementById('intended-use-confirmed');if(!confirmed||!confirmed.checked){alert('Please confirm the intended use before checkout.');return;}const intent=document.getElementById('customer-intent').value;const format=activeMode==='bw'?'blackAndWhite':'colour';const note='';startCheckout({type:'design',productId:activeProduct.id,variantId:'var_'+tierSelect.value,artworkFormat:format,customerIntent:intent,intendedUseConfirmed:true,placementNote:note},cta);});
+document.querySelectorAll('[data-license-id]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();startCheckout({type:'license',licenseId:link.dataset.licenseId},link);}));
+tierSelect.addEventListener('change',updateTier);
+document.querySelectorAll('.product[data-image]').forEach(card=>{const openCard=()=>{
+  // Build the active item from the exact card clicked; never reuse another product's media.
+  activeProduct={
+    id:card.dataset.productId||card.dataset.name||'',
+    name:card.dataset.name||'',
+    media:{
+      colour:card.dataset.previewColour||'',
+      blackAndWhite:card.dataset.previewBw||'',
+      onSkin:card.dataset.previewSkin||''
+    }
+  };
+  nameEl.textContent=activeProduct.name;
+  const gallery=document.getElementById('placement-gallery');
+  if(gallery){gallery.innerHTML='';gallery.style.display='none';}
+  imageEl.style.display='flex';
+  const original=card.dataset.detailImage||card.dataset.image||'';
+  activeProduct.media.colour=original;
+  activeProduct.media.blackAndWhite=card.dataset.previewBw||'';
+  activeProduct.media.onSkin=card.dataset.previewSkin||'';
+  renderActivePreview('colour');
+  drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');
+  tierSelect.value='detailed';updateTier()
+};card.addEventListener('click',openCard);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard()}})});
+document.getElementById('close').onclick=()=>{drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true')};
+drawer.addEventListener('click',e=>{if(e.target===drawer)document.getElementById('close').click()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true')}});
+const categoryButtons=[...document.querySelectorAll('[data-category]')],activeCategory=document.getElementById('active-category');
+categoryButtons.forEach(button=>button.addEventListener('click',()=>{categoryButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));if(activeCategory)activeCategory.textContent=button.dataset.category;document.getElementById('gallery').scrollIntoView({behavior:'smooth',block:'start'})}));
+const reset=document.getElementById('reset-filter');if(reset)reset.addEventListener('click',()=>{categoryButtons.forEach(b=>b.setAttribute('aria-pressed','false'));if(activeCategory)activeCategory.textContent='All artwork'});
+const lang=document.getElementById('lang');if(lang)lang.onclick=()=>{document.documentElement.lang=document.documentElement.lang==='cs'?'en':'cs';lang.textContent=document.documentElement.lang==='cs'?'CZ⌄':'EN⌄'};
+document.getElementById('translate').onclick=()=>{if(lang)lang.click()};
+updateTier();
+</script></body></html>
