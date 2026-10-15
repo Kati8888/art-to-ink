@@ -164,3 +164,17 @@ const lang=document.getElementById('lang');if(lang)lang.onclick=()=>{document.do
 document.getElementById('translate').onclick=()=>{if(lang)lang.click()};
 updateTier();
 </script></body></html>
+
+/* Mobile viewport lock: prevent the page and product gallery from drifting horizontally. */
+@media(max-width:620px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  body{position:relative}
+  .section,.wrap,.gallery,.categories,.gallery-status{width:100%;max-width:100%;min-width:0}
+  .section{padding-left:16px;padding-right:16px}
+  .gallery{grid-template-columns:minmax(0,1fr);gap:14px}
+  .product{width:100%;min-width:0;max-width:100%;transform:none}
+  .product:hover{transform:none}
+  .product-image,.product-body{min-width:0;max-width:100%}
+  .product-image img{max-width:100%}
+  .gallery-status{flex-wrap:wrap}
+}
