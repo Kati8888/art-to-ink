@@ -57,4 +57,17 @@ export const tattooDesigns: TattooDesign[] = [
     },
     sizes: sharedSizes,
   },
+  {
+    id: "war-mask",
+    title: "War Mask",
+    slug: "war-mask",
+    category: "Original Tattoo Artwork",
+    description: "Original War Mask tattoo artwork, available in colour and black-and-white presentation.",
+    media: {
+      colour: image("images/V%C3%A1le%C4%8Dn%C3%BD%20portr%C3%A9t%20s%20tanky%20a%20rohy.png"),
+      blackAndWhite: image("images/Komiksov%C3%BD%20portr%C3%A9t%20v%20inkoustov%C3%BDch%20tetov%C3%A1n%C3%ADch%20%281%29.png"),
+      onSkin: image("images/Komiksov%C3%BD%20portr%C3%A9t%20v%20inkoustov%C3%BDch%20tetov%C3%A1n%C3%ADch%20%281%29.png"),
+    },
+    sizes: sharedSizes,
+  },
 ];
