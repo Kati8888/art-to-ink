@@ -64,6 +64,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   }
 
   function getCurrentImage(): string {
+    if (activeView === "colour" && product.checkoutImage) return product.checkoutImage;
     return product.media[activeView];
   }
 
