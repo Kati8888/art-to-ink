@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ProductDetail from "@/components/ProductDetail";
-import type { TattooDesign } from "@/lib/products";
+import type { TattooDesign } from "@/lib/products";\nimport { isSecureDownloadConfigured } from "@/lib/secure-assets";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 
 type MediaState = "colour" | "bw" | "skin";
@@ -21,7 +21,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [state, setState] = useState<MediaState>("colour");
   const [size, setSize] = useState<(typeof DESIGN_SIZE_ORDER)[number]>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
-  const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
+  const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");\n  const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");\n  const deliveryReady = isSecureDownloadConfigured(design.id);
   const [placementNote, setPlacementNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +34,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
     try {
       const response = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "design", productSlug: design.slug, size, intendedUseConfirmed, intendedUse, placementNote }),
+        body: JSON.stringify({ type: "design", productSlug: design.slug, size, artworkFormat, intendedUseConfirmed, intendedUse, placementNote }),
       });
       const data: { url?: string; error?: string } = await response.json();
       if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
@@ -58,11 +58,11 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
       <div className="purchase-form">
         <label>Artwork size and file <select value={size} onChange={(event) => setSize(event.target.value as typeof size)}>{DESIGN_SIZE_ORDER.map((key) => <option key={key} value={key}>{design.sizes[key].label} — {formatEuro(design.sizes[key].price)}</option>)}</select></label>
         <p className="muted" style={{ margin: 0 }}>{design.sizes[size].details}</p>
-        <label>Intended use <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)}><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference</option></select></label>
+        <label>File format <select value={artworkFormat} onChange={(event) => setArtworkFormat(event.target.value as "colour" | "blackAndWhite")}><option value="colour">Colour PNG</option><option value="blackAndWhite">Black &amp; white PNG</option></select></label>\n        <label>Intended use <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)}><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference</option></select></label>
         <label>Optional placement note <textarea rows={2} maxLength={500} value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} placeholder="e.g. outer forearm (optional)" /></label>
         <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
         {error && <p className="error-text" role="alert">{error}</p>}
-        <button type="button" className="button" disabled={busy} onClick={checkout}>{busy ? "Opening secure checkout…" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
+        {!deliveryReady && <p className="notice" role="status">Secure original files are still being prepared for this design. Checkout is temporarily unavailable; no payment will be taken.</p>}\n        <button type="button" className="button" disabled={busy || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : !deliveryReady ? "Coming soon · files being prepared" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
       </div>
     </div>
   </article>;
