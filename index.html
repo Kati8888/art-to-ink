@@ -84,73 +84,32 @@
 /* Lion Heart On skin: zoom in enough to emphasize both tattoo placements in the mockup. */
 .drawer.lion-heart #detail-image img.skin-preview{object-fit:cover!important;object-position:50% 48%!important;transform:scale(1.28)!important;transform-origin:center center!important;}
 
-/* Logo watermark stacked as ART above TO INK */
-.product-image,
-#detail-image,
-.preview,
-.placement-gallery figure,
-.detail-gallery figure { position:relative; }
-.product-image::after,
-#detail-image::after,
-.preview::after,
-.placement-gallery figure::after,
-.detail-gallery figure::after {
-  content:"ART\\A TO INK";
+/* ART TO INK watermark: ART on top, red TO + white INK below */
+.product-image, #detail-image, .preview, .placement-gallery figure, .detail-gallery figure { position:relative; }
+.product-image::after, #detail-image::after, .preview::after, .placement-gallery figure::after, .detail-gallery figure::after {
+  content:"ART\\A INK";
   white-space:pre;
-  position:absolute;
-  z-index:4;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:98%;
-  padding:0;
-  color:rgba(255,255,255,.52);
-  border:0;
-  background:transparent;
-  text-align:center;
-  font-family:Georgia,'Times New Roman',serif;
-  font-size:clamp(42px,8vw,124px);
-  font-weight:700;
-  line-height:.86;
-  letter-spacing:-.035em;
-  text-shadow:0 2px 5px rgba(0,0,0,.62);
-  pointer-events:none;
-  user-select:none;
+  position:absolute; z-index:4; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:98%; padding:0; color:rgba(255,255,255,.43); border:0; background:transparent;
+  text-align:center; font-family:Georgia,'Times New Roman',serif; font-size:clamp(42px,8vw,124px);
+  font-weight:700; line-height:.86; letter-spacing:-.035em; text-shadow:0 2px 5px rgba(0,0,0,.62);
+  pointer-events:none; user-select:none;
 }
-.product-image::before,
-#detail-image::before,
-.preview::before,
-.placement-gallery figure::before,
-.detail-gallery figure::before {
-  content:"TO";
-  position:absolute;
-  z-index:5;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%) rotate(-8deg);
-  color:rgba(255,16,54,.72);
-  background:transparent;
-  border:0;
-  padding:0;
-  font-family:Georgia,'Times New Roman',serif;
-  font-style:italic;
-  font-weight:900;
-  font-size:clamp(44px,8vw,120px);
-  line-height:.8;
-  letter-spacing:-.09em;
-  text-shadow:0 2px 6px rgba(0,0,0,.62);
-  pointer-events:none;
-  user-select:none;
+.product-image::before, #detail-image::before, .preview::before, .placement-gallery figure::before, .detail-gallery figure::before {
+  content:"TO"; position:absolute; z-index:5; left:37%; top:61%; transform:translate(-50%,-50%) rotate(-8deg);
+  color:rgba(255,16,54,.78); background:transparent; border:0; padding:0;
+  font-family:Georgia,'Times New Roman',serif; font-style:italic; font-weight:900;
+  font-size:clamp(42px,7.8vw,118px); line-height:.8; letter-spacing:-.09em;
+  text-shadow:0 2px 6px rgba(0,0,0,.62); pointer-events:none; user-select:none;
 }
-/* Hide the duplicate white TO behind the red TO; the white line reads INK */
 .product-image::after { font-size:clamp(32px,5.5vw,82px); }
-.product-image::before { font-size:clamp(36px,6vw,90px); }
+.product-image::before { font-size:clamp(36px,6vw,90px); left:36%; top:61%; }
 .preview::after { font-size:clamp(9px,1.4vw,16px); }
-.preview::before { font-size:clamp(11px,1.8vw,21px); }
+.preview::before { font-size:clamp(11px,1.8vw,21px); left:34%; top:61%; }
 .placement-gallery figure::after,.detail-gallery figure::after { font-size:clamp(16px,2.7vw,34px); }
-.placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(18px,3vw,38px); }
+.placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(18px,3vw,38px); left:36%; top:61%; }
 #detail-image::after { font-size:clamp(56px,9.5vw,140px); }
-#detail-image::before { font-size:clamp(62px,10.5vw,156px); }
+#detail-image::before { font-size:clamp(62px,10.5vw,156px); left:36%; top:61%; }
 </style>
 </head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Home</a><a href="#gallery">Gallery</a><a href="#motifs">Licences</a><a href="#about">About the Artist</a></div><div class="tools"><a class="you-link" href="/vy">Your Tattoos</a><span class="language-label" aria-label="Website language">EN</span></div><button class="mobile-menu" aria-label="Open menu">☰</button></nav></header>
