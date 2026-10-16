@@ -29,46 +29,46 @@ export default function VyPage() {
     try {
       const response = await fetch("/api/customer-photos", { method: "POST", body });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Fotku se nepodařilo nahrát.");
-      setStatus("Děkujeme! Fotka byla odeslána ke kontrole. Zveřejníme ji až po schválení.");
+      if (!response.ok) throw new Error(result.error || "The photo could not be uploaded.");
+      setStatus("Thank you! Your photo has been submitted for review. It will be published only after approval.");
       setFile(null); setCaption(""); setName(""); setPermission(false);
       formElement.reset();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Nahrání se nepodařilo. Zkus to prosím znovu.");
+      setStatus(error instanceof Error ? error.message : "Upload failed. Please try again.");
     } finally { setBusy(false); }
   }
 
   return <main className="customer-page">
     <header className="customer-header">
       <a href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></a>
-      <a className="customer-back" href="/">Zpět na web ↗</a>
+      <a className="customer-back" href="/">Back to the website ↗</a>
     </header>
     <section className="customer-hero">
       <p className="customer-kicker">REAL PEOPLE · REAL TATTOOS</p>
-      <h1>Vy. Vaše kůže. Váš příběh.</h1>
-      <p>Nechali jste si udělat tetování podle motivu ART TO INK? Pochlubte se, jak vypadá na vás. Fotky zveřejňujeme až po kontrole.</p>
-      <a className="customer-gold-button" href="#upload">Nahrát svou fotku ↓</a>
+      <h1>You. Your skin. Your story.</h1>
+      <p>Got a tattoo based on an ART TO INK design? Show us how it looks on you. Every photo is reviewed before it appears in the gallery.</p>
+      <a className="customer-gold-button" href="#upload">Upload Your Photo ↓</a>
     </section>
     <section className="customer-gallery">
-      <div className="customer-section-heading"><div><p className="customer-kicker">COMMUNITY GALLERY</p><h2>Fotky od vás</h2></div><span>{photos.length} {photos.length === 1 ? "fotka" : "fotky"}</span></div>
-      {photos.length ? <div className="customer-photo-grid">{photos.map((photo) => <figure key={photo.id}><img src={photo.imageUrl} alt={photo.caption || "Tetování ART TO INK na zákazníkovi"} /><figcaption>{photo.caption || "Příběh z komunity"} </figcaption></figure>)}</div> : <div className="customer-empty"><span>✳</span><h3>Buďte mezi prvními.</h3><p>Galerie se naplní skutečnými fotkami zákazníků po jejich nahrání a schválení. Žádné ilustrační ani vymyšlené fotky.</p></div>}
+      <div className="customer-section-heading"><div><p className="customer-kicker">COMMUNITY GALLERY</p><h2>Your Photos</h2></div><span>{photos.length} {photos.length === 1 ? "photo" : "photos"}</span></div>
+      {photos.length ? <div className="customer-photo-grid">{photos.map((photo) => <figure key={photo.id}><img src={photo.imageUrl} alt={photo.caption || "ART TO INK tattoo on a customer"} /><figcaption>{photo.caption || "A story from the community"} </figcaption></figure>)}</div> : <div className="customer-empty"><span>✳</span><h3>Be among the first.</h3><p>This gallery will feature real customer photos after they have been submitted and approved. No stock images or made-up examples.</p></div>}
     </section>
     <section className="customer-upload" id="upload">
-      <div><p className="customer-kicker">YOUR TURN</p><h2>Nechali jste si kérku udělat?</h2><p>Vložte fotku svého tetování. Může to být detail kérky nebo fotka, na které je vidět, jak tetování sedí na těle.</p></div>
+      <div><p className="customer-kicker">YOUR TURN</p><h2>Got your tattoo done?</h2><p>Upload a photo of your tattoo. Share a close-up of the design or a photo showing how it looks on your body.</p></div>
       <form onSubmit={submit}>
-        <label className="customer-file-label">Fotka tetování
+        <label className="customer-file-label">Your tattoo photo
           <input type="file" accept="image/jpeg,image/png,image/webp" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          <small>{file ? file.name : "JPG, PNG nebo WebP · max. 10 MB"}</small>
+          <small>{file ? file.name : "JPG, PNG or WebP · max. 10 MB"}</small>
         </label>
-        <label>Jméno nebo přezdívka (nepovinné)<input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Jak vás můžeme uvést?" /></label>
-        <label>Krátký popisek (nepovinný)<input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={180} placeholder="Např. Lion Heart · předloktí" /></label>
-        <label className="customer-consent"><input type="checkbox" checked={permission} onChange={(e) => setPermission(e.target.checked)} required /><span>Souhlasím s tím, aby ART TO INK fotku po mém schválení zveřejnilo na webu. Potvrzuji, že mám právo fotku sdílet.</span></label>
-        <button className="customer-gold-button" type="submit" disabled={busy || !file || !permission}>{busy ? "Nahrávám…" : "Odeslat fotku ke schválení →"}</button>
-        <p className="customer-form-note">Fotka se nezobrazí veřejně hned po odeslání. Nejdřív ji ručně schválíme.</p>
+        <label>Name or nickname (optional)<input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="How should we credit you?" /></label>
+        <label>Short caption (optional)<input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={180} placeholder="e.g. Lion Heart · forearm" /></label>
+        <label className="customer-consent"><input type="checkbox" checked={permission} onChange={(e) => setPermission(e.target.checked)} required /><span>I agree that ART TO INK may publish this photo on the website after review. I confirm that I have the right to share this photo.</span></label>
+        <button className="customer-gold-button" type="submit" disabled={busy || !file || !permission}>{busy ? "Uploading…" : "Submit Photo for Review →"}</button>
+        <p className="customer-form-note">Your photo will not appear publicly immediately after submission. It must be manually approved first.</p>
         {status && <p className="customer-status" role="status">{status}</p>}
       </form>
     </section>
-    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <a href="/">Zpět na hlavní web ↑</a></footer>
+    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <a href="/">Back to the main website ↑</a></footer>
     <style jsx>{`
       .customer-page{min-height:100vh;background:#080807;color:#f4ecdf;font:15px/1.6 Arial,sans-serif}
       .customer-header{height:88px;border-bottom:1px solid #493a27;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1200px)/2))}
