@@ -8,7 +8,7 @@ const bucket = process.env.SUPABASE_CUSTOMER_PHOTOS_BUCKET || "customer-photos";
 function supabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Nahrávání zatím není připojeno. Správce webu musí nastavit úložiště fotek.");
+  if (!url || !key) throw new Error("Photo uploads are not configured yet. The site administrator must connect the photo storage.");
   return createClient(url, key, { auth: { persistSession: false } });
 }
 export async function GET() {
@@ -34,10 +34,10 @@ export async function POST(request: Request) {
     const permission = form.get("permission");
     const name = String(form.get("name") ?? "").trim().slice(0,80);
     const caption = String(form.get("caption") ?? "").trim().slice(0,180);
-    if (permission !== "yes") return NextResponse.json({ error: "Pro odeslání je potřeba potvrdit souhlas se zveřejněním." }, { status: 400 });
-    if (!(file instanceof File)) return NextResponse.json({ error: "Vyber prosím fotku." }, { status: 400 });
-    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) return NextResponse.json({ error: "Povoleny jsou pouze JPG, PNG a WebP." }, { status: 400 });
-    if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Fotka může mít maximálně 10 MB." }, { status: 400 });
+    if (permission !== "yes") return NextResponse.json({ error: "Please confirm your consent to publication before submitting." }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: "Please choose a photo." }, { status: 400 });
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) return NextResponse.json({ error: "Only JPG, PNG, and WebP files are allowed." }, { status: 400 });
+    if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "The photo must be no larger than 10 MB." }, { status: 400 });
     const supabase = supabaseAdmin();
     const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
     storagePath = `pending/${new Date().toISOString().slice(0,10)}/${randomUUID()}.${ext}`;
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    const safeMessage = message.includes("not connected") || message.includes("Nahrávání zatím") ? message : "Fotku se teď nepodařilo uložit. Zkontroluj prosím nastavení úložiště a zkus to znovu.";
+    const safeMessage = message.includes("not connected") || message.includes("Nahrávání zatím") ? message : "The photo could not be saved. Please check the storage configuration and try again.";
     return NextResponse.json({ error: safeMessage }, { status: 503 });
   }
 }
