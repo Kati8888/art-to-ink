@@ -63,6 +63,14 @@
 /* Lion Heart: restore the variant buttons and zoom only the On skin view into the right-hand tattoo photos. */
 .drawer.lion-heart #detail-image img{transform:none!important;transform-origin:center center;object-fit:contain!important;max-width:100%!important;max-height:72vh!important;width:auto!important;height:auto!important;}
 
+
+/* Restore the original tidy gallery proportions and align every product card. */
+#gallery .gallery{grid-auto-rows:1fr;align-items:stretch;}
+#gallery .gallery>.product{display:flex;flex-direction:column;min-width:0;height:100%;}
+#gallery .gallery>.product .product-image{height:285px;min-height:285px;max-height:285px;flex:0 0 285px;}
+#gallery .gallery>.product .product-body{display:flex;flex:1;flex-direction:column;padding:16px;min-width:0;}
+#gallery .gallery>.product .product-body h3{min-height:2.5em;line-height:1.25;margin:8px 0;}
+#gallery .gallery>.product .product-foot{margin-top:auto;}
 </style>
 </head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Domů</a><a href="#gallery">Galerie</a><a href="#motifs">Tetovací motivy</a><a href="#collections">Kolekce</a><a href="#about">O mně</a><a href="#contact">Kontakt</a></div><div class="tools"><a class="you-link" href="#about">Vy</a><div id="google_translate_element" aria-label="Překladač celého webu"></div></div><button class="mobile-menu" aria-label="Menu">☰</button></nav></header>
