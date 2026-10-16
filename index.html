@@ -70,7 +70,52 @@
 #gallery #products.gallery>.product .product-image img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;}
 @media(max-width:900px){#gallery #products.gallery{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:620px){#gallery #products.gallery{grid-template-columns:minmax(0,1fr)!important;}}
-</style></head>
+</style><style id="gallery-layout-emergency-fix">
+/* Keep the existing functional artwork cards; repair only their layout. */
+#gallery #products.gallery{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:24px!important;
+  width:100%!important;
+  max-width:1200px!important;
+  margin:40px auto!important;
+  padding:0 16px!important;
+  box-sizing:border-box!important;
+  align-items:start!important;
+}
+#gallery #products.gallery>.product{
+  display:flex!important;
+  flex-direction:column!important;
+  grid-column:auto!important;
+  grid-row:auto!important;
+  float:none!important;
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+#gallery #products.gallery>.product .product-image{
+  display:flex!important;
+  width:100%!important;
+  height:285px!important;
+  min-height:0!important;
+  max-height:285px!important;
+  overflow:hidden!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#gallery #products.gallery>.product .product-image img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+}
+#gallery #products.gallery>.product .product-body{display:block!important;width:100%!important;min-width:0!important;padding:12px!important}
+@media(max-width:900px){#gallery #products.gallery{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:620px){#gallery #products.gallery{grid-template-columns:minmax(0,1fr)!important}}
+</style>
+</head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Domů</a><a href="#gallery">Galerie</a><a href="#motifs">Tetovací motivy</a><a href="#collections">Kolekce</a><a href="#about">O mně</a><a href="#contact">Kontakt</a></div><div class="tools"><a class="you-link" href="#about">Vy</a><div id="google_translate_element" aria-label="Překladač celého webu"></div></div><button class="mobile-menu" aria-label="Menu">☰</button></nav></header>
 <main id="home"><section class="hero"><a href="#home" class="hero-logo" aria-label="ART TO INK — domů"><span class="logo-art">ART</span><span class="logo-bottom"><svg class="logo-brush-to" viewBox="0 0 190 78" role="img" aria-label="TO"><path d="M8 15 Q42 7 77 5 Q67 14 52 17 L41 68 Q37 76 29 73 L43 17 Q25 20 8 23 Q3 22 8 15Z" fill="#e3262e"/><path d="M89 18 C102 2 131 0 146 13 C160 25 151 52 131 65 C111 78 89 69 84 51 C80 39 82 27 89 18Z" fill="none" stroke="#e3262e" stroke-width="13" stroke-linecap="round"/><path d="M93 20 C106 9 127 8 138 18 C149 28 142 48 128 58 C113 68 98 60 94 48 C91 39 91 28 99 20" fill="none" stroke="#e3262e" stroke-width="5" stroke-linecap="round"/><path d="M10 18 1 25 M33 63 25 76 M144 14 155 7 M92 62 84 72" fill="none" stroke="#e3262e" stroke-width="2.5" stroke-linecap="round"/></svg><span class="logo-ink">INK</span></span></a><nav class="hero-categories" aria-label="Kategorie motivů">
 <a class="hero-category" href="#gallery"><svg viewBox="0 0 150 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M35 92c-4-18 0-30 11-39-5-12-1-25 8-33l7 9 8-18 7 14 11-7 2 15c12 8 16 22 8 35 9 13 12 23 8 32M45 48l13-7 9 4 8-6 13 7M48 60l12-3 8 4 12-5 11 4M56 71l11-2 7 5 10-4M61 82l7-3 8 4 7-4M50 30l-9-5m50 2 9-8M59 92l-2 6m24-6 3 6"/><path d="M55 43l4 3m25-3-4 4M62 57l4 1m17-1-4 2" stroke-width="1"/></g></svg><span>PORTRÉTY<br>A EMOCE</span><i>→</i></a>
