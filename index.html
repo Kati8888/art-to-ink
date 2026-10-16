@@ -298,11 +298,11 @@ updateTier();
   document.querySelectorAll('.product[data-product-id]').forEach(card=>{
     if(card.querySelector('.artwork-social')) return;
     const id=card.dataset.productId;
-    const title=card.dataset.name||card.querySelector('h3')?.textContent?.trim()||'Tento návrh';
+    const title=card.dataset.name||card.querySelector('h3')?.textContent?.trim()||'This design';
     const section=document.createElement('section');
     section.className='artwork-social';
-    section.setAttribute('aria-label','Lajky a komentáře: '+title);
-    section.innerHTML='<div class="artwork-social-top"><div><span class="social-eyebrow">COMMUNITY</span><h4>Co říkáš na tento návrh?</h4></div><button class="social-like" type="button" aria-pressed="false"><span aria-hidden="true">♡</span> To se mi líbí <b>…</b></button></div><form class="social-comment-form"><label>Tvoje jméno (nepovinné)<input name="visitor_name" maxlength="60" placeholder="Např. Jana"></label><label>Komentář<textarea name="body" rows="3" maxlength="1000" required placeholder="Napiš, co si o návrhu myslíš…"></textarea></label><button class="social-submit" type="submit">Přidat komentář →</button></form><p class="social-notice" role="status" hidden></p><p class="social-error" role="alert" hidden></p><div class="social-comments"><div class="social-comments-heading">Komentáře <span>…</span></div><div class="social-comment-list"><p class="social-empty">Načítám reakce…</p></div></div>';
+    section.setAttribute('aria-label','Likes and comments: '+title);
+    section.innerHTML='<div class="artwork-social-top"><div><span class="social-eyebrow">COMMUNITY</span><h4>What do you think of this design?</h4></div><button class="social-like" type="button" aria-pressed="false"><span aria-hidden="true">♡</span> Like <b>…</b></button></div><form class="social-comment-form"><label>Your name (optional)<input name="visitor_name" maxlength="60" placeholder="e.g. Jane"></label><label>Comment<textarea name="body" rows="3" maxlength="1000" required placeholder="Share your thoughts on this design…"></textarea></label><button class="social-submit" type="submit">Post comment →</button></form><p class="social-notice" role="status" hidden></p><p class="social-error" role="alert" hidden></p><div class="social-comments"><div class="social-comments-heading">Comments <span>…</span></div><div class="social-comment-list"><p class="social-empty">Loading reactions…</p></div></div>';
     section.addEventListener('click',event=>event.stopPropagation());
     section.addEventListener('keydown',event=>event.stopPropagation());
     card.appendChild(section);
@@ -319,24 +319,24 @@ updateTier();
       commentCount.textContent=String(rows.length);
       list.innerHTML=rows.length?rows.map(row=>{
         const canRemove=Boolean(localStorage.getItem('art-to-ink-comment-delete:'+row.id));
-        return '<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p>'+(canRemove?'<button type="button" class="social-remove-comment" data-remove-comment="'+escapeHtml(row.id)+'">Odebrat komentář ×</button>':'')+'</article>';
-      }).join(''):'<p class="social-empty">Zatím tu nejsou komentáře. Buď první!</p>';
+        return '<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p>'+(canRemove?'<button type="button" class="social-remove-comment" data-remove-comment="'+escapeHtml(row.id)+'" >Remove comment ×</button>':'')+'</article>';
+      }).join(''):'<p class="social-empty">No comments yet. Be the first!</p>';
     }
     list.addEventListener('click',async event=>{
       const button=event.target.closest('[data-remove-comment]');
       if(!button)return;
       const id=button.getAttribute('data-remove-comment');
       const token=localStorage.getItem('art-to-ink-comment-delete:'+id);
-      if(!token||!confirm('Opravdu chceš tento komentář odebrat?'))return;
+      if(!token||!confirm('Are you sure you want to remove this comment?'))return;
       button.disabled=true;
       try{
         const response=await fetch('/api/comments/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token})});
         const result=await response.json();
-        if(!response.ok||!result.success)throw new Error(result.error||'Odstranění se nezdařilo.');
+        if(!response.ok||!result.success)throw new Error(result.error||'Could not remove the comment.');
         localStorage.removeItem('art-to-ink-comment-delete:'+id);
-        message('Komentář byl odebrán.');
+        message('Comment removed.');
         await refresh();
-      }catch(error){message(error.message||'Komentář se nepodařilo odebrat.',true);button.disabled=false;}
+      }catch(error){message(error.message||'Could not remove the comment.',true);button.disabled=false;}
     });
     async function refresh(){
       const [likes,own,comments]=await Promise.all([
@@ -344,8 +344,8 @@ updateTier();
         db.from('artwork_likes').select('id').eq('design_id',id).eq('visitor_id',visitorId).maybeSingle(),
         db.from('artwork_comments').select('id,visitor_name,body,created_at').eq('design_id',id).order('created_at',{ascending:false}).limit(50)
       ]);
-      if(likes.error||own.error||comments.error){message('Interakce se nepodařilo načíst. Obnov stránku a zkus to znovu.',true);list.innerHTML='<p class="social-empty">Komentáře se teď nepodařilo načíst.</p>';return;}
-      likeCount.textContent=String(likes.count||0);liked=Boolean(own.data);likeButton.classList.toggle('is-liked',liked);likeButton.setAttribute('aria-pressed',String(liked));likeButton.querySelector('span').textContent=liked?'♥':'♡';likeButton.childNodes[1].textContent=liked?' Líbí se ti ':' To se mi líbí ';
+      if(likes.error||own.error||comments.error){message('Could not load interactions. Refresh the page and try again.',true);list.innerHTML='<p class="social-empty">Komentáře se teď nepodařilo načíst.</p>';return;}
+      likeCount.textContent=String(likes.count||0);liked=Boolean(own.data);likeButton.classList.toggle('is-liked',liked);likeButton.setAttribute('aria-pressed',String(liked));likeButton.querySelector('span').textContent=liked?'♥':'♡';likeButton.childNodes[1].textContent=liked?' Liked ':' Like ';
       renderComments(comments.data||[]);
     }
     likeButton.addEventListener('click',async()=>{
@@ -353,21 +353,21 @@ updateTier();
       const wasLiked=liked;
       const result=wasLiked?await db.from('artwork_likes').delete().eq('design_id',id).eq('visitor_id',visitorId):await db.from('artwork_likes').insert({design_id:id,visitor_id:visitorId});
       likeButton.disabled=false;
-      if(result.error){message('Lajk se nepodařilo uložit. Zkus to znovu.',true);return;}
-      message(wasLiked?'Lajk odebrán.':'Děkujeme za lajk!');await refresh();
+      if(result.error){message('Could not save your like. Please try again.',true);return;}
+      message(wasLiked?'Like removed.':'Thanks for your like!');await refresh();
     });
     form.addEventListener('submit',async event=>{
-      event.preventDefault();const fields=new FormData(form);const visitor_name=String(fields.get('visitor_name')||'').trim()||'Návštěvník';const body=String(fields.get('body')||'').trim();
+      event.preventDefault();const fields=new FormData(form);const visitor_name=String(fields.get('visitor_name')||'').trim()||'Visitor';const body=String(fields.get('body')||'').trim();
       if(!body)return;
-      const submit=form.querySelector('button[type=submit]');submit.disabled=true;submit.textContent='Ukládám…';notice.hidden=true;error.hidden=true;
+      const submit=form.querySelector('button[type=submit]');submit.disabled=true;submit.textContent='Posting…';notice.hidden=true;error.hidden=true;
       const deleteToken=crypto.randomUUID()+crypto.randomUUID();
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(deleteToken));
       const deleteTokenHash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
       const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body,visitor_id:visitorId,delete_token_hash:deleteTokenHash}).select('id,visitor_name,body,created_at').single();
-      submit.disabled=false;submit.textContent='Přidat komentář →';
-      if(insertError){message('Komentář se nepodařilo uložit. Zkus to znovu.',true);return;}
+      submit.disabled=false;submit.textContent='Post comment →';
+      if(insertError){message('Could not post your comment. Please try again.',true);return;}
       localStorage.setItem('art-to-ink-comment-delete:'+data.id,deleteToken);
-      form.elements.body.value='';message('Komentář byl zveřejněn. Z tohoto prohlížeče ho můžeš kdykoli odebrat.');await refresh();
+      form.elements.body.value='';message('Your comment has been posted. You can remove it anytime from this browser.');await refresh();
     });
     void refresh();
   });
