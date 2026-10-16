@@ -10,6 +10,12 @@ const supabase: SupabaseClient = createClient(
 );
 
 type CommentRow = { id: string; visitor_name: string; body: string; created_at: string };
+const deleteTokenKey = (id: string) => `art-to-ink-comment-delete:${id}`;
+async function sha256(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 type Props = { designId: string; designTitle: string };
 
 function getVisitorId() {
@@ -76,6 +82,27 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
     }
   }
 
+  async function removeComment(comment: CommentRow) {
+    const token = window.localStorage.getItem(deleteTokenKey(comment.id));
+    if (!token) {
+      setNotice("Tento komentář lze odebrat pouze z prohlížeče, ze kterého byl odeslán.");
+      return;
+    }
+    if (!window.confirm("Opravdu chceš tento komentář odebrat?")) return;
+    const response = await fetch("/api/comments/delete", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: comment.id, token }),
+    });
+    const data = await response.json() as { error?: string; success?: boolean };
+    if (!response.ok || !data.success) {
+      setNotice(data.error ?? "Komentář se nepodařilo odebrat.");
+      return;
+    }
+    window.localStorage.removeItem(deleteTokenKey(comment.id));
+    setComments((current) => current.filter((item) => item.id !== comment.id));
+    setNotice("Komentář byl odebrán.");
+  }
+
   async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanName = name.trim() || "Návštěvník";
@@ -88,17 +115,20 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
     setSending(true);
     setNotice("");
     setError("");
+    const deleteToken = window.crypto.randomUUID() + window.crypto.randomUUID();
+    const deleteTokenHash = await sha256(deleteToken);
     const { data, error: insertError } = await supabase
       .from("artwork_comments")
-      .insert({ design_id: designId, visitor_name: cleanName, body: cleanBody })
+      .insert({ design_id: designId, visitor_name: cleanName, body: cleanBody, visitor_id: visitorId, delete_token_hash: deleteTokenHash })
       .select("id,visitor_name,body,created_at")
       .single();
     if (insertError) {
       setNotice("Komentář se nepodařilo uložit. Zkus to prosím znovu.");
     } else if (data) {
+      window.localStorage.setItem(deleteTokenKey(data.id), deleteToken);
       setComments((current) => [data as CommentRow, ...current]);
       setBody("");
-      setNotice("Komentář byl zveřejněn.");
+      setNotice("Komentář byl zveřejněn. Z tohoto prohlížeče ho můžeš kdykoli odebrat.");
     }
     setSending(false);
   }
@@ -133,6 +163,7 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
           <article className="social-comment" key={comment.id}>
             <div className="social-comment-meta"><strong>{comment.visitor_name}</strong><time dateTime={comment.created_at}>{new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(comment.created_at))}</time></div>
             <p>{comment.body}</p>
+            {typeof window !== "undefined" && window.localStorage.getItem(deleteTokenKey(comment.id)) && <button className="social-remove-comment" type="button" onClick={() => void removeComment(comment)}>Odebrat komentář ×</button>}
           </article>
         ))}
       </div>
