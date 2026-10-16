@@ -87,7 +87,7 @@
 /* Correct watermark: two clean stacked lines, no escaped literal text */
 .product-image, #detail-image, .preview, .placement-gallery figure, .detail-gallery figure { position:relative; }
 .product-image::after, #detail-image::after, .preview::after, .placement-gallery figure::after, .detail-gallery figure::after {
-  content:"ART INK";
+  content:"ART\A INK";
   white-space:pre;
   position:absolute; z-index:4; left:50%; top:50%; transform:translate(-50%,-50%);
   width:98%; padding:0; color:rgba(255,255,255,.34); border:0; background:transparent;
@@ -108,7 +108,7 @@
 .preview::before { font-size:clamp(8px,1vw,12px); }
 .placement-gallery figure::after,.detail-gallery figure::after { font-size:clamp(11px,1.8vw,22px); }
 .placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(12px,1.9vw,23px); }
-#detail-image::after { content:"ART INK"; white-space:pre; font-size:clamp(40px,6.2vw,90px); }
+#detail-image::after { content:"ART\A INK"; white-space:pre; font-size:clamp(40px,6.2vw,90px); }
 #detail-image::before { font-size:clamp(42px,6.4vw,94px); }
 </style>
 </head>
