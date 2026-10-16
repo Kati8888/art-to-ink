@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProductDetail from "@/components/ProductDetail";
+import ArtworkInteractions from "@/components/ArtworkInteractions";
 import type { TattooDesign } from "@/lib/products";
 import { isSecureDownloadConfigured } from "@/lib/secure-assets";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
@@ -70,5 +71,6 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
         <button type="button" className="button" disabled={busy || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : !deliveryReady ? "Coming soon · files being prepared" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
       </div>
     </div>
+    <ArtworkInteractions designId={design.id} designTitle={design.title} />
   </article>;
 }
