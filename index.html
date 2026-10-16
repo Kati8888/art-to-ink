@@ -318,26 +318,10 @@ updateTier();
     function renderComments(rows){
       commentCount.textContent=String(rows.length);
       list.innerHTML=rows.length?rows.map(row=>{
-        const canRemove=Boolean(localStorage.getItem('art-to-ink-comment-delete:'+row.id));
-        return '<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p>'+(canRemove?'<button type="button" class="social-remove-comment" data-remove-comment="'+escapeHtml(row.id)+'" >Remove comment ×</button>':'')+'</article>';
+        return '<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p>'+'</article>';
       }).join(''):'<p class="social-empty">No comments yet. Be the first!</p>';
     }
-    list.addEventListener('click',async event=>{
-      const button=event.target.closest('[data-remove-comment]');
-      if(!button)return;
-      const id=button.getAttribute('data-remove-comment');
-      const token=localStorage.getItem('art-to-ink-comment-delete:'+id);
-      if(!token||!confirm('Are you sure you want to remove this comment?'))return;
-      button.disabled=true;
-      try{
-        const response=await fetch('/api/comments/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token})});
-        const result=await response.json();
-        if(!response.ok||!result.success)throw new Error(result.error||'Could not remove the comment.');
-        localStorage.removeItem('art-to-ink-comment-delete:'+id);
-        message('Comment removed.');
-        await refresh();
-      }catch(error){message(error.message||'Could not remove the comment.',true);button.disabled=false;}
-    });
+
     async function refresh(){
       const [likes,own,comments]=await Promise.all([
         db.from('artwork_likes').select('id',{count:'exact',head:true}).eq('design_id',id),
@@ -360,14 +344,10 @@ updateTier();
       event.preventDefault();const fields=new FormData(form);const visitor_name=String(fields.get('visitor_name')||'').trim()||'Visitor';const body=String(fields.get('body')||'').trim();
       if(!body)return;
       const submit=form.querySelector('button[type=submit]');submit.disabled=true;submit.textContent='Posting…';notice.hidden=true;error.hidden=true;
-      const deleteToken=crypto.randomUUID()+crypto.randomUUID();
-      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(deleteToken));
-      const deleteTokenHash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
-      const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body,visitor_id:visitorId,delete_token_hash:deleteTokenHash}).select('id,visitor_name,body,created_at').single();
+      const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body,visitor_id:visitorId}).select('id,visitor_name,body,created_at').single();
       submit.disabled=false;submit.textContent='Post comment →';
       if(insertError){message('Could not post your comment. Please try again.',true);return;}
-      localStorage.setItem('art-to-ink-comment-delete:'+data.id,deleteToken);
-      form.elements.body.value='';message('Your comment has been posted. You can remove it anytime from this browser.');await refresh();
+      form.elements.body.value='';message('Your comment has been posted.');await refresh();
     });
     void refresh();
   });
