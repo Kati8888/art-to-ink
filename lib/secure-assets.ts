@@ -31,6 +31,11 @@ const secureDownloadObjects: Record<string, Partial<Record<DesignSize, Record<Ar
   },
 };
 
+export function isSecureDownloadConfigured(productId: string): boolean {
+  const variants = secureDownloadObjects[productId];
+  return Boolean(variants && variants.mini?.colour && variants.mini?.blackAndWhite);
+}
+
 export function getSecureDownloadObject(
   productId: string,
   size: DesignSize,

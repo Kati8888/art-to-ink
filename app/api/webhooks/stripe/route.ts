@@ -5,7 +5,8 @@ import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getStripe } from "@/lib/stripe";
 import { getSecureDownloadObject, type ArtworkFormat } from "@/lib/secure-assets";
-import { DESIGN_SIZE_ORDER, type DesignSize } from "@/lib/products";
+import { DESIGN_SIZE_ORDER, LICENSES, type DesignSize } from "@/lib/products";
+import { tattooDesigns } from "@/lib/mock-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -111,11 +112,25 @@ export async function POST(request: Request) {
 
     const resend = new Resend(requiredEnv("RESEND_API_KEY"));
     const from = requiredEnv("RESEND_FROM_EMAIL");
-    const subject = purchaseType === "design" ? "Your ART TO INK artwork is ready" : "Your ART TO INK studio licence is active";
+    const productId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
+    const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === productId || item.slug === productId) : undefined;
+    const format = session.metadata?.artworkFormat === "blackAndWhite" ? "blackAndWhite" : "colour";
+    const variantKey = (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "detailed") as DesignSize;
+    const variantInfo = purchasedDesign?.sizes[variantKey];
+    const licenseId = session.metadata?.license_id ?? "";
+    const license = LICENSES.find((item) => item.id === licenseId);
+    const subject = purchaseType === "design"
+      ? `Your ${purchasedDesign?.title ?? "ART TO INK"} artwork is ready`
+      : "Your ART TO INK studio licence — payment confirmed";
     const html = purchaseType === "design"
-      ? `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for supporting original artwork!</h1><p>Your payment has been confirmed. Your tattoo files are ready.</p><p>Your secure artwork download link is valid for seven days.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:14px 20px;background:#d5a957;color:#080807;text-decoration:none">Download your artwork</a></p><p>Please save your file securely and share it only as permitted by your licence.</p><p>Thank you personally for supporting my original artwork.</p><p>With gratitude,<br/>Kateřina Pohnetalová<br/>ART TO INK</p></div>`
-      : `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed and your studio licence is active.</p><p>Licence: <strong>${session.metadata?.license_id ?? "Studio licence"}</strong></p><p>Keep this email as your purchase confirmation. The licence is non-exclusive and does not transfer copyright.</p><p>Kateřina Pohnetalová · ART TO INK</p></div>`;
-    const { error: emailError } = await resend.emails.send({ from, to: email, subject, html }, { idempotencyKey: `art-to-ink-customer-${session.id}` });
+      ? `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · ORIGINAL ARTWORK</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Your artwork is ready.</h1><p>Thank you for supporting original artwork by Kateřina Pohnetalová. Your payment has been confirmed.</p><h2 style="font-family:Georgia,serif;font-weight:400">${purchasedDesign?.title ?? "Your selected design"}</h2>${purchasedDesign ? `<p><img src="${purchasedDesign.media[format]}" alt="${purchasedDesign.title} tattoo artwork preview" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0"/></p>` : ""}<p><strong>Package:</strong> ${variantInfo?.label ?? variantKey}<br/><strong>File:</strong> ${format === "colour" ? "Colour" : "Black & white"}</p><p>Your private download link expires in seven days. If it expires before you download the file, reply to this email and we can help.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:15px 22px;background:#d5a957;color:#080807;text-decoration:none;font-weight:bold">DOWNLOAD YOUR ARTWORK</a></p><p style="font-size:13px;color:#655b4d">Your purchase grants only the rights stated in the applicable licence. Please do not resell, redistribute, or publicly share the source file.</p><p>With gratitude,<br/>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`
+      : `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · STUDIO LICENSING</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed. Keep this email as your purchase record.</p><h2 style="font-family:Georgia,serif;font-weight:400">${license?.title ?? "Studio licence"}</h2><p><strong>Annual price:</strong> €${license?.price ?? "—"}<br/><strong>Scope:</strong> ${license?.allowance ?? "As specified in your licence"}<br/><strong>Team/location:</strong> ${license?.audience ?? "As specified in your licence"}</p><p>This licence is non-exclusive and does not transfer copyright. Use is limited to the stated designs, artist count, and studio location. Source files may not be resold or redistributed.</p><p>For your records, payment reference: ${session.id}</p><p>If you need to register the artists using the licence or clarify its scope, reply to this email before using the artwork commercially.</p><p>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`;
+    const { error: emailError } = await resend.emails.send({
+      from, to: email, subject, html,
+      text: purchaseType === "design"
+        ? `Your ART TO INK artwork is ready. Design: ${purchasedDesign?.title ?? productId}. Package: ${variantInfo?.label ?? variantKey}. Format: ${format === "colour" ? "Colour" : "Black & white"}. Your private download link expires in seven days: ${downloadUrl}. Thank you, Kateřina Pohnetalová, ART TO INK.`
+        : `Your ART TO INK studio licence payment is confirmed. Licence: ${license?.title ?? licenseId}. Annual price: €${license?.price ?? "—"}. Scope: ${license?.allowance ?? "see licence terms"}. This licence is non-exclusive and does not transfer copyright. Payment reference: ${session.id}. Reply to this email for registration or questions.`
+    }, { idempotencyKey: `art-to-ink-customer-${session.id}` });
     if (emailError) throw new Error(`Transactional customer email failed: ${emailError.message}`);
 
     // Send the shop owner a separate order notification without exposing the secure download token.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { TattooDesign, DesignSize } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
+import { isSecureDownloadConfigured } from "@/lib/secure-assets";
 
 type MediaView = keyof TattooDesign["media"];
 
@@ -21,6 +22,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [placementNote, setPlacementNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const deliveryReady = isSecureDownloadConfigured(product.id);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -126,7 +128,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               key={getCurrentImage()}
               src={getCurrentImage()}
               alt={`${product.title} — ${activeLabel}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain" style={{ filter: "brightness(1.28) contrast(1.06)" }}
             />
           </div>
         </div>
@@ -196,13 +198,14 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               <span>I confirm the intended use above and agree to the applicable design licence terms.</span>
             </label>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
+            {!deliveryReady && <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Secure original files are still being prepared for this design. Checkout is temporarily unavailable; no payment will be taken.</p>}
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || !deliveryReady}
               onClick={checkout}
               className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60"
             >
-              {busy ? "Opening secure checkout…" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
+              {busy ? "Opening secure checkout…" : !deliveryReady ? "Coming soon · files being prepared" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
             </button>
           </div>
         </div>
