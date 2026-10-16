@@ -67,7 +67,7 @@
 /* Aura of Pete: when On skin is selected, zoom into the skin-placement photos on the right side of the composite. */
 .drawer.aura-of-pete #detail-image img.skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:72% 45%!important;transform:scale(1.45)!important;transform-origin:center 45%;}
 /* Lion Heart: make the lion visibly larger in the gallery and detail view. */
-#gallery .product[data-product-id="lion-heart"] .product-image img{transform:scale(1.22)!important;transform-origin:center center;}
+#gallery .product[data-product-id="lion-heart"] .product-image img{transform:scale(1.12)!important;transform-origin:center center;}
 /* Lion Heart: zoom into the real skin-placement photos on the On skin variant, matching the close-up treatment used elsewhere. */
 #detail-image img.skin-preview,.drawer.lion-heart #detail-image img.skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:72vh!important;object-fit:cover!important;object-position:100% 50%!important;transform:scale(1.9)!important;transform-origin:right center;}
 /* Lion Heart: restore the variant buttons and zoom only the On skin view into the right-hand tattoo photos. */
@@ -123,6 +123,8 @@
 
 /* Slightly dim the homepage hero artwork without dimming the logo or navigation */
 .hero{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),url('assets/hero-gold-extravagance.png')!important;background-color:#080807!important;}
+
+.social-remove-comment{margin-top:8px;border:1px solid #5d4930;color:#b9ad9c;background:transparent;padding:5px 8px;font-size:10px;cursor:pointer}.social-remove-comment:hover{border-color:#e3262e;color:#f4ecdf}
 </style>
 
 <style id="artwork-social-styles">
@@ -315,8 +317,27 @@ updateTier();
     function message(text,isError=false){notice.hidden=isError;error.hidden=!isError;(isError?error:notice).textContent=text;}
     function renderComments(rows){
       commentCount.textContent=String(rows.length);
-      list.innerHTML=rows.length?rows.map(row=>'<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p></article>').join(''):'<p class="social-empty">Zatím tu nejsou komentáře. Buď první!</p>';
+      list.innerHTML=rows.length?rows.map(row=>{
+        const canRemove=Boolean(localStorage.getItem('art-to-ink-comment-delete:'+row.id));
+        return '<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p>'+(canRemove?'<button type="button" class="social-remove-comment" data-remove-comment="'+escapeHtml(row.id)+'">Odebrat komentář ×</button>':'')+'</article>';
+      }).join(''):'<p class="social-empty">Zatím tu nejsou komentáře. Buď první!</p>';
     }
+    list.addEventListener('click',async event=>{
+      const button=event.target.closest('[data-remove-comment]');
+      if(!button)return;
+      const id=button.getAttribute('data-remove-comment');
+      const token=localStorage.getItem('art-to-ink-comment-delete:'+id);
+      if(!token||!confirm('Opravdu chceš tento komentář odebrat?'))return;
+      button.disabled=true;
+      try{
+        const response=await fetch('/api/comments/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token})});
+        const result=await response.json();
+        if(!response.ok||!result.success)throw new Error(result.error||'Odstranění se nezdařilo.');
+        localStorage.removeItem('art-to-ink-comment-delete:'+id);
+        message('Komentář byl odebrán.');
+        await refresh();
+      }catch(error){message(error.message||'Komentář se nepodařilo odebrat.',true);button.disabled=false;}
+    });
     async function refresh(){
       const [likes,own,comments]=await Promise.all([
         db.from('artwork_likes').select('id',{count:'exact',head:true}).eq('design_id',id),
@@ -339,10 +360,14 @@ updateTier();
       event.preventDefault();const fields=new FormData(form);const visitor_name=String(fields.get('visitor_name')||'').trim()||'Návštěvník';const body=String(fields.get('body')||'').trim();
       if(!body)return;
       const submit=form.querySelector('button[type=submit]');submit.disabled=true;submit.textContent='Ukládám…';notice.hidden=true;error.hidden=true;
-      const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body}).select('id,visitor_name,body,created_at').single();
+      const deleteToken=crypto.randomUUID()+crypto.randomUUID();
+      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(deleteToken));
+      const deleteTokenHash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+      const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body,visitor_id:visitorId,delete_token_hash:deleteTokenHash}).select('id,visitor_name,body,created_at').single();
       submit.disabled=false;submit.textContent='Přidat komentář →';
       if(insertError){message('Komentář se nepodařilo uložit. Zkus to znovu.',true);return;}
-      form.elements.body.value='';message('Komentář byl zveřejněn.');await refresh();
+      localStorage.setItem('art-to-ink-comment-delete:'+data.id,deleteToken);
+      form.elements.body.value='';message('Komentář byl zveřejněn. Z tohoto prohlížeče ho můžeš kdykoli odebrat.');await refresh();
     });
     void refresh();
   });
