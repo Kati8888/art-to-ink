@@ -46,8 +46,8 @@
 /* Last two gallery products: show complete artwork without cropping. */
 #gallery .product[data-product-id="lion-heart"] .product-image,
 #gallery .product[data-product-id="aura-of-pete"] .product-image{height:320px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#090807!important;padding:8px!important;overflow:hidden!important;}
-#gallery .product[data-product-id="lion-heart"] .product-image img,
-#gallery .product[data-product-id="aura-of-pete"] .product-image img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;filter:none!important;opacity:1!important;transform:none!important;image-rendering:auto!important;}
+#gallery .product[data-product-id="lion-heart"] .product-image img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;filter:none!important;opacity:1!important;transform:none!important;image-rendering:auto!important;}
+#gallery .product[data-product-id="aura-of-pete"] .product-image img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;filter:none!important;opacity:1!important;transform:scale(1.18)!important;transform-origin:center center;image-rendering:auto!important;}
 
 /* Aura of Pete: show the complete artwork in the main Colour view; only On skin gets a close-up. */
 .drawer.aura-of-pete #detail-image img:not(.skin-preview){width:auto!important;height:auto!important;max-width:100%!important;max-height:72vh!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:none!important;}
