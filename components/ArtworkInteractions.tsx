@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabase: SupabaseClient = createClient(
@@ -76,7 +76,7 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
     }
   }
 
-  async function postComment(event: React.FormEvent<HTMLFormElement>) {
+  async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanName = name.trim() || "Návštěvník";
     const cleanBody = body.trim();
