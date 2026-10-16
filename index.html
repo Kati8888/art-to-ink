@@ -124,6 +124,24 @@
 /* Slightly dim the homepage hero artwork without dimming the logo or navigation */
 .hero{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),url('assets/hero-gold-extravagance.png')!important;background-color:#080807!important;}
 </style>
+
+<style id="artwork-social-styles">
+.artwork-social{border-top:1px solid #5d4930;padding:16px;background:linear-gradient(145deg,#12100c,#0a0908);display:grid;gap:13px;color:#f4ecdf;cursor:default}
+.artwork-social-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.artwork-social-top h4{font:19px/1.2 Georgia,serif;margin:5px 0 0;color:#f4ecdf}
+.social-eyebrow{font-size:9px;letter-spacing:.2em;color:#d5a957}
+.social-like{display:inline-flex;align-items:center;gap:6px;border:1px solid #5d4930;padding:9px 10px;color:#f4ecdf;font-size:11px;white-space:nowrap;background:transparent;cursor:pointer}
+.social-like span{font-size:20px;color:#e3262e;line-height:1}.social-like b{color:#d5a957;font-weight:400}.social-like.is-liked{border-color:#e3262e;background:#25100f}
+.social-comment-form{display:grid;gap:9px}.social-comment-form label{display:grid;gap:5px;font-size:11px;color:#b9ad9c}
+.social-comment-form input,.social-comment-form textarea{width:100%;min-width:0;background:#090908;border:1px solid #5d4930;color:#f4ecdf;padding:10px;font:13px/1.5 Arial,sans-serif;resize:vertical}
+.social-submit{justify-self:start;background:#d5a957;color:#100d08;border:1px solid #d5a957;padding:10px 13px;font-size:10px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.social-submit:disabled{opacity:.55;cursor:wait}.social-notice{font-size:12px;margin:0;color:#d5a957}.social-error{font-size:12px;margin:0;color:#ffb2a8}
+.social-comments{border-top:1px solid #3c3023;padding-top:11px}.social-comments-heading{display:flex;justify-content:space-between;color:#f4ecdf;font:17px Georgia,serif}.social-comments-heading span{font:11px Arial,sans-serif;color:#d5a957;border:1px solid #5d4930;padding:3px 8px}
+.social-empty{color:#b9ad9c;font-size:12px;margin:10px 0 2px}.social-comment{padding:10px 0;border-bottom:1px solid #2b2419}.social-comment:last-child{border-bottom:0}
+.social-comment-meta{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.social-comment-meta strong{font-size:12px;color:#d5a957;font-weight:400}.social-comment-meta time{font-size:10px;color:#b9ad9c;white-space:nowrap}
+.social-comment p{margin:6px 0 0;font-size:13px;line-height:1.5;color:#e5d9c7;overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:620px){.artwork-social{padding:12px}.artwork-social-top{align-items:flex-start;flex-direction:column}}
+</style>
 </head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Home</a><a href="#gallery">Gallery</a><a href="#motifs">Licences</a><a href="#about">About the Artist</a></div><div class="tools"><a class="you-link" href="/vy.html">Your Tattoos</a><span class="language-label" aria-label="Website language">EN</span></div><button class="mobile-menu" aria-label="Open menu">☰</button></nav></header>
 <main id="home"><section class="hero"><a href="#home" class="hero-logo" aria-label="ART TO INK — domů"><span class="logo-art">ART</span><span class="logo-bottom"><svg class="logo-brush-to" viewBox="0 0 190 78" role="img" aria-label="TO"><path d="M8 15 Q42 7 77 5 Q67 14 52 17 L41 68 Q37 76 29 73 L43 17 Q25 20 8 23 Q3 22 8 15Z" fill="#e3262e"/><path d="M89 18 C102 2 131 0 146 13 C160 25 151 52 131 65 C111 78 89 69 84 51 C80 39 82 27 89 18Z" fill="none" stroke="#e3262e" stroke-width="13" stroke-linecap="round"/><path d="M93 20 C106 9 127 8 138 18 C149 28 142 48 128 58 C113 68 98 60 94 48 C91 39 91 28 99 20" fill="none" stroke="#e3262e" stroke-width="5" stroke-linecap="round"/><path d="M10 18 1 25 M33 63 25 76 M144 14 155 7 M92 62 84 72" fill="none" stroke="#e3262e" stroke-width="2.5" stroke-linecap="round"/></svg><span class="logo-ink">INK</span></span></a><nav class="hero-categories" aria-label="Artwork categories">
@@ -263,4 +281,70 @@ const categoryButtons=[...document.querySelectorAll('[data-category]')],activeCa
 categoryButtons.forEach(button=>button.addEventListener('click',()=>{categoryButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));if(activeCategory)activeCategory.textContent=button.dataset.category;document.getElementById('gallery').scrollIntoView({behavior:'smooth',block:'start'})}));
 const reset=document.getElementById('reset-filter');if(reset)reset.addEventListener('click',()=>{categoryButtons.forEach(b=>b.setAttribute('aria-pressed','false'));if(activeCategory)activeCategory.textContent='All artwork'});
 updateTier();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script id="artwork-social-script">
+(() => {
+  const api = window.supabase;
+  if (!api || typeof api.createClient !== 'function') return;
+  const db = api.createClient('https://tiruitlpdnasgyzgwmka.supabase.co','sb_publishable_eH-7JOUxNCbUibaaKulJTg_vKUZMMtT');
+  const visitorKey='art-to-ink-visitor-id';
+  let visitorId=localStorage.getItem(visitorKey);
+  if(!visitorId){visitorId=crypto.randomUUID();localStorage.setItem(visitorKey,visitorId);}
+  const escapeHtml=(value)=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const formatDate=(value)=>new Intl.DateTimeFormat('cs-CZ',{dateStyle:'medium'}).format(new Date(value));
+  document.querySelectorAll('.product[data-product-id]').forEach(card=>{
+    if(card.querySelector('.artwork-social')) return;
+    const id=card.dataset.productId;
+    const title=card.dataset.name||card.querySelector('h3')?.textContent?.trim()||'Tento návrh';
+    const section=document.createElement('section');
+    section.className='artwork-social';
+    section.setAttribute('aria-label','Lajky a komentáře: '+title);
+    section.innerHTML='<div class="artwork-social-top"><div><span class="social-eyebrow">COMMUNITY</span><h4>Co říkáš na tento návrh?</h4></div><button class="social-like" type="button" aria-pressed="false"><span aria-hidden="true">♡</span> To se mi líbí <b>…</b></button></div><form class="social-comment-form"><label>Tvoje jméno (nepovinné)<input name="visitor_name" maxlength="60" placeholder="Např. Jana"></label><label>Komentář<textarea name="body" rows="3" maxlength="1000" required placeholder="Napiš, co si o návrhu myslíš…"></textarea></label><button class="social-submit" type="submit">Přidat komentář →</button></form><p class="social-notice" role="status" hidden></p><p class="social-error" role="alert" hidden></p><div class="social-comments"><div class="social-comments-heading">Komentáře <span>…</span></div><div class="social-comment-list"><p class="social-empty">Načítám reakce…</p></div></div>';
+    section.addEventListener('click',event=>event.stopPropagation());
+    section.addEventListener('keydown',event=>event.stopPropagation());
+    card.appendChild(section);
+    const likeButton=section.querySelector('.social-like');
+    const likeCount=likeButton.querySelector('b');
+    const commentCount=section.querySelector('.social-comments-heading span');
+    const list=section.querySelector('.social-comment-list');
+    const notice=section.querySelector('.social-notice');
+    const error=section.querySelector('.social-error');
+    const form=section.querySelector('form');
+    let liked=false;
+    function message(text,isError=false){notice.hidden=isError;error.hidden=!isError;(isError?error:notice).textContent=text;}
+    function renderComments(rows){
+      commentCount.textContent=String(rows.length);
+      list.innerHTML=rows.length?rows.map(row=>'<article class="social-comment"><div class="social-comment-meta"><strong>'+escapeHtml(row.visitor_name)+'</strong><time datetime="'+escapeHtml(row.created_at)+'">'+escapeHtml(formatDate(row.created_at))+'</time></div><p>'+escapeHtml(row.body)+'</p></article>').join(''):'<p class="social-empty">Zatím tu nejsou komentáře. Buď první!</p>';
+    }
+    async function refresh(){
+      const [likes,own,comments]=await Promise.all([
+        db.from('artwork_likes').select('id',{count:'exact',head:true}).eq('design_id',id),
+        db.from('artwork_likes').select('id').eq('design_id',id).eq('visitor_id',visitorId).maybeSingle(),
+        db.from('artwork_comments').select('id,visitor_name,body,created_at').eq('design_id',id).order('created_at',{ascending:false}).limit(50)
+      ]);
+      if(likes.error||own.error||comments.error){message('Interakce se nepodařilo načíst. Obnov stránku a zkus to znovu.',true);list.innerHTML='<p class="social-empty">Komentáře se teď nepodařilo načíst.</p>';return;}
+      likeCount.textContent=String(likes.count||0);liked=Boolean(own.data);likeButton.classList.toggle('is-liked',liked);likeButton.setAttribute('aria-pressed',String(liked));likeButton.querySelector('span').textContent=liked?'♥':'♡';likeButton.childNodes[1].textContent=liked?' Líbí se ti ':' To se mi líbí ';
+      renderComments(comments.data||[]);
+    }
+    likeButton.addEventListener('click',async()=>{
+      likeButton.disabled=true;notice.hidden=true;error.hidden=true;
+      const wasLiked=liked;
+      const result=wasLiked?await db.from('artwork_likes').delete().eq('design_id',id).eq('visitor_id',visitorId):await db.from('artwork_likes').insert({design_id:id,visitor_id:visitorId});
+      likeButton.disabled=false;
+      if(result.error){message('Lajk se nepodařilo uložit. Zkus to znovu.',true);return;}
+      message(wasLiked?'Lajk odebrán.':'Děkujeme za lajk!');await refresh();
+    });
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();const fields=new FormData(form);const visitor_name=String(fields.get('visitor_name')||'').trim()||'Návštěvník';const body=String(fields.get('body')||'').trim();
+      if(!body)return;
+      const submit=form.querySelector('button[type=submit]');submit.disabled=true;submit.textContent='Ukládám…';notice.hidden=true;error.hidden=true;
+      const {data, error:insertError}=await db.from('artwork_comments').insert({design_id:id,visitor_name,body}).select('id,visitor_name,body,created_at').single();
+      submit.disabled=false;submit.textContent='Přidat komentář →';
+      if(insertError){message('Komentář se nepodařilo uložit. Zkus to znovu.',true);return;}
+      form.elements.body.value='';message('Komentář byl zveřejněn.');await refresh();
+    });
+    void refresh();
+  });
+})();
 </script></body></html>
