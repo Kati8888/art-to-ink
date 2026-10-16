@@ -14,6 +14,7 @@ export default function HomePage() {
           <a href="#gallery">Artwork</a>
           <a href="#licences">Studio licences</a>
           <a href="#artist">The artist</a>
+          <a href="/vy">Vy · Customer tattoos</a>
         </div>
         <details className="mobile-menu">
           <summary aria-label="Open navigation menu"><span></span><span></span><span></span></summary>
@@ -21,6 +22,7 @@ export default function HomePage() {
             <a href="#gallery">Artwork</a>
             <a href="#licences">Studio licences</a>
             <a href="#artist">The artist</a>
+            <a href="/vy">Vy · Customer tattoos</a>
           </div>
         </details>
         <div className="nav-tools" aria-label="Language and quick links">
