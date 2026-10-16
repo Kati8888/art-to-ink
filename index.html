@@ -50,6 +50,8 @@
 #gallery .product[data-product-id="aura-of-pete"] .product-image img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;filter:none!important;opacity:1!important;transform:scale(1.18)!important;transform-origin:center center;image-rendering:auto!important;}
 
 .drawer.aura-of-pete #detail-image img.bw-preview{filter:grayscale(1)!important;object-fit:contain!important;transform:none!important;}
+/* Consistent On skin framing across every artwork: show the placement photo broadly, without extreme zoom. */
+#detail-image img.skin-preview,.drawer.lion-heart #detail-image img.skin-preview,.drawer.mrs-beer #detail-image img.skin-preview,.drawer.war-mask #detail-image img.skin-preview,.drawer.aura-of-pete #detail-image img.skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:50% 50%!important;transform:scale(1.08)!important;transform-origin:center center;}
 /* Aura of Pete: show the complete artwork in the main Colour view; only On skin gets a close-up. */
 .drawer.aura-of-pete #detail-image img:not(.skin-preview){width:auto!important;height:auto!important;max-width:100%!important;max-height:72vh!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:none!important;}
 /* Aura of Pete: when On skin is selected, zoom into the skin-placement photos on the right side of the composite. */
