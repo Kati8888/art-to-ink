@@ -49,7 +49,7 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
       supabase.from("artwork_comments").select("id,visitor_name,body,created_at").eq("design_id", designId).order("created_at", { ascending: false }).limit(50),
     ]);
     if (likesResult.error || ownLikeResult.error || commentsResult.error) {
-      setError("Interakce se nepodařilo načíst. Zkuste stránku obnovit.");
+      setError("Could not load interactions. Please refresh the page.");
     } else {
       setLikeCount(likesResult.count ?? 0);
       setLiked(Boolean(ownLikeResult.data));
@@ -76,40 +76,40 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
     if (result.error) {
       setLiked(previousLiked);
       setLikeCount((count) => Math.max(0, count + (previousLiked ? 1 : -1)));
-      setNotice("Lajk se nepodařilo uložit. Zkus to prosím znovu.");
+      setNotice("Could not save your like. Please try again.");
     } else {
-      setNotice(previousLiked ? "Lajk odebrán." : "Děkujeme za lajk!");
+      setNotice(previousLiked ? "Like removed." : "Thanks for your like!");
     }
   }
 
   async function removeComment(comment: CommentRow) {
     const token = window.localStorage.getItem(deleteTokenKey(comment.id));
     if (!token) {
-      setNotice("Tento komentář lze odebrat pouze z prohlížeče, ze kterého byl odeslán.");
+      setNotice("This comment can only be removed from the browser it was posted from.");
       return;
     }
-    if (!window.confirm("Opravdu chceš tento komentář odebrat?")) return;
+    if (!window.confirm("Are you sure you want to remove this comment?")) return;
     const response = await fetch("/api/comments/delete", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: comment.id, token }),
     });
     const data = await response.json() as { error?: string; success?: boolean };
     if (!response.ok || !data.success) {
-      setNotice(data.error ?? "Komentář se nepodařilo odebrat.");
+      setNotice(data.error ?? "Could not remove the comment.");
       return;
     }
     window.localStorage.removeItem(deleteTokenKey(comment.id));
     setComments((current) => current.filter((item) => item.id !== comment.id));
-    setNotice("Komentář byl odebrán.");
+    setNotice("Comment removed.");
   }
 
   async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const cleanName = name.trim() || "Návštěvník";
+    const cleanName = name.trim() || "Visitor";
     const cleanBody = body.trim();
     if (!cleanBody) return;
     if (cleanBody.length > 1000 || cleanName.length > 60) {
-      setNotice("Jméno může mít nejvýše 60 a komentář 1 000 znaků.");
+      setNotice("Names can be up to 60 characters and comments up to 1,000 characters.");
       return;
     }
     setSending(true);
@@ -123,12 +123,12 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
       .select("id,visitor_name,body,created_at")
       .single();
     if (insertError) {
-      setNotice("Komentář se nepodařilo uložit. Zkus to prosím znovu.");
+      setNotice("Could not post your comment. Please try again.");
     } else if (data) {
       window.localStorage.setItem(deleteTokenKey(data.id), deleteToken);
       setComments((current) => [data as CommentRow, ...current]);
       setBody("");
-      setNotice("Komentář byl zveřejněn. Z tohoto prohlížeče ho můžeš kdykoli odebrat.");
+      setNotice("Your comment has been posted. You can remove it anytime from this browser.");
     }
     setSending(false);
   }
@@ -138,32 +138,32 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
       <div className="artwork-social-top">
         <div>
           <span className="social-eyebrow">COMMUNITY</span>
-          <h4>Co říkáš na tento návrh?</h4>
+          <h4>What do you think of this design?</h4>
         </div>
         <button className={`social-like ${liked ? "is-liked" : ""}`} type="button" onClick={toggleLike} disabled={!visitorId || loading} aria-pressed={liked}>
-          <span aria-hidden="true">{liked ? "♥" : "♡"}</span> {liked ? "Líbí se ti" : "To se mi líbí"} <b>{likeCount}</b>
+          <span aria-hidden="true">{liked ? "♥" : "♡"}</span> {liked ? "Liked" : "Like"} <b>{likeCount}</b>
         </button>
       </div>
       <form className="social-comment-form" onSubmit={postComment}>
         <label>
-          Tvoje jméno (nepovinné)
-          <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="Např. Jana" />
+          Your name (optional)
+          <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="e.g. Jane" />
         </label>
         <label>
-          Komentář
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={1000} rows={3} required placeholder="Napiš, co si o návrhu myslíš…" />
+          Comment
+          <textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={1000} rows={3} required placeholder="Share your thoughts on this design…" />
         </label>
-        <button className="social-submit" type="submit" disabled={sending || !body.trim()}>{sending ? "Ukládám…" : "Přidat komentář →"}</button>
+        <button className="social-submit" type="submit" disabled={sending || !body.trim()}>{sending ? "Posting…" : "Post comment →"}</button>
       </form>
       {notice && <p className="social-notice" role="status">{notice}</p>}
       {error && <p className="social-error" role="alert">{error}</p>}
       <div className="social-comments">
-        <div className="social-comments-heading">Komentáře <span>{comments.length}</span></div>
+        <div className="social-comments-heading">Commente <span>{comments.length}</span></div>
         {loading ? <p className="social-empty">Načítám reakce…</p> : comments.length === 0 ? <p className="social-empty">Zatím tu nejsou komentáře. Buď první!</p> : comments.map((comment) => (
           <article className="social-comment" key={comment.id}>
             <div className="social-comment-meta"><strong>{comment.visitor_name}</strong><time dateTime={comment.created_at}>{new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(comment.created_at))}</time></div>
             <p>{comment.body}</p>
-            {typeof window !== "undefined" && window.localStorage.getItem(deleteTokenKey(comment.id)) && <button className="social-remove-comment" type="button" onClick={() => void removeComment(comment)}>Odebrat komentář ×</button>}
+            {typeof window !== "undefined" && window.localStorage.getItem(deleteTokenKey(comment.id)) && <button className="social-remove-comment" type="button" onClick={() => void removeComment(comment)}>Remove comment ×</button>}
           </article>
         ))}
       </div>
