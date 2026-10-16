@@ -28,3 +28,34 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}b
 .design-card-media button,.gallery-tab,.design-card-copy button{touch-action:manipulation}
 @media(max-width:850px){.mobile-menu{display:block}.nav-tools{grid-column:2;grid-row:1}.mobile-menu{grid-column:3;grid-row:1}.nav-shell{grid-template-columns:minmax(0,1fr) auto auto}.nav-links{display:none}}
 @media(max-width:600px){.nav-shell{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding:0 12px}.nav-tools{gap:7px}.mobile-menu summary{width:42px;height:42px}.mobile-menu-panel{right:0;min-width:220px}.gallery-tab{min-height:44px;padding:10px 4px;font-size:10px}}
+
+
+/* Persistent community reactions under each tattoo design */
+.artwork-social{border-top:1px solid var(--line);padding:18px;background:linear-gradient(145deg,#12100c,#0a0908);display:grid;gap:15px}
+.artwork-social-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.artwork-social-top h4{font:20px/1.2 Georgia,serif;margin:6px 0 0;color:var(--paper)}
+.social-eyebrow{font-size:9px;letter-spacing:.2em;color:var(--gold)}
+.social-like{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);padding:10px 12px;color:var(--paper);font-size:11px;white-space:nowrap}
+.social-like span{font-size:20px;color:var(--red);line-height:1}
+.social-like b{color:var(--gold);font-weight:400}
+.social-like.is-liked{border-color:var(--red);background:#25100f}
+.social-like:disabled{opacity:.6;cursor:wait}
+.social-comment-form{display:grid;gap:10px}
+.social-comment-form label{display:grid;gap:6px;font-size:11px;color:var(--muted)}
+.social-comment-form input,.social-comment-form textarea{width:100%;min-width:0;background:#090908;border:1px solid var(--line);color:var(--paper);padding:11px;font:13px/1.5 Arial,sans-serif;resize:vertical}
+.social-comment-form input:focus,.social-comment-form textarea:focus{outline:1px solid var(--gold);border-color:var(--gold)}
+.social-submit{justify-self:start;background:var(--gold);color:#100d08;border:1px solid var(--gold);padding:11px 14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.social-submit:disabled{opacity:.55;cursor:wait}
+.social-notice,.social-error{font-size:12px;margin:0;color:var(--gold)}
+.social-error{color:#ffb2a8}
+.social-comments{border-top:1px solid var(--line);padding-top:12px}
+.social-comments-heading{display:flex;justify-content:space-between;align-items:center;color:var(--paper);font:17px Georgia,serif}
+.social-comments-heading span{font:11px Arial,sans-serif;color:var(--gold);border:1px solid var(--line);padding:3px 8px}
+.social-empty{color:var(--muted);font-size:12px;margin:12px 0 2px}
+.social-comment{padding:12px 0;border-bottom:1px solid #2b2419}
+.social-comment:last-child{border-bottom:0}
+.social-comment-meta{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.social-comment-meta strong{font-size:12px;color:var(--gold);font-weight:400}
+.social-comment-meta time{font-size:10px;color:var(--muted);white-space:nowrap}
+.social-comment p{margin:7px 0 0;font-size:13px;line-height:1.55;color:#e5d9c7;overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:620px){.artwork-social{padding:14px}.artwork-social-top{align-items:flex-start;flex-direction:column}.social-like{align-self:flex-start}}
