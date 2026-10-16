@@ -110,6 +110,9 @@
 .placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(17px,2.6vw,32px); }
 #detail-image::after { font-size:clamp(56px,8.7vw,126px); }
 #detail-image::before { font-size:clamp(56px,8.8vw,127px); }
+
+/* Slightly dim the homepage hero artwork without dimming the logo or navigation */
+.hero{background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)),url('assets/hero-gold-extravagance.png')!important;background-color:#080807!important;}
 </style>
 </head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Home</a><a href="#gallery">Gallery</a><a href="#motifs">Licences</a><a href="#about">About the Artist</a></div><div class="tools"><a class="you-link" href="/vy">Your Tattoos</a><span class="language-label" aria-label="Website language">EN</span></div><button class="mobile-menu" aria-label="Open menu">☰</button></nav></header>
