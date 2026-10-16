@@ -48,6 +48,8 @@
 #gallery .product[data-product-id="lion-heart"] .product-image img,
 #gallery .product[data-product-id="aura-of-pete"] .product-image img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;}
 
+/* Aura of Pete: when On skin is selected, zoom into the skin-placement photos on the right side of the composite. */
+.drawer.aura-of-pete #detail-image img.skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:72vh!important;object-fit:cover!important;object-position:100% 50%!important;transform:scale(1.75)!important;transform-origin:right center;}
 /* Lion Heart: make the lion visibly larger in the gallery and detail view. */
 #gallery .product[data-product-id="lion-heart"] .product-image img{transform:scale(1.58)!important;transform-origin:center center;}
 /* Lion Heart: zoom into the real skin-placement photos on the On skin variant, matching the close-up treatment used elsewhere. */
