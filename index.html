@@ -84,32 +84,32 @@
 /* Lion Heart On skin: zoom in enough to emphasize both tattoo placements in the mockup. */
 .drawer.lion-heart #detail-image img.skin-preview{object-fit:cover!important;object-position:50% 48%!important;transform:scale(1.28)!important;transform-origin:center center!important;}
 
-/* Horizontal ART TO INK watermark, 37% smaller and more transparent */
+/* Stacked ART / red TO / white INK watermark, reduced by 30% */
 .product-image, #detail-image, .preview, .placement-gallery figure, .detail-gallery figure { position:relative; }
 .product-image::after, #detail-image::after, .preview::after, .placement-gallery figure::after, .detail-gallery figure::after {
-  content:"ART      INK";
+  content:"ART\\A INK";
   white-space:pre;
   position:absolute; z-index:4; left:50%; top:50%; transform:translate(-50%,-50%);
-  width:100%; padding:0; color:rgba(255,255,255,.24); border:0; background:transparent;
-  text-align:center; font-family:Georgia,'Times New Roman',serif; font-size:clamp(34px,5.7vw,83px);
-  font-weight:700; line-height:1; letter-spacing:-.035em; text-shadow:0 2px 5px rgba(0,0,0,.58);
+  width:98%; padding:0; color:rgba(255,255,255,.24); border:0; background:transparent;
+  text-align:center; font-family:Georgia,'Times New Roman',serif; font-size:clamp(38px,6.3vw,92px);
+  font-weight:700; line-height:.92; letter-spacing:-.035em; text-shadow:0 2px 5px rgba(0,0,0,.58);
   pointer-events:none; user-select:none;
 }
 .product-image::before, #detail-image::before, .preview::before, .placement-gallery figure::before, .detail-gallery figure::before {
-  content:"TO"; position:absolute; z-index:5; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-8deg);
+  content:"TO"; position:absolute; z-index:5; left:50%; top:61%; transform:translate(-50%,-50%) rotate(-8deg);
   color:rgba(255,16,54,.42); background:transparent; border:0; padding:0;
   font-family:Georgia,'Times New Roman',serif; font-style:italic; font-weight:900;
-  font-size:clamp(34px,5.5vw,80px); line-height:1; letter-spacing:-.07em;
+  font-size:clamp(38px,6.1vw,90px); line-height:1; letter-spacing:-.07em;
   text-shadow:0 2px 6px rgba(0,0,0,.58); pointer-events:none; user-select:none;
 }
-.product-image::after { font-size:clamp(29px,4.3vw,60px); }
-.product-image::before { font-size:clamp(29px,4.4vw,61px); }
-.preview::after { font-size:clamp(9px,1.15vw,14px); }
-.preview::before { font-size:clamp(9px,1.2vw,15px); }
-.placement-gallery figure::after,.detail-gallery figure::after { font-size:clamp(15px,2.3vw,28px); }
-.placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(15px,2.4vw,29px); }
-#detail-image::after { font-size:clamp(50px,7.8vw,113px); }
-#detail-image::before { font-size:clamp(50px,7.9vw,114px); }
+.product-image::after { font-size:clamp(32px,4.7vw,67px); }
+.product-image::before { font-size:clamp(32px,4.8vw,68px); }
+.preview::after { font-size:clamp(10px,1.3vw,16px); }
+.preview::before { font-size:clamp(10px,1.4vw,17px); }
+.placement-gallery figure::after,.detail-gallery figure::after { font-size:clamp(17px,2.5vw,31px); }
+.placement-gallery figure::before,.detail-gallery figure::before { font-size:clamp(17px,2.6vw,32px); }
+#detail-image::after { font-size:clamp(56px,8.7vw,126px); }
+#detail-image::before { font-size:clamp(56px,8.8vw,127px); }
 </style>
 </head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Home</a><a href="#gallery">Gallery</a><a href="#motifs">Licences</a><a href="#about">About the Artist</a></div><div class="tools"><a class="you-link" href="/vy">Your Tattoos</a><span class="language-label" aria-label="Website language">EN</span></div><button class="mobile-menu" aria-label="Open menu">☰</button></nav></header>
