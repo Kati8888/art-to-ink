@@ -20,6 +20,7 @@ export default function VyPage() {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formElement = e.currentTarget;
     if (!file || !permission) return;
     setBusy(true); setStatus("");
     const body = new FormData();
@@ -31,7 +32,7 @@ export default function VyPage() {
       if (!response.ok) throw new Error(result.error || "Fotku se nepodařilo nahrát.");
       setStatus("Děkujeme! Fotka byla odeslána ke kontrole. Zveřejníme ji až po schválení.");
       setFile(null); setCaption(""); setName(""); setPermission(false);
-      (e.currentTarget as HTMLFormElement).reset();
+      formElement.reset();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Nahrání se nepodařilo. Zkus to prosím znovu.");
     } finally { setBusy(false); }
