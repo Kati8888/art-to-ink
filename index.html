@@ -49,9 +49,8 @@
 /* Lion Heart: make the lion visibly larger in the gallery and detail view. */
 #gallery .product[data-product-id="lion-heart"] .product-image img{transform:scale(1.58)!important;transform-origin:center center;}
 /* Lion Heart: zoom into the real skin-placement photos on the On skin variant, matching the close-up treatment used elsewhere. */
-.drawer.lion-heart .skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:100% 50%!important;transform:scale(1.9)!important;transform-origin:right center;}
-/* Lion Heart: keep the supplied three-part composite as one detail image; hide only its variant strip. */
-.drawer.lion-heart .preview-strip{display:none!important;}
+#detail-image img.skin-preview,.drawer.lion-heart #detail-image img.skin-preview{width:100%!important;height:100%!important;max-width:none!important;max-height:72vh!important;object-fit:cover!important;object-position:100% 50%!important;transform:scale(1.9)!important;transform-origin:right center;}
+/* Lion Heart: restore the variant buttons and zoom only the On skin view into the right-hand tattoo photos. */
 .drawer.lion-heart #detail-image img{transform:none!important;transform-origin:center center;object-fit:contain!important;max-width:100%!important;max-height:72vh!important;width:auto!important;height:auto!important;}
 </style></head>
 <body><div class="topline"></div><header class="header"><nav class="nav"><a href="#home" class="brand">ART <i>TO</i> INK<small>KATEŘINA POHNETALOVÁ</small></a><div class="menu"><a href="#home">Domů</a><a href="#gallery">Galerie</a><a href="#motifs">Tetovací motivy</a><a href="#collections">Kolekce</a><a href="#about">O mně</a><a href="#contact">Kontakt</a></div><div class="tools"><button class="icon" aria-label="Hledat">⌕</button><button class="icon" aria-label="Košík">♧</button><button class="lang" id="lang">CZ⌄</button></div><button class="mobile-menu" aria-label="Menu">☰</button></nav></header>
