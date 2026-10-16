@@ -23,6 +23,7 @@
 
 /* MRS Beer: shift the On skin preview toward the back/torso placement photo. */
 .drawer.mrs-beer #detail-image img.skin-preview{object-position:88% 50%!important;transform:scale(1.35)!important;transform-origin:right center;}
+.drawer.war-mask #detail-image img.skin-preview{object-position:50% 100%!important;transform:scale(1.5)!important;transform-origin:center bottom;}
 /* Avoid unrelated artwork: use the Assimilation asset consistently. */
 .detail-image{background:#050505}.detail-image>img{object-fit:contain;object-position:center;max-width:100%;max-height:76vh;width:100%;height:auto}.preview img{object-fit:contain;background:#050505}.preview .skin-thumb{object-fit:cover;object-position:center}.skin-preview{object-fit:cover!important;object-position:center!important}
 
@@ -167,7 +168,7 @@ document.querySelectorAll('.product[data-image]').forEach(card=>{const openCard=
     }
   };
   nameEl.textContent=activeProduct.name;
-  drawer.classList.toggle('aura-of-pete',card.dataset.productId==='aura-of-pete');drawer.classList.toggle('lion-heart',card.dataset.productId==='lion-heart');drawer.classList.toggle('mrs-beer',card.dataset.productId==='mrs-beer');
+  drawer.classList.toggle('aura-of-pete',card.dataset.productId==='aura-of-pete');drawer.classList.toggle('lion-heart',card.dataset.productId==='lion-heart');drawer.classList.toggle('mrs-beer',card.dataset.productId==='mrs-beer');drawer.classList.toggle('war-mask',card.dataset.productId==='war-mask');
   const gallery=document.getElementById('placement-gallery');
   if(gallery){gallery.innerHTML='';gallery.style.display='none';}
   imageEl.style.display='flex';
