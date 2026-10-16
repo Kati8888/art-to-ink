@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080807">
+<title>Your Tattoos — ART TO INK</title>
+<style>
+:root{--bg:#080807;--panel:#11110f;--cream:#f4ecdf;--muted:#b9ad9c;--gold:#d5a957;--red:#e3262e;--line:#574632}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.6 Arial,sans-serif}a{color:inherit;text-decoration:none}.header{border-bottom:1px solid #3c3023;background:#080807}.nav{max-width:1320px;margin:auto;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font:30px/.9 Georgia,serif;letter-spacing:-1px}.brand i{color:var(--red)}.brand small{display:block;margin-top:9px;color:var(--muted);font:9px Arial,sans-serif;letter-spacing:3px}.back{border:1px solid var(--gold);padding:9px 15px;font-size:11px;letter-spacing:1px;text-transform:uppercase}.wrap{max-width:1160px;margin:auto;padding:44px 24px 70px}.eyebrow{color:var(--gold);letter-spacing:3px;text-transform:uppercase;font-size:11px}.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:center}.hero-image{width:100%;height:min(68vw,690px);min-height:420px;object-fit:cover;object-position:center 35%;border:1px solid var(--line);background:#14110c}.hero h1{font:clamp(42px,5vw,72px)/1 Georgia,serif;margin:12px 0 20px}.hero p{color:var(--muted);max-width:510px}.gold{color:var(--gold)}.upload{margin-top:54px;padding:32px;border:1px solid var(--line);background:linear-gradient(135deg,#12110e,#090908)}.upload h2{font:36px/1.1 Georgia,serif;margin:8px 0 12px}.upload p{color:var(--muted)}.drop{margin:24px 0;border:1px dashed #9a7842;padding:28px;text-align:center;background:#0b0b09}.drop input{display:block;width:100%;max-width:450px;margin:15px auto;color:var(--cream)}.btn{display:inline-block;background:var(--gold);color:#100d08;border:0;padding:14px 22px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:bold;cursor:pointer}.btn:disabled{opacity:.45;cursor:not-allowed}.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:20px}.preview-grid img{width:100%;height:190px;object-fit:cover;border:1px solid var(--line)}.note{font-size:12px;color:var(--muted)}.footer{border-top:1px solid var(--line);padding:24px;text-align:center;color:var(--muted);font-size:12px}@media(max-width:760px){.hero{grid-template-columns:1fr}.hero-image{height:100vw;min-height:0;max-height:620px;object-position:center 30%}.wrap{padding:28px 16px 50px}.upload{padding:22px}.nav{padding:18px 16px}.brand{font-size:25px}}
+</style>
+</head>
+<body>
+<header class="header"><nav class="nav"><a class="brand" href="/"><span>ART <i>TO</i> INK</span><small>KATEŘINA POHNETALOVÁ</small></a><a class="back" href="/">← Back to gallery</a></nav></header>
+<main class="wrap">
+<section class="hero">
+<img class="hero-image" src="/assets/Luxusní%20tetovací%20banner%20s%20portrétem.png" alt="ART TO INK tattoo artwork inspiration">
+<div><div class="eyebrow">ART TO INK · COMMUNITY</div><h1>Your tattoo.<br><span class="gold">Your story.</span></h1><p>Have you had one of my designs tattooed? Share a photo and show how the artwork became part of your story.</p><p class="note">Please upload only photos you have the right to share. Avoid including other people without their permission.</p><a class="btn" href="#upload">Share your tattoo ↓</a></div>
+</section>
+<section class="upload" id="upload"><div class="eyebrow">Community gallery</div><h2>Had your tattoo done?</h2><p>Upload a photo of your tattoo here. Select one or more images to preview them before sharing.</p>
+<div class="drop"><label for="photos"><strong>Choose your tattoo photos</strong></label><input id="photos" type="file" accept="image/*" multiple><div id="count" class="note">JPG, PNG or WebP · Multiple photos allowed</div><div id="previews" class="preview-grid"></div></div>
+<button id="share" class="btn" type="button" disabled>Prepare photos</button>
+<p id="status" class="note" aria-live="polite">For now, selected photos are previewed only in your browser; they are not published or uploaded to a server.</p>
+</section>
+</main>
+<footer class="footer">© ART TO INK · Kateřina Pohnetalová · <a href="/">Back to ART TO INK</a></footer>
+<script>
+const input=document.getElementById('photos'), previews=document.getElementById('previews'), count=document.getElementById('count'), share=document.getElementById('share'), status=document.getElementById('status');
+let urls=[];
+input.addEventListener('change',()=>{urls.forEach(URL.revokeObjectURL);urls=[];previews.replaceChildren();const files=[...input.files||[]].filter(f=>f.type.startsWith('image/'));count.textContent=files.length?files.length+' photo(s) selected':'JPG, PNG or WebP · Multiple photos allowed';share.disabled=!files.length;status.textContent='Preview only: your photos have not been uploaded or published.';files.forEach(file=>{const url=URL.createObjectURL(file);urls.push(url);const img=document.createElement('img');img.src=url;img.alt='Your selected tattoo photo';previews.appendChild(img)});});
+share.addEventListener('click',()=>{status.textContent='The preview is ready, but public submissions are not enabled yet. A secure upload destination and moderation approval are needed before photos can appear on the website.';});
+</script>
+</body></html>
