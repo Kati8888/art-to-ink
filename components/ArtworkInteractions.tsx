@@ -158,10 +158,10 @@ export default function ArtworkInteractions({ designId, designTitle }: Props) {
       {notice && <p className="social-notice" role="status">{notice}</p>}
       {error && <p className="social-error" role="alert">{error}</p>}
       <div className="social-comments">
-        <div className="social-comments-heading">Commente <span>{comments.length}</span></div>
-        {loading ? <p className="social-empty">Načítám reakce…</p> : comments.length === 0 ? <p className="social-empty">Zatím tu nejsou komentáře. Buď první!</p> : comments.map((comment) => (
+        <div className="social-comments-heading" >Comments <span>{comments.length}</span></div>
+        {loading ? <p className="social-empty">Loading reactions…</p> : comments.length === 0 ? <p className="social-empty">No comments yet. Be the first!</p> : comments.map((comment) => (
           <article className="social-comment" key={comment.id}>
-            <div className="social-comment-meta"><strong>{comment.visitor_name}</strong><time dateTime={comment.created_at}>{new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(comment.created_at))}</time></div>
+            <div className="social-comment-meta"><strong>{comment.visitor_name}</strong><time dateTime={comment.created_at}>{new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(new Date(comment.created_at))}</time></div>
             <p>{comment.body}</p>
             {typeof window !== "undefined" && window.localStorage.getItem(deleteTokenKey(comment.id)) && <button className="social-remove-comment" type="button" onClick={() => void removeComment(comment)}>Remove comment ×</button>}
           </article>
