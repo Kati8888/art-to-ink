@@ -27,6 +27,9 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
   const deliveryReady = isSecureDownloadConfigured(design.id);
   const [placementNote, setPlacementNote] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
@@ -34,11 +37,12 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   async function checkout() {
     setError("");
     if (!intendedUseConfirmed) { setError("Please confirm the intended use before checkout."); return; }
+    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) { setError("Please enter your name, phone number and email so we can contact you if delivery fails."); return; }
     setBusy(true);
     try {
       const response = await fetch("/api/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "design", productSlug: design.slug, size, artworkFormat, intendedUseConfirmed, intendedUse, placementNote }),
+        body: JSON.stringify({ type: "design", productSlug: design.slug, size, artworkFormat, intendedUseConfirmed, intendedUse, placementNote, customerName: customerName.trim().slice(0, 120), customerPhone: customerPhone.trim().slice(0, 40), customerEmail: customerEmail.trim().slice(0, 254) }),
       });
       const data: { url?: string; error?: string } = await response.json();
       if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
@@ -63,6 +67,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
         <label>Artwork size and file <select value={size} onChange={(event) => setSize(event.target.value as typeof size)}>{DESIGN_SIZE_ORDER.map((key) => <option key={key} value={key}>{design.sizes[key].label} — {formatEuro(design.sizes[key].price)}</option>)}</select></label>
         <p className="muted" style={{ margin: 0 }}>{design.sizes[size].details}</p>
         <label>File format <select value={artworkFormat} onChange={(event) => setArtworkFormat(event.target.value as "colour" | "blackAndWhite")}><option value="colour">Colour PNG</option><option value="blackAndWhite">Black &amp; white PNG</option></select></label>
+        <fieldset className="order-contact-fields"><legend>Order contact details</legend><p>We use these details for your order and to contact you if payment or delivery has a problem.</p><label>Full name <input required autoComplete="name" value={customerName} onChange={(event) => setCustomerName(event.target.value)} maxLength={120} /></label><label>Email address <input required type="email" autoComplete="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} maxLength={254} /></label><label>Phone number <input required type="tel" autoComplete="tel" value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} maxLength={40} /></label></fieldset>
         <label>Intended use <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)}><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference</option></select></label>
         <label>Optional placement note <textarea rows={2} maxLength={500} value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} placeholder="e.g. outer forearm (optional)" /></label>
         <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
