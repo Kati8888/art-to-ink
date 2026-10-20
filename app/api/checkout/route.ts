@@ -93,6 +93,12 @@ export async function POST(request: Request) {
     if (!allowedIntents.has(customerIntent)) return NextResponse.json({ error: "Choose a valid intended use." }, { status: 400 });
 
     const placementNote = String(body.placementNote ?? "").trim().slice(0, 500);
+    const customerName = String(body.customerName ?? "").trim().slice(0, 120);
+    const customerPhone = String(body.customerPhone ?? "").trim().slice(0, 40);
+    const customerEmail = String(body.customerEmail ?? "").trim().slice(0, 254);
+    if (!customerName || !customerPhone || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(customerEmail)) {
+      return NextResponse.json({ error: "Enter your name, a valid email address and phone number before checkout." }, { status: 400 });
+    }
     const objectPath = getSecureDownloadObject(design.id, size, format);
     if (!objectPath) {
       return NextResponse.json({ error: "Secure delivery is not configured for this design variant." }, { status: 503 });
@@ -117,6 +123,7 @@ export async function POST(request: Request) {
         },
       }],
       customer_creation: "always",
+      customer_email: customerEmail,
       billing_address_collection: "required",
       custom_fields: [
         {
@@ -142,6 +149,9 @@ export async function POST(request: Request) {
         variantId: `var_${size}`,
         customerIntent,
         placementNote,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail,
         artworkFormat: format,
         product_slug: design.slug,
         size,
