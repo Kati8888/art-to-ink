@@ -20,6 +20,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
   const [intendedUse, setIntendedUse] = useState("personal-tattoo");
   const [placementNote, setPlacementNote] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const deliveryReady = isSecureDownloadConfigured(product.id);
@@ -38,6 +41,10 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
       setError("Please confirm the intended use before checkout.");
       return;
     }
+    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) {
+      setError("Please enter your name, phone number and email so we can contact you if delivery fails.");
+      return;
+    }
     setBusy(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -52,6 +59,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
           intendedUseConfirmed: true,
           intendedUse,
           placementNote: placementNote.trim().slice(0, 500),
+          customerName: customerName.trim().slice(0, 120),
+          customerPhone: customerPhone.trim().slice(0, 40),
+          customerEmail: customerEmail.trim().slice(0, 254),
         }),
       });
       const data: { url?: string; error?: string } = await response.json();
@@ -165,6 +175,13 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
           </div>
 
           <div>
+            <div className="mb-5 border border-zinc-800 bg-zinc-950 p-4">
+              <h3 className="mb-3 text-xs uppercase tracking-widest text-zinc-400">Order contact details</h3>
+              <p className="mb-3 text-xs text-zinc-500">We use these details for your order and to contact you if the payment or download delivery has a problem.</p>
+              <label className="mb-3 block text-sm text-zinc-300">Full name<input required autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={120} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
+              <label className="mb-3 block text-sm text-zinc-300">Email address<input required type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
+              <label className="block text-sm text-zinc-300">Phone number<input required type="tel" autoComplete="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={40} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
+            </div>
             <label className="mb-4 block text-sm text-zinc-300">
               Intended use
               <select
