@@ -58,7 +58,8 @@ export async function POST(request: Request) {
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
       customer_email: email,
-      customer_name: session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
+      customer_name: session.metadata?.customer_name ?? session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
+      customer_phone: session.metadata?.customer_phone ?? null,
       purchase_type: purchaseType,
       product_slug: session.metadata?.productId ?? session.metadata?.product_slug ?? null,
       variant: (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? null),
@@ -141,13 +142,13 @@ export async function POST(request: Request) {
       const item = purchaseType === "license"
         ? `Studio licence: ${session.metadata?.license_id ?? "ART TO INK licence"}`
         : `${session.metadata?.product_slug ?? session.metadata?.productId ?? "Tattoo artwork"} · ${session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "design"} · ${session.metadata?.artworkFormat === "blackAndWhite" ? "black & white" : "colour"}`;
-      const ownerHtml = `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>New paid order · ART TO INK</h1><p>A Stripe payment has been confirmed.</p><p><strong>Item:</strong> ${item}</p><p><strong>Amount:</strong> ${amount} ${currency}</p><p><strong>Customer:</strong> ${email}</p><p><strong>Intended use:</strong> ${session.metadata?.customerIntent ?? session.metadata?.intended_use ?? "not specified"}</p><p><strong>Checkout session:</strong> ${session.id}</p></div>`;
+      const ownerHtml = `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>New paid order · ART TO INK</h1><p>A Stripe payment has been confirmed.</p><p><strong>Item:</strong> ${item}</p><p><strong>Amount:</strong> ${amount} ${currency}</p><p><strong>Customer:</strong> ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"} (${email})</p><p><strong>Phone:</strong> ${session.metadata?.customer_phone ?? "Not provided"}</p><p><strong>Intended use:</strong> ${session.metadata?.customerIntent ?? session.metadata?.intended_use ?? "not specified"}</p><p><strong>Checkout session:</strong> ${session.id}</p></div>`;
       const { error: ownerEmailError } = await resend.emails.send({
         from,
         to: ownerEmail,
         subject: `Nová zaplacená objednávka ART TO INK · ${amount} ${currency}`,
         html: ownerHtml,
-        text: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${email}. Session: ${session.id}.`,
+        text: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"}. E-mail: ${email}. Telefon: ${session.metadata?.customer_phone ?? "Not provided"}. Session: ${session.id}.`,
       }, { idempotencyKey: `art-to-ink-owner-order-${session.id}` });
       if (ownerEmailError) console.error("ART TO INK owner notification failed:", ownerEmailError.message);
     } catch (ownerNotificationError) {
