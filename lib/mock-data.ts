@@ -5,28 +5,28 @@ const image = (path: string) => `https://raw.githubusercontent.com/Kati8888/art-
 const sharedSizes = {
   mini: {
     price: 9,
-    label: "Mini Digital Design",
-    details: "Compact digital design file for personal reference.",
+    label: "Mini — 1,200 px",
+    details: "Digital PNG export with a 1,200 px longest edge. Approx. 10.2 cm on the longest edge at 300 DPI; the other edge follows the artwork's original proportions.",
   },
   small: {
     price: 19,
-    label: "Small Digital Design",
-    details: "Small-format digital design file.",
+    label: "Small — 2,000 px",
+    details: "Digital PNG export with a 2,000 px longest edge. Approx. 16.9 cm on the longest edge at 300 DPI; the other edge follows the artwork's original proportions.",
   },
   detailed: {
     price: 39,
-    label: "Detailed Design",
-    details: "High-detail design file for careful placement planning.",
+    label: "Detailed — 3,200 px",
+    details: "Digital PNG export with a 3,200 px longest edge. Approx. 27.1 cm on the longest edge at 300 DPI; the other edge follows the artwork's original proportions.",
   },
   premium: {
     price: 79,
-    label: "Premium Design Bundle",
-    details: "Premium design package for professional review.",
+    label: "Premium — 4,000 px",
+    details: "Digital PNG export with a 4,000 px longest edge. Approx. 33.9 cm on the longest edge at 300 DPI; the other edge follows the artwork's original proportions.",
   },
   collection: {
     price: 149,
-    label: "Complete Digital Design Collection",
-    details: "Complete digital design collection.",
+    label: "Complete Size Collection — 1,200 / 2,000 / 3,200 / 4,000 px",
+    details: "Intended package: all four PNG size exports (1,200, 2,000, 3,200 and 4,000 px longest edge), each preserving the artwork's original proportions. Physical dimensions above are estimates at 300 DPI.",
   },
 };
 
