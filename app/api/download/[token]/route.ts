@@ -35,7 +35,9 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
     if (signError || !signed?.signedUrl) throw signError ?? new Error("Unable to create secure storage access.");
     const fileResponse = await fetch(signed.signedUrl, { cache: "no-store" });
     if (!fileResponse.ok || !fileResponse.body) throw new Error("Secure file retrieval failed.");
-    const headers = new Headers({ "Content-Type": fileResponse.headers.get("content-type") ?? "application/octet-stream", "Content-Disposition": 'attachment; filename="art-to-ink-design.png"', "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" });
+    const isCollection = order.download_object_path.toLowerCase().endsWith(".zip");
+    const fileName = isCollection ? "art-to-ink-assimilation-collection.zip" : "art-to-ink-design.png";
+    const headers = new Headers({ "Content-Type": isCollection ? "application/zip" : (fileResponse.headers.get("content-type") ?? "image/png"), "Content-Disposition": `attachment; filename="${fileName}"`, "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" });
     const size = fileResponse.headers.get("content-length");
     if (size) headers.set("Content-Length", size);
     return new Response(fileResponse.body, { status: 200, headers });
