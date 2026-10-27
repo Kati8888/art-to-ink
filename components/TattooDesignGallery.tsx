@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductDetail from "@/components/ProductDetail";
 import ArtworkInteractions from "@/components/ArtworkInteractions";
 import type { TattooDesign } from "@/lib/products";
-import { isSecureDownloadConfigured } from "@/lib/secure-assets";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 
 type MediaState = "colour" | "bw" | "skin";
@@ -25,13 +24,13 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
   const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
-  const deliveryReady = isSecureDownloadConfigured(design.id);
+  useEffect(() => {\n    let cancelled = false;\n    setCheckingDelivery(true);\n    setDeliveryReady(false);\n    const query = new URLSearchParams({ productId: design.id, size, artworkFormat });\n    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })\n      .then((response) => response.ok ? response.json() : { available: false })\n      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })\n      .catch(() => { if (!cancelled) setDeliveryReady(false); })\n      .finally(() => { if (!cancelled) setCheckingDelivery(false); });\n    return () => { cancelled = true; };\n  }, [design.id, size, artworkFormat]);
   const [placementNote, setPlacementNote] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [deliveryReady, setDeliveryReady] = useState(false);\n  const [checkingDelivery, setCheckingDelivery] = useState(true);
   const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
 
   async function checkout() {
@@ -72,8 +71,8 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
         <label>Optional placement note <textarea rows={2} maxLength={500} value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} placeholder="e.g. outer forearm (optional)" /></label>
         <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
         {error && <p className="error-text" role="alert">{error}</p>}
-        {!deliveryReady && <p className="notice" role="status">Secure original files are still being prepared for this design. Checkout is temporarily unavailable; no payment will be taken.</p>}
-        <button type="button" className="button" disabled={busy || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : !deliveryReady ? "Coming soon · files being prepared" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
+        {checkingDelivery ? <p className="notice" role="status">Checking secure file availability…</p> : !deliveryReady ? <p className="notice" role="status">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
+        <button type="button" className="button" disabled={busy || checkingDelivery || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
       </div>
     </div>
     <ArtworkInteractions designId={design.id} designTitle={design.title} />
