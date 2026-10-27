@@ -55,8 +55,8 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
 
   return <article className="design-card">
     <div className="design-card-media">
-      {/* Consistent 250px image frame; artwork is cropped proportionally, never stretched. */}
-      <button type="button" onClick={onOpen} aria-label={`View ${design.title} details`} className="block w-full text-left"><div className="relative block w-full h-[350px] min-h-[350px] overflow-hidden bg-zinc-900"><img className={`absolute inset-0 block w-full h-full ${design.id === "lion-heart" ? "lion-heart-primary object-contain scale-[1.12]" : "object-cover object-top"} ${design.id === "sea-dragons" ? "assimilation-artwork" : ""}`} src={currentMedia} alt={`${design.title} — ${mediaLabels[state]}`} /></div></button>
+      {/* Consistent image frame; show the full artwork without cropping or stretching. */}
+      <button type="button" onClick={onOpen} aria-label={`View ${design.title} details`} className="block w-full text-left"><div className="relative block w-full h-[350px] min-h-[350px] overflow-hidden bg-zinc-900"><img className={`absolute inset-0 block w-full h-full ${design.id === "lion-heart" ? "lion-heart-primary object-contain scale-[1.12]" : "object-contain object-center p-2"} ${design.id === "sea-dragons" ? "assimilation-artwork" : ""}`} src={currentMedia} alt={`${design.title} — ${mediaLabels[state]}`} /></div></button>
       <div className="gallery-tabs" role="group" aria-label={`${design.title} image view`}>
         {(Object.keys(mediaLabels) as MediaState[]).map((item) => <button key={item} type="button" className="gallery-tab" aria-pressed={state === item} onClick={() => setState(item)}>{mediaLabels[item]}</button>)}
       </div>
