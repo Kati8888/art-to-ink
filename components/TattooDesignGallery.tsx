@@ -24,14 +24,28 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
   const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
-  useEffect(() => {\n    let cancelled = false;\n    setCheckingDelivery(true);\n    setDeliveryReady(false);\n    const query = new URLSearchParams({ productId: design.id, size, artworkFormat });\n    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })\n      .then((response) => response.ok ? response.json() : { available: false })\n      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })\n      .catch(() => { if (!cancelled) setDeliveryReady(false); })\n      .finally(() => { if (!cancelled) setCheckingDelivery(false); });\n    return () => { cancelled = true; };\n  }, [design.id, size, artworkFormat]);
+
   const [placementNote, setPlacementNote] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);\n  const [deliveryReady, setDeliveryReady] = useState(false);\n  const [checkingDelivery, setCheckingDelivery] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [deliveryReady, setDeliveryReady] = useState(false);
+  const [checkingDelivery, setCheckingDelivery] = useState(true);
   const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
+  useEffect(() => {
+    let cancelled = false;
+    setCheckingDelivery(true);
+    setDeliveryReady(false);
+    const query = new URLSearchParams({ productId: design.id, size, artworkFormat });
+    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { available: false })
+      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })
+      .catch(() => { if (!cancelled) setDeliveryReady(false); })
+      .finally(() => { if (!cancelled) setCheckingDelivery(false); });
+    return () => { cancelled = true; };
+  }, [design.id, size, artworkFormat]);
 
   async function checkout() {
     setError("");
