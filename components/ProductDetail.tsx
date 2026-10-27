@@ -22,9 +22,22 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [busy, setBusy] = useState(false);\n  const [deliveryReady, setDeliveryReady] = useState(false);\n  const [checkingDelivery, setCheckingDelivery] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [deliveryReady, setDeliveryReady] = useState(false);
+  const [checkingDelivery, setCheckingDelivery] = useState(true);
   const [error, setError] = useState("");
-  useEffect(() => {\n    let cancelled = false;\n    setCheckingDelivery(true);\n    setDeliveryReady(false);\n    const query = new URLSearchParams({ productId: product.id, size, artworkFormat });\n    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })\n      .then((response) => response.ok ? response.json() : { available: false })\n      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })\n      .catch(() => { if (!cancelled) setDeliveryReady(false); })\n      .finally(() => { if (!cancelled) setCheckingDelivery(false); });\n    return () => { cancelled = true; };\n  }, [product.id, size, artworkFormat]);
+  useEffect(() => {
+    let cancelled = false;
+    setCheckingDelivery(true);
+    setDeliveryReady(false);
+    const query = new URLSearchParams({ productId: product.id, size, artworkFormat });
+    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { available: false })
+      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })
+      .catch(() => { if (!cancelled) setDeliveryReady(false); })
+      .finally(() => { if (!cancelled) setCheckingDelivery(false); });
+    return () => { cancelled = true; };
+  }, [product.id, size, artworkFormat]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
