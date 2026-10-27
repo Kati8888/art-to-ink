@@ -51,15 +51,21 @@ export async function POST(request: Request) {
       const licenseId = String(body.licenseId ?? "");
       const license = LICENSES.find((item) => item.id === licenseId);
       if (!license) return NextResponse.json({ error: "Choose a valid licence." }, { status: 400 });
-      const priceId = process.env[license.stripePriceEnv];
-      if (!priceId || !priceId.startsWith("price_")) {
-        return NextResponse.json({ error: "This licence is not available for checkout yet. The verified Stripe recurring price is not configured." }, { status: 503 });
-      }
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
-        line_items: [{ price: priceId, quantity: 1 }],
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: "eur",
+            unit_amount: Math.round(license.price * 100),
+            recurring: { interval: "year" },
+            product_data: {
+              name: license.title,
+              description: `${license.allowance}. ${license.audience}. ${license.description}`,
+            },
+          },
+        }],
         billing_address_collection: "required",
-        customer_creation: undefined,
         success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/`,
         metadata: { purchase_type: "license", license_id: license.id, intended_use_confirmed: "true" },
