@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     const customerName = String(body.customerName ?? "").trim().slice(0, 120);
     const customerPhone = String(body.customerPhone ?? "").trim().slice(0, 40);
     const customerEmail = String(body.customerEmail ?? "").trim().slice(0, 254);
-    if (!customerName || !customerPhone || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(customerEmail)) {
+    if (!customerName || !customerPhone || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       return NextResponse.json({ error: "Enter your name, a valid email address and phone number before checkout." }, { status: 400 });
     }
     const objectPath = getSecureDownloadObject(design.id, size, format);
