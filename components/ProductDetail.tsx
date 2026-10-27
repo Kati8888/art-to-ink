@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { TattooDesign, DesignSize } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
-import { isSecureDownloadConfigured } from "@/lib/secure-assets";
 
 type MediaView = keyof TattooDesign["media"];
 
@@ -23,9 +22,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [deliveryReady, setDeliveryReady] = useState(false);\n  const [checkingDelivery, setCheckingDelivery] = useState(true);
   const [error, setError] = useState("");
-  const deliveryReady = isSecureDownloadConfigured(product.id);
+  useEffect(() => {\n    let cancelled = false;\n    setCheckingDelivery(true);\n    setDeliveryReady(false);\n    const query = new URLSearchParams({ productId: product.id, size, artworkFormat });\n    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })\n      .then((response) => response.ok ? response.json() : { available: false })\n      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })\n      .catch(() => { if (!cancelled) setDeliveryReady(false); })\n      .finally(() => { if (!cancelled) setCheckingDelivery(false); });\n    return () => { cancelled = true; };\n  }, [product.id, size, artworkFormat]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -215,14 +214,14 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               <span>I confirm the intended use above and agree to the applicable design licence terms.</span>
             </label>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
-            {!deliveryReady && <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Secure original files are still being prepared for this design. Checkout is temporarily unavailable; no payment will be taken.</p>}
+            {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
             <button
               type="button"
-              disabled={busy || !deliveryReady}
+              disabled={busy || checkingDelivery || !deliveryReady}
               onClick={checkout}
               className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60"
             >
-              {busy ? "Opening secure checkout…" : !deliveryReady ? "Coming soon · files being prepared" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
+              {busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
             </button>
           </div>
         </div>
