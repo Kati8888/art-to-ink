@@ -3,38 +3,34 @@ import type { DesignSize } from "@/lib/products";
 export type ArtworkFormat = "colour" | "blackAndWhite";
 
 /**
- * Private Supabase Storage object keys. These names are deliberately not public
- * URLs. Checkout verifies the object exists before creating a paid session.
+ * Private, size-specific Supabase Storage objects. These files must exist in
+ * the private bucket before checkout can be enabled. "collection" is a ZIP
+ * containing all four sizes in the selected colour format.
  */
 const secureDownloadObjects: Record<string, Partial<Record<DesignSize, Record<ArtworkFormat, string>>>> = {
   "sea-dragons": {
     mini: {
-      colour: "sea-dragons/sea-dragons-pure-colour.png",
-      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+      colour: "sea-dragons/assimilation-colour-1200.png",
+      blackAndWhite: "sea-dragons/assimilation-black-white-1200.png",
     },
     small: {
-      colour: "sea-dragons/sea-dragons-pure-colour.png",
-      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+      colour: "sea-dragons/assimilation-colour-2000.png",
+      blackAndWhite: "sea-dragons/assimilation-black-white-2000.png",
     },
     detailed: {
-      colour: "sea-dragons/sea-dragons-pure-colour.png",
-      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+      colour: "sea-dragons/assimilation-colour-3200.png",
+      blackAndWhite: "sea-dragons/assimilation-black-white-3200.png",
     },
     premium: {
-      colour: "sea-dragons/sea-dragons-pure-colour.png",
-      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+      colour: "sea-dragons/assimilation-colour-4000.png",
+      blackAndWhite: "sea-dragons/assimilation-black-white-4000.png",
     },
     collection: {
-      colour: "sea-dragons/sea-dragons-pure-colour.png",
-      blackAndWhite: "sea-dragons/sea-dragons-pure-bw.png",
+      colour: "sea-dragons/assimilation-colour-complete-collection.zip",
+      blackAndWhite: "sea-dragons/assimilation-black-white-complete-collection.zip",
     },
   },
 };
-
-export function isSecureDownloadConfigured(productId: string): boolean {
-  const variants = secureDownloadObjects[productId];
-  return Boolean(variants && variants.mini?.colour && variants.mini?.blackAndWhite);
-}
 
 export function getSecureDownloadObject(
   productId: string,
