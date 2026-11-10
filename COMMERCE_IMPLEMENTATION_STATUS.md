@@ -12,6 +12,8 @@ Working branch: `commerce-completion`
 - Added verified-email account sign-up/sign-in page and purchase claiming.
 - Added account order and licence history.
 - Added server endpoints for licence activation and short-lived private file delivery.
+- Added idempotent order-item snapshots and tracked customer/owner transactional email delivery through Brevo.
+- Added email-verified claiming of guest purchases into a customer account.
 - Added private admin commerce dashboard for orders, recorded paid totals, customer accounts, and licences.
 - Seeded catalogue product and size variant metadata in the migration without inventing storage assets.
 - Kept Brevo as the transactional email provider.
@@ -23,7 +25,8 @@ Working branch: `commerce-completion`
 - Secure assets cannot be registered until the matching original files are uploaded.
 - Checkout remains intentionally unavailable for any design/size/format without a verified private object.
 - No full production build or live Stripe/Brevo end-to-end test has been run.
-- Order item snapshots, cart persistence, full refund lifecycle, licence expiry reminders, and full admin order actions still need implementation and testing.
+- Persistent cart and cart-based checkout still need implementation and testing.
+- Full refund lifecycle, licence expiry reminders, and full admin order actions still need implementation and testing.
 
 ## Data safety
 No live Supabase tables, rows, policies, Storage objects, Stripe objects, Brevo settings, or production deployments were changed by these code edits. The migration file is prepared for manual review only.
