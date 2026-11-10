@@ -25,10 +25,10 @@ Working branch: `commerce-completion`
 ## Still blocked / not complete
 - Migration `003_commerce_foundation_review.sql` has been applied successfully to the existing Supabase project. Migration `004_profile_safe_updates.sql` has also been applied. The schema, seed counts, RLS flags, and profile policies were verified afterward.
 - Vercel production environment variables have not been independently verified.
-- The existing private bucket `art-to-ink-originals` currently contains no objects; the upload script is prepared but has not been run because the original artwork pack is not available in the current workspace.
+- The existing private bucket `art-to-ink-originals` currently contains no objects; the upload script is prepared but has not been run because the original 16-file artwork pack is not available in the current workspace.
 - Secure assets cannot be registered until the matching original files are uploaded.
 - Checkout remains intentionally unavailable for any design/size/format without a verified private object.
-- No successful CI run, full production build, or live Stripe/Brevo end-to-end test has been confirmed. The Vercel connector currently exposes a different project list and cannot locate the `art-to-ink` project to verify or set its environment variables.
+- No successful CI run, full production build, or live Stripe/Brevo end-to-end test has been confirmed. The connected Vercel account currently exposes only the `linuxio` project and cannot locate the `art-to-ink` project to verify or set its environment variables. Do not promote this branch until the correct Vercel team/project is accessible and configured.
 - Persistent cart and cart-based checkout still need implementation and testing.
 - Full refund lifecycle, licence expiry reminders, and full admin order actions still need implementation and testing.
 
