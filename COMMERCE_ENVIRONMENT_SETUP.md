@@ -45,3 +45,15 @@ Do not promote this branch to production until:
 3. Verified Brevo sender is confirmed.
 4. Private artwork originals are uploaded and checked.
 5. Stripe test-mode purchase, webhook retry, account claiming, licence activation, and private download tests pass.
+
+## Uploading the private artwork catalogue
+
+After the migration is approved and applied, extract the original artwork pack locally. In a private terminal (never in chat or a public repository), set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_DOWNLOAD_BUCKET=art-to-ink-originals`, then run:
+
+```bash
+pnpm commerce:upload-assets "/path/to/extracted/artwork-pack"
+```
+
+The script checks that the bucket is private and that all 16 source images exist before uploading. It creates four PNG sizes (1,200 / 2,000 / 3,200 / 4,000 px longest edge) in both formats, builds a ZIP collection for each format, uploads them to the private bucket, and registers each asset against its catalogue variant. It does not make any object public.
+
+This operation uploads/overwrites objects at the same named paths (`upsert: true`). Review the source pack and output paths before running. Do not run it with a production service-role key on a shared/public computer.
