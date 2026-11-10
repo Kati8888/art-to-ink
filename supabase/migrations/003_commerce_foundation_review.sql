@@ -334,6 +334,7 @@ begin
     return;
   end if;
 
+  if v_license.purchased_credits is null then raise exception 'license_credit_limit_not_configured' using errcode = 'P0001'; end if;
   if v_license.purchased_credits is not null and v_license.used_credits >= v_license.purchased_credits then raise exception 'license_credits_exhausted' using errcode = 'P0001'; end if;
 
   -- Never trust asset/design identifiers supplied by the browser.
