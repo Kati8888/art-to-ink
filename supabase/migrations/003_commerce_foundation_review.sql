@@ -11,6 +11,18 @@ alter table if exists public.orders add column if not exists stripe_payment_inte
 alter table if exists public.orders add column if not exists refunded_at timestamptz;
 alter table if exists public.orders add column if not exists refund_amount bigint;
 create index if not exists orders_customer_id_idx on public.orders(customer_id);
+
+-- Preserve the existing lifecycle values and add the explicit refunded state.
+do $order_status$
+begin
+  if exists (select 1 from pg_constraint where conrelid='public.orders'::regclass and conname='orders_fulfillment_status_check') then
+    alter table public.orders drop constraint orders_fulfillment_status_check;
+  end if;
+  alter table public.orders add constraint orders_fulfillment_status_check
+    check (fulfillment_status in ('processing','fulfilled','license_active','failed','refunded'));
+end;
+$order_status$;
+
 create unique index if not exists orders_stripe_payment_intent_uidx
   on public.orders(stripe_payment_intent_id)
   where stripe_payment_intent_id is not null;
