@@ -51,15 +51,21 @@ export async function POST(request: Request) {
       const licenseId = String(body.licenseId ?? "");
       const license = LICENSES.find((item) => item.id === licenseId);
       if (!license) return NextResponse.json({ error: "Choose a valid licence." }, { status: 400 });
+      const packageCode = license.id === "artist" ? "starter" : license.id === "studio" ? "professional" : "studio";
+      const { data: packageRow, error: packageError } = await getSupabaseAdmin().from("license_packages")
+        .select("id,code,title,price_cents,currency,credit_limit,active")
+        .eq("code", packageCode).eq("active", true).single();
+      if (packageError || !packageRow) return NextResponse.json({ error: "This licence package is not configured for checkout." }, { status: 409 });
+      if (packageRow.credit_limit === null) return NextResponse.json({ error: "This licence package is not ready for sale until its usage limit has been configured." }, { status: 409 });
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: [{
           quantity: 1,
           price_data: {
-            currency: "eur",
-            unit_amount: Math.round(license.price * 100),
+            currency: packageRow.currency,
+            unit_amount: packageRow.price_cents,
             product_data: {
-              name: license.title,
+              name: packageRow.title,
               description: `${license.allowance}. ${license.audience}. ${license.description}`,
             },
           },
@@ -67,7 +73,7 @@ export async function POST(request: Request) {
         billing_address_collection: "required",
         success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/`,
-        metadata: { purchase_type: "license", license_id: license.id, intended_use_confirmed: "true" },
+        metadata: { purchase_type: "license", license_id: license.id, license_package_code: packageCode, intended_use_confirmed: "true" },
       });
       if (!session.url) throw new Error("Stripe did not return a checkout URL.");
       return contentType.includes("application/json")
