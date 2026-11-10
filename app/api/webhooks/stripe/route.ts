@@ -76,7 +76,12 @@ export async function POST(request: Request) {
 
     const { data: existing, error: lookupError } = await supabase.from("orders").select("id,fulfillment_status,download_token_hash,download_expires_at").eq("stripe_checkout_session_id", session.id).maybeSingle();
     if (lookupError) throw lookupError;
-    if (existing?.fulfillment_status === "fulfilled" || existing?.fulfillment_status === "license_active") return NextResponse.json({ received: true, duplicate: true });
+    if (existing?.fulfillment_status === "fulfilled") return NextResponse.json({ received: true, duplicate: true });
+    if (existing?.fulfillment_status === "license_active") {
+      const { data: existingLicences, error: licenceLookupError } = await supabase.from("customer_licenses").select("id").eq("order_id", existing.id).limit(1);
+      if (licenceLookupError) throw licenceLookupError;
+      if (existingLicences?.length) return NextResponse.json({ received: true, duplicate: true });
+    }
 
     let token: string | null = null;
     let downloadExpiresAt: string | null = null;
@@ -109,9 +114,35 @@ export async function POST(request: Request) {
     } else {
       const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, fulfillment_status: "license_active" }, { onConflict: "stripe_checkout_session_id" });
       if (orderError) throw orderError;
+      const licenseId = session.metadata?.license_id ?? "";
+      const selectedLicense = LICENSES.find((item) => item.id === licenseId);
+      if (!selectedLicense) throw new Error("Paid licence purchase has an unknown licence package.");
+      const packageCode = licenseId === "artist" ? "starter" : licenseId === "studio" ? "professional" : "studio";
+      const { data: packageRow, error: packageError } = await supabase.from("license_packages")
+        .select("id,credit_limit,validity_months").eq("code", packageCode).eq("active", true).single();
+      if (packageError || !packageRow) throw packageError ?? new Error("Licence package is not configured in Supabase.");
+      const startsAt = new Date();
+      const expiresAt = new Date(startsAt);
+      expiresAt.setUTCMonth(expiresAt.getUTCMonth() + Number(packageRow.validity_months ?? 12));
+      const { data: licenceOrder, error: licenceOrderError } = await supabase.from("orders")
+        .select("id").eq("stripe_checkout_session_id", session.id).single();
+      if (licenceOrderError || !licenceOrder) throw licenceOrderError ?? new Error("Licence order record is missing.");
+      const { error: createLicenceError } = await supabase.from("customer_licenses").upsert({
+        customer_id: null,
+        customer_email: email.toLowerCase(),
+        order_id: licenceOrder.id,
+        license_package_id: packageRow.id,
+        starts_at: startsAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        purchased_credits: packageRow.credit_limit,
+        used_credits: 0,
+        status: "active",
+      }, { onConflict: "order_id,license_package_id", ignoreDuplicates: true });
+      if (createLicenceError) throw createLicenceError;
     }
 
-    const from = requiredEnv("RESEND_FROM_EMAIL");
+    const from = process.env.BREVO_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL;
+    if (!from) throw new Error("Missing BREVO_FROM_EMAIL server environment variable.");
     const productId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
     const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === productId || item.slug === productId) : undefined;
     const format = session.metadata?.artworkFormat === "blackAndWhite" ? "blackAndWhite" : "colour";
