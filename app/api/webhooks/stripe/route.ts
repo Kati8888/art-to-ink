@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       if (itemError) throw itemError;
       downloadUrl = `${safeSiteOrigin()}/api/download/${token}`;
     } else {
-      const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, fulfillment_status: "license_active" }, { onConflict: "stripe_checkout_session_id" });
+      const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, fulfillment_status: "processing" }, { onConflict: "stripe_checkout_session_id" });
       if (orderError) throw orderError;
       const licenseId = session.metadata?.license_id ?? "";
       const selectedLicense = LICENSES.find((item) => item.id === licenseId);
