@@ -130,12 +130,18 @@ create table if not exists public.license_packages (
   updated_at timestamptz not null default now()
 );
 
-alter table public.cart_items
-  add constraint cart_items_license_package_fk
-  foreign key (license_package_id) references public.license_packages(id) on delete restrict;
-alter table public.order_items
-  add constraint order_items_license_package_fk
-  foreign key (license_package_id) references public.license_packages(id) on delete set null;
+do $constraints$
+begin
+  if not exists (select 1 from pg_constraint where conname='cart_items_license_package_fk' and conrelid='public.cart_items'::regclass) then
+    alter table public.cart_items add constraint cart_items_license_package_fk
+      foreign key (license_package_id) references public.license_packages(id) on delete restrict;
+  end if;
+  if not exists (select 1 from pg_constraint where conname='order_items_license_package_fk' and conrelid='public.order_items'::regclass) then
+    alter table public.order_items add constraint order_items_license_package_fk
+      foreign key (license_package_id) references public.license_packages(id) on delete set null;
+  end if;
+end;
+$constraints$;
 
 create table if not exists public.customer_licenses (
   id uuid primary key default gen_random_uuid(),
@@ -267,7 +273,7 @@ begin
 end;
 $$;
 
-do $
+do $trigger$
 begin
   if not exists (select 1 from pg_trigger where tgrelid = 'auth.users'::regclass and tgname = 'art_to_ink_on_auth_user_created' and not tgisinternal) then
     create trigger art_to_ink_on_auth_user_created
@@ -275,7 +281,7 @@ begin
     for each row execute function public.handle_new_user();
   end if;
 end;
-$;
+$trigger$;
 
 -- Atomic licence activation. Application code must call this only after verifying the
 -- authenticated user and the requested asset; this function enforces ownership,
@@ -362,7 +368,8 @@ begin
   return next;
 end;
 $$;
-revoke all on function public.activate_license(uuid, uuid, text, text, timestamptz) from public;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.activate_license(uuid, uuid, text, text, timestamptz) from public, anon;
 grant execute on function public.activate_license(uuid, uuid, text, text, timestamptz) to authenticated;
 
 -- Explicit client grants. RLS remains the row-level boundary; sensitive writes stay server-only.
