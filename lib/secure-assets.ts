@@ -18,6 +18,10 @@ for (const slug of slugs) {
       blackAndWhite: `${slug}/${slug}-blackAndWhite-${pixels}.png`,
     };
   }
+  variants.collection = {
+    colour: `${slug}/${slug}-colour-complete-collection.zip`,
+    blackAndWhite: `${slug}/${slug}-blackAndWhite-complete-collection.zip`,
+  };
   secureDownloadObjects[slug] = variants;
 }
 
