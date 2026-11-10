@@ -1,61 +1,50 @@
-# ART TO INK — private artwork upload checklist
+# ART TO INK — private artwork upload
 
-This is the handoff for putting the artwork files from `ART_TO_INK_customer_artwork_pack_compact.zip` into the private Supabase Storage bucket used by the live checkout.
+The live Supabase project already has a private Storage bucket named `art-to-ink-originals`. It currently contains no artwork objects. Checkout therefore remains disabled until the verified source artwork is uploaded.
 
-## Important
-- Do not put paid originals in `public/` or use public GitHub image URLs as download links.
-- Keep the bucket private.
-- The archive includes original colour source images and grayscale-derived versions. The grayscale versions are not manually redrawn tattoo stencils.
-- Uploading files alone does not configure Stripe, Resend, the webhook, or database schema.
+## Before uploading
+1. Apply the reviewed commerce migration to the existing Supabase project.
+2. Confirm the bucket `art-to-ink-originals` remains private.
+3. Obtain the original artwork pack containing these 16 PNG files:
+   - `brain-heart/brain-heart-colour-source.png`
+   - `brain-heart/brain-heart-black-white-derived.png`
+   - `mrs-beer/mrs-beer-colour-source.png`
+   - `mrs-beer/mrs-beer-black-white-derived.png`
+   - `sea-horses/sea-horses-colour-source.png`
+   - `sea-horses/sea-horses-black-white-derived.png`
+   - `lion-heart/lion-heart-colour-source.png`
+   - `lion-heart/lion-heart-black-white-derived.png`
+   - `grandparents/grandparents-colour-source.png`
+   - `grandparents/grandparents-black-white-derived.png`
+   - `faces-within/faces-within-colour-source.png`
+   - `faces-within/faces-within-black-white-derived.png`
+   - `goodbye-london/goodbye-london-colour-source.png`
+   - `goodbye-london/goodbye-london-black-white-derived.png`
+   - `war-inside/war-inside-colour-source.png`
+   - `war-inside/war-inside-black-white-derived.png`
 
-## Files to upload
-Extract the ZIP. The upload script expects these paths inside the extracted folder:
-
-- `brain-heart/brain-heart-colour-source.png`
-- `brain-heart/brain-heart-black-white-derived.png`
-- `mrs-beer/mrs-beer-colour-source.png`
-- `mrs-beer/mrs-beer-black-white-derived.png`
-- `sea-horses/sea-horses-colour-source.png`
-- `sea-horses/sea-horses-black-white-derived.png`
-- `lion-heart/lion-heart-colour-source.png`
-- `lion-heart/lion-heart-black-white-derived.png`
-- `grandparents/grandparents-colour-source.png`
-- `grandparents/grandparents-black-white-derived.png`
-- `faces-within/faces-within-colour-source.png`
-- `faces-within/faces-within-black-white-derived.png`
-- `goodbye-london/goodbye-london-colour-source.png`
-- `goodbye-london/goodbye-london-black-white-derived.png`
-- `war-inside/war-inside-colour-source.png`
-- `war-inside/war-inside-black-white-derived.png`
-
-## Run the upload
-Run this from the repository root after extracting the ZIP locally. Use a private terminal and never paste the service-role key into chat, GitHub, or browser code.
+## Upload and register the files
+Run this from a private local terminal. Never paste the Supabase service-role key into ChatGPT, GitHub, browser code, or a public repository.
 
 ```bash
 SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co" \
 SUPABASE_SERVICE_ROLE_KEY="YOUR_SERVICE_ROLE_KEY" \
-SUPABASE_DOWNLOAD_BUCKET="YOUR_PRIVATE_BUCKET_NAME" \
-node scripts/upload-artwork-to-supabase.mjs "/path/to/extracted/ART_TO_INK_customer_artwork_pack_compact"
+SUPABASE_DOWNLOAD_BUCKET="art-to-ink-originals" \
+pnpm commerce:upload-assets "/path/to/extracted/artwork-pack"
 ```
 
-On Windows PowerShell, set the variables in the current terminal first:
+The script verifies the bucket is private and checks all 16 source files before it starts. It creates four longest-edge sizes (1,200 / 2,000 / 3,200 / 4,000 px) for each artwork and both formats, builds a ZIP containing the four sizes for each format, uploads the 80 resulting objects, and registers each one in `commerce_assets`.
 
-```powershell
-$env:SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
-$env:SUPABASE_SERVICE_ROLE_KEY="YOUR_SERVICE_ROLE_KEY"
-$env:SUPABASE_DOWNLOAD_BUCKET="YOUR_PRIVATE_BUCKET_NAME"
-node scripts/upload-artwork-to-supabase.mjs "C:\\path\\to\\extracted\\ART_TO_INK_customer_artwork_pack_compact"
-```
-
-The script stops before uploading if any expected image is missing, and reports each successful upload. It uses `upsert: true`, so rerunning it replaces files at the same object paths.
+The upload uses `upsert: true`; running it again replaces files at the same object paths. Inspect the source files and output paths first.
 
 ## After upload
-1. Verify the bucket is private and all 16 objects are present.
-2. Add/verify the Vercel production environment variables: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DOWNLOAD_BUCKET`, `NEXT_PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BREVO_API_KEY`, and `RESEND_FROM_EMAIL`.
-3. Verify the `orders` table and required columns exist.
-4. Add the matching object paths to `lib/secure-assets.ts` only after files exist. The checkout endpoint checks private storage before creating a Stripe session, so a missing object must never result in a payment.
-5. Test with Stripe test mode and a Resend test recipient before enabling live payments.
-6. Test both formats for each artwork, the seven-day download expiry, invalid tokens, duplicate webhook events, and owner notification. Do not claim the workflow is live until these pass.
+1. Confirm the Storage bucket is still private.
+2. Confirm the generated assets are registered in `public.commerce_assets`.
+3. Test checkout with Stripe test mode.
+4. Test one-time annual licence purchase, verified email account claim, licence activation, download expiry, and full/partial refunds.
+5. Do not enable live sales until the Vercel production environment variables and Brevo sender verification are confirmed.
 
-## Current limitation
-This script has been added to the repository, but the files have **not** been uploaded to Supabase by this commit. The connected Vercel project currently exposes no environment variables through the available project listing, so credentials and live integration still need to be configured/verified.
+## Important
+- The grayscale files are derived grayscale versions, not manually redrawn tattoo stencils.
+- The upload script does not change public gallery preview images.
+- No original artwork files are currently in the live private bucket.
