@@ -206,12 +206,14 @@ export async function POST(request: Request) {
       if (productRowError || !productRow) throw productRowError ?? new Error("Design catalogue record is missing.");
       const { data: variantRow, error: variantRowError } = await supabase.from("commerce_variants").select("id").eq("product_id", productRow.id).eq("variant_key", size).single();
       if (variantRowError || !variantRow) throw variantRowError ?? new Error("Design size catalogue record is missing.");
+      const { data: assetRow, error: assetRowError } = await supabase.from("commerce_assets").select("id,storage_object_path").eq("product_id", productRow.id).eq("variant_id", variantRow.id).eq("artwork_format", format).eq("active", true).single();
+      if (assetRowError || !assetRow || assetRow.storage_object_path !== objectPath) throw assetRowError ?? new Error("Verified private asset catalogue record is missing.");
       const { error: itemError } = await supabase.from("order_items").upsert({
         order_id: designOrder.id, product_id: productRow.id, variant_id: variantRow.id,
-        asset_id: null, license_package_id: null, quantity: 1,
+        asset_id: assetRow.id, license_package_id: null, quantity: 1,
         unit_amount: session.amount_total ?? 0, currency: session.currency ?? "eur",
         title_snapshot: purchasedDesign?.title ?? productId, variant_snapshot: size,
-        artwork_format_snapshot: format, storage_object_path_snapshot: objectPath,
+        artwork_format_snapshot: format, storage_object_path_snapshot: null,
       }, { onConflict: "order_id,product_id,variant_id,license_package_id,artwork_format_snapshot" });
       if (itemError) throw itemError;
       downloadUrl = `${safeSiteOrigin()}/api/download/${token}`;
