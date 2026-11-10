@@ -127,7 +127,6 @@ for (const design of designs) {
       uploaded++;
       console.log(`Uploaded and registered ${objectPath}`);
     }
-  }
     const collectionVariant = (variants ?? []).find(v => v.product_id === product.id && v.variant_key === "collection");
     if (!collectionVariant) throw new Error(`Missing catalogue variant ${design.slug}/collection; run the reviewed migration first.`);
     const zip = makeZip(collectionFiles);
