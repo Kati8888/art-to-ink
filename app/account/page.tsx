@@ -12,6 +12,13 @@ export default function AccountPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [designSlug, setDesignSlug] = useState("");
+  const [licenseId, setLicenseId] = useState("");
+  const [variantKey, setVariantKey] = useState("detailed");
+  const [format, setFormat] = useState("colour");
+  const [activationBusy, setActivationBusy] = useState(false);
+  const [activationMessage, setActivationMessage] = useState("");
+  const [entitlementId, setEntitlementId] = useState("");
 
   async function loadAccount() {
     const supabase = getSupabaseBrowser();
@@ -51,6 +58,41 @@ export default function AccountPage() {
     } finally { setBusy(false); }
   }
 
+  async function activateDesign(event: React.FormEvent) {
+    event.preventDefault(); setActivationBusy(true); setActivationMessage(""); setEntitlementId("");
+    try {
+      const session = (await getSupabaseBrowser().auth.getSession()).data.session;
+      if (!session?.access_token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/licenses/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ licenseId, designSlug: designSlug.trim().toLowerCase(), variantKey, format, idempotencyKey: crypto.randomUUID() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not activate this design.");
+      setEntitlementId(String(result.entitlement_id ?? result.entitlementId ?? ""));
+      setActivationMessage("One licence credit has been activated for this design.");
+      await loadAccount();
+    } catch (error) {
+      setActivationMessage(error instanceof Error ? error.message : "Activation failed.");
+    } finally { setActivationBusy(false); }
+  }
+
+  async function downloadLicensedDesign() {
+    try {
+      const session = (await getSupabaseBrowser().auth.getSession()).data.session;
+      if (!session?.access_token || !entitlementId) throw new Error("Please sign in and activate a design first.");
+      const response = await fetch(`/api/licenses/download?entitlementId=${encodeURIComponent(entitlementId)}`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (!response.ok) { const result = await response.json(); throw new Error(result.error ?? "Download failed."); }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a"); link.href = objectUrl; link.download = "art-to-ink-licensed-artwork"; link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      setActivationMessage(error instanceof Error ? error.message : "Download failed.");
+    }
+  }
+
   async function signOut() {
     await getSupabaseBrowser().auth.signOut();
     setSummary(null); setMessage("You have signed out.");
@@ -76,6 +118,22 @@ export default function AccountPage() {
           <p style={{ color: "#aaa39a", fontSize: 13 }}>Valid until {String(licence.expires_at ?? "")} · {String(licence.status ?? "")}</p>
           <p>{String(licence.used_credits ?? 0)} / {String(licence.purchased_credits ?? "Unlimited")} credits used</p>
         </article>)}</div> : <p style={{ color: "#aaa39a" }}>No licences linked yet.</p>}
+        {(summary.licences ?? []).length > 0 && <section style={{ marginTop: 32, border: "1px solid #51432d", padding: 18 }}>
+          <h2 style={{ fontSize: 24 }}>Activate a design with your licence</h2>
+          <p style={{ color: "#aaa39a", fontSize: 13, margin: "8px 0 16px" }}>Activating a design consumes one credit. A credit covers one design for one tattoo client. Previewing artwork does not consume a credit.</p>
+          <form onSubmit={activateDesign} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+            <label>Licence<select required value={licenseId} onChange={e => setLicenseId(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}>
+              <option value="">Choose an active licence</option>
+              {(summary.licences ?? []).filter(l => l.status === "active" && Date.parse(String(l.expires_at)) > Date.now()).map(l => <option key={String(l.id)} value={String(l.id)}>{String((l.license_packages as {title?:string}|null)?.title ?? "Studio licence")} · {String(l.used_credits ?? 0)}/{String(l.purchased_credits ?? "∞")}</option>)}
+            </select></label>
+            <label>Design slug<input required value={designSlug} onChange={e => setDesignSlug(e.target.value)} placeholder="e.g. lion-heart" style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}/></label>
+            <label>File size<select value={variantKey} onChange={e => setVariantKey(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}>{["mini","small","detailed","premium","collection"].map(v => <option key={v} value={v}>{v}</option>)}</select></label>
+            <label>File format<select value={format} onChange={e => setFormat(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}><option value="colour">Colour</option><option value="blackAndWhite">Black &amp; white</option></select></label>
+            <button disabled={activationBusy || !licenseId} style={{ padding: 13, background: "#d5a957", color: "#090908", fontWeight: 700 }}>{activationBusy ? "Activating…" : "Activate one credit"}</button>
+          </form>
+          {activationMessage && <p role="status" style={{ marginTop: 12, color: "#d5a957" }}>{activationMessage}</p>}
+          {entitlementId && <button onClick={() => void downloadLicensedDesign()} style={{ marginTop: 12, padding: 12, border: "1px solid #d5a957" }}>Download activated design</button>}
+        </section>}
       </section> : <form onSubmit={submit} style={{ marginTop: 32, maxWidth: 440, display: "grid", gap: 14 }}>
         <div style={{ display: "flex", gap: 8 }}>
           <button type="button" onClick={() => setMode("signin")} aria-pressed={mode === "signin"} style={{ border: "1px solid #75613b", padding: 10 }}>Sign in</button>
