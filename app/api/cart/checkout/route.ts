@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     if (authError || !auth.user?.id || !auth.user.email || !auth.user.email_confirmed_at) {
       return NextResponse.json({ error: "Verify your email and sign in again." }, { status: 403 });
     }
+    const checkoutBody = await request.json() as { intendedUseConfirmed?: unknown; intendedUse?: unknown };
     const db = getSupabaseAdmin();
     const { data: cart, error: cartError } = await db.from("carts").select("id").eq("customer_id", auth.user.id).single();
     if (cartError || !cart) return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
@@ -60,6 +61,11 @@ export async function POST(request: Request) {
     }
 
     if (!item.product_id || !item.variant_id || !item.asset_id) return NextResponse.json({ error: "The cart item is incomplete." }, { status: 409 });
+    const allowedIntents = new Set(["personal-tattoo", "professional-client-tattoo", "personal-reference"]);
+    const intendedUse = typeof checkoutBody.intendedUse === "string" ? checkoutBody.intendedUse : "";
+    if (checkoutBody.intendedUseConfirmed !== true || !allowedIntents.has(intendedUse)) {
+      return NextResponse.json({ error: "Confirm the intended use of this artwork before checkout." }, { status: 400 });
+    }
     const [{ data: product, error: productError }, { data: variant, error: variantError }, { data: asset, error: assetError }] = await Promise.all([
       db.from("commerce_products").select("id,slug,title,active").eq("id", item.product_id).eq("active", true).single(),
       db.from("commerce_variants").select("id,variant_key,label,price_cents,currency,active").eq("id", item.variant_id).eq("active", true).single(),
@@ -88,8 +94,8 @@ export async function POST(request: Request) {
       metadata: {
         purchase_type: "design", productId: product.slug, product_slug: product.slug,
         variantId: `var_${variant.variant_key}`, size: variant.variant_key,
-        artworkFormat: asset.artwork_format, customerIntent: "personal-tattoo",
-        intended_use: "personal-tattoo", intended_use_confirmed: "true",
+        artworkFormat: asset.artwork_format, customerIntent: intendedUse,
+        intended_use: intendedUse, intended_use_confirmed: "true",
         customer_id: auth.user.id, cart_item_id: item.id,
       },
     });
