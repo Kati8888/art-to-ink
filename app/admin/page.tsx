@@ -6,6 +6,7 @@ type Dashboard = {
   orders?: Array<Record<string, unknown>>;
   licences?: Array<Record<string, unknown>>;
   customers?: Array<Record<string, unknown>>;
+  packages?: Array<Record<string, unknown>>;
   stats?: { orders: number; revenueCents: number };
 };
 
@@ -15,14 +16,21 @@ export default function AdminDashboard() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [limits, setLimits] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/admin/commerce", { cache: "no-store" });
+      const [response, packageResponse] = await Promise.all([
+        fetch("/api/admin/commerce", { cache: "no-store" }),
+        fetch("/api/admin/licence-packages", { cache: "no-store" }),
+      ]);
       const result = await response.json();
-      if (!response.ok) { if (response.status === 401) setLoggedIn(false); throw new Error(result.error ?? "Could not load dashboard."); }
-      setData(result); setLoggedIn(true);
+      const packageResult = await packageResponse.json();
+      if (!response.ok || !packageResponse.ok) { if (response.status === 401 || packageResponse.status === 401) setLoggedIn(false); throw new Error(result.error ?? packageResult.error ?? "Could not load dashboard."); }
+      setData({ ...result, packages: packageResult.packages ?? [] });
+      setLimits(Object.fromEntries((packageResult.packages ?? []).map((pkg: Record<string, unknown>) => [String(pkg.id), pkg.credit_limit == null ? "" : String(pkg.credit_limit)])));
+      setLoggedIn(true);
     } catch (e) { setError(e instanceof Error ? e.message : "Could not load dashboard."); }
     finally { setBusy(false); }
   }, []);
@@ -37,6 +45,20 @@ export default function AdminDashboard() {
       if (!response.ok) throw new Error(result.error ?? "Login failed.");
       setPassword(""); await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Login failed."); }
+    finally { setBusy(false); }
+  }
+
+  async function saveLimit(packageId: string) {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/licence-packages", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageId, creditLimit: limits[packageId] }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not save usage limit.");
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not save usage limit."); }
     finally { setBusy(false); }
   }
 
@@ -66,6 +88,13 @@ export default function AdminDashboard() {
           <button onClick={() => void logout()} style={{ border: "1px solid #5d4930", padding: 10 }}>Sign out</button>
           <a href="/admin/comments" style={{ border: "1px solid #5d4930", padding: 10 }}>Moderate comments</a>
         </div>
+        <h2 style={{ fontSize: 26, margin: "32px 0 12px" }}>Annual licence package limits</h2>
+        <p style={{ color: "#aaa39a", fontSize: 13, marginBottom: 12 }}>Studio usage limits are deliberately not unlimited by default. Set the maximum annual credits before selling a package.</p>
+        <div style={{ display: "grid", gap: 10 }}>{(data?.packages ?? []).map((pkg,i)=><form key={String(pkg.id ?? i)} onSubmit={event => { event.preventDefault(); void saveLimit(String(pkg.id)); }} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", border: "1px solid #39342b", padding: 14 }}>
+          <div style={{ minWidth: 180, flex: 1 }}><strong>{String(pkg.title ?? pkg.code ?? "Licence")}</strong><p style={{ color: "#aaa39a", fontSize: 12 }}>€{(Number(pkg.price_cents ?? 0)/100).toFixed(2)} / {String(pkg.validity_months ?? 12)} months</p></div>
+          <label style={{ fontSize: 12 }}>Annual credits<input type="number" min="1" max="10000" required value={limits[String(pkg.id)] ?? ""} onChange={e => setLimits(current => ({ ...current, [String(pkg.id)]: e.target.value }))} style={{ display: "block", width: 120, padding: 8, marginTop: 5, background: "#171512", color: "#fff", border: "1px solid #5d4930" }}/></label>
+          <button disabled={busy} style={{ padding: 10, border: "1px solid #d5a957" }}>Save limit</button>
+        </form>)}</div>
         <h2 style={{ fontSize: 26, marginBottom: 12 }}>Orders</h2>
         <div style={{ overflowX: "auto", border: "1px solid #39342b" }}>
           <table style={{ width: "100%", minWidth: 850, borderCollapse: "collapse", fontSize: 13 }}>
