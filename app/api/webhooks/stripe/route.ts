@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { Resend } from "resend";
+import { sendTransactionalEmail } from "@/lib/brevo";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getStripe } from "@/lib/stripe";
 import { getSecureDownloadObject, type ArtworkFormat } from "@/lib/secure-assets";
@@ -111,7 +111,6 @@ export async function POST(request: Request) {
       if (orderError) throw orderError;
     }
 
-    const resend = new Resend(requiredEnv("RESEND_API_KEY"));
     const from = requiredEnv("RESEND_FROM_EMAIL");
     const productId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
     const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === productId || item.slug === productId) : undefined;
@@ -126,13 +125,16 @@ export async function POST(request: Request) {
     const html = purchaseType === "design"
       ? `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · ORIGINAL ARTWORK</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Your artwork is ready.</h1><p>Thank you for supporting original artwork by Kateřina Pohnetalová. Your payment has been confirmed.</p><h2 style="font-family:Georgia,serif;font-weight:400">${purchasedDesign?.title ?? "Your selected design"}</h2>${purchasedDesign ? `<p><img src="${purchasedDesign.media[format]}" alt="${purchasedDesign.title} tattoo artwork preview" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0"/></p>` : ""}<p><strong>Package:</strong> ${variantInfo?.label ?? variantKey}<br/><strong>File:</strong> ${format === "colour" ? "Colour" : "Black & white"}</p><p>${variantInfo?.details ?? "Digital artwork file."}</p><p>Your private download link expires in seven days. If it expires before you download the file, reply to this email and we can help.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:15px 22px;background:#d5a957;color:#080807;text-decoration:none;font-weight:bold">DOWNLOAD YOUR ARTWORK</a></p><p style="font-size:13px;color:#655b4d">Your purchase grants only the rights stated in the applicable licence. Please do not resell, redistribute, or publicly share the source file.</p><p>With gratitude,<br/>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`
       : `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · STUDIO LICENSING</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed. Keep this email as your purchase record.</p><h2 style="font-family:Georgia,serif;font-weight:400">${license?.title ?? "Studio licence"}</h2><p><strong>Annual price:</strong> €${license?.price ?? "—"}<br/><strong>Scope:</strong> ${license?.allowance ?? "As specified in your licence"}<br/><strong>Team/location:</strong> ${license?.audience ?? "As specified in your licence"}</p><p>This licence is non-exclusive and does not transfer copyright. Use is limited to the stated designs, artist count, and studio location. Source files may not be resold or redistributed.</p><p>For your records, payment reference: ${session.id}</p><p>If you need to register the artists using the licence or clarify its scope, reply to this email before using the artwork commercially.</p><p>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`;
-    const { error: emailError } = await resend.emails.send({
-      from, to: email, subject, html,
-      text: purchaseType === "design"
+    await sendTransactionalEmail({
+      sender: { email: from, name: "ART TO INK" },
+      to: [email],
+      subject,
+      htmlContent: html,
+      textContent: purchaseType === "design"
         ? `Your ART TO INK artwork is ready. Design: ${purchasedDesign?.title ?? productId}. Package: ${variantInfo?.label ?? variantKey}. Format: ${format === "colour" ? "Colour" : "Black & white"}. Your private download link expires in seven days: ${downloadUrl}. Thank you, Kateřina Pohnetalová, ART TO INK.`
-        : `Your ART TO INK studio licence payment is confirmed. Licence: ${license?.title ?? licenseId}. Annual price: €${license?.price ?? "—"}. Scope: ${license?.allowance ?? "see licence terms"}. This licence is non-exclusive and does not transfer copyright. Payment reference: ${session.id}. Reply to this email for registration or questions.`
-    }, { idempotencyKey: `art-to-ink-customer-${session.id}` });
-    if (emailError) throw new Error(`Transactional customer email failed: ${emailError.message}`);
+        : `Your ART TO INK studio licence payment is confirmed. Licence: ${license?.title ?? licenseId}. Annual price: €${license?.price ?? "—"}. Scope: ${license?.allowance ?? "see licence terms"}. This licence is non-exclusive and does not transfer copyright. Payment reference: ${session.id}. Reply to this email for registration or questions.`,
+      messageId: `art-to-ink-customer-${session.id}`,
+    });
 
     // Send the shop owner a separate order notification without exposing the secure download token.
     try {
@@ -143,14 +145,14 @@ export async function POST(request: Request) {
         ? `Studio licence: ${session.metadata?.license_id ?? "ART TO INK licence"}`
         : `${session.metadata?.product_slug ?? session.metadata?.productId ?? "Tattoo artwork"} · ${session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "design"} · ${session.metadata?.artworkFormat === "blackAndWhite" ? "black & white" : "colour"}`;
       const ownerHtml = `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>New paid order · ART TO INK</h1><p>A Stripe payment has been confirmed.</p><p><strong>Item:</strong> ${item}</p><p><strong>Amount:</strong> ${amount} ${currency}</p><p><strong>Customer:</strong> ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"} (${email})</p><p><strong>Phone:</strong> ${session.metadata?.customer_phone ?? "Not provided"}</p><p><strong>Intended use:</strong> ${session.metadata?.customerIntent ?? session.metadata?.intended_use ?? "not specified"}</p><p><strong>Checkout session:</strong> ${session.id}</p></div>`;
-      const { error: ownerEmailError } = await resend.emails.send({
-        from,
-        to: ownerEmail,
+      await sendTransactionalEmail({
+        sender: { email: from, name: "ART TO INK" },
+        to: [ownerEmail],
         subject: `Nová zaplacená objednávka ART TO INK · ${amount} ${currency}`,
-        html: ownerHtml,
-        text: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"}. E-mail: ${email}. Telefon: ${session.metadata?.customer_phone ?? "Not provided"}. Session: ${session.id}.`,
-      }, { idempotencyKey: `art-to-ink-owner-order-${session.id}` });
-      if (ownerEmailError) console.error("ART TO INK owner notification failed:", ownerEmailError.message);
+        htmlContent: ownerHtml,
+        textContent: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"}. E-mail: ${email}. Telefon: ${session.metadata?.customer_phone ?? "Not provided"}. Session: ${session.id}.`,
+        messageId: `art-to-ink-owner-order-${session.id}`,
+      });
     } catch (ownerNotificationError) {
       console.error("ART TO INK owner notification failed:", ownerNotificationError);
     }
