@@ -106,6 +106,9 @@ create table if not exists public.order_items (
   created_at timestamptz not null default now()
 );
 
+create unique index if not exists order_items_order_item_uidx
+  on public.order_items (order_id, product_id, variant_id, license_package_id, artwork_format_snapshot) nulls not distinct;
+
 create table if not exists public.stripe_events (
   id text primary key,
   event_type text not null,
