@@ -106,7 +106,7 @@ export default function AdminDashboard() {
         <div style={{ display: "grid", gap: 10 }}>{(data?.licences ?? []).map((l,i)=><article key={String(l.id ?? i)} style={{ border: "1px solid #39342b", padding: 16 }}>
           <strong>{String((l.license_packages as {title?:string}|null)?.title ?? "Licence")}</strong>
           <p style={{ color: "#aaa39a", fontSize: 13 }}>{String(l.customer_email ?? "")} · {String(l.status ?? "")} · Expires {String(l.expires_at ?? "")}</p>
-          <p>{String(l.used_credits ?? 0)} / {String(l.purchased_credits ?? "Unlimited")} credits used</p>
+          <p>{String(l.used_credits ?? 0)} / {String(l.purchased_credits ?? "Limit not configured")} credits used</p>
         </article>)}</div>
         <p style={{ color: "#766c60", fontSize: 12, marginTop: 24 }}>*Recorded paid order totals, not net revenue after Stripe fees, refunds or tax adjustments.</p>
       </>}
