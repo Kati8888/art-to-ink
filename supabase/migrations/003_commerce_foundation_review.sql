@@ -152,7 +152,7 @@ create table if not exists public.customer_licenses (
   check (purchased_credits is null or used_credits <= purchased_credits)
 );
 create index if not exists customer_licenses_customer_idx on public.customer_licenses(customer_id, status, expires_at);
-create unique index if not exists customer_licenses_order_uidx on public.customer_licenses(order_id);
+create unique index if not exists customer_licenses_order_package_uidx on public.customer_licenses(order_id, license_package_id);
 
 create table if not exists public.license_usage (
   id uuid primary key default gen_random_uuid(),
@@ -215,9 +215,8 @@ begin
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='profiles' and policyname='profiles_select_own') then
     create policy profiles_select_own on public.profiles for select using (auth.uid() = id);
   end if;
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='profiles' and policyname='profiles_update_own') then
-    create policy profiles_update_own on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
-  end if;
+  -- No row-level UPDATE policy is created for profiles: column grants below allow
+  -- customers to edit only display_name and phone, never is_admin.
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='commerce_products' and policyname='products_public_read') then
     create policy products_public_read on public.commerce_products for select using (active = true);
   end if;
@@ -268,10 +267,15 @@ begin
 end;
 $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-after insert on auth.users
-for each row execute function public.handle_new_user();
+do $
+begin
+  if not exists (select 1 from pg_trigger where tgrelid = 'auth.users'::regclass and tgname = 'art_to_ink_on_auth_user_created' and not tgisinternal) then
+    create trigger art_to_ink_on_auth_user_created
+    after insert on auth.users
+    for each row execute function public.handle_new_user();
+  end if;
+end;
+$;
 
 -- Atomic licence activation. Application code must call this only after verifying the
 -- authenticated user and the requested asset; this function enforces ownership,
@@ -305,14 +309,38 @@ begin
   if not found or v_license.status <> 'active' or v_license.expires_at <= now() then raise exception 'license_not_active' using errcode = 'P0001'; end if;
   if v_license.purchased_credits is not null and v_license.used_credits >= v_license.purchased_credits then raise exception 'license_credits_exhausted' using errcode = 'P0001'; end if;
 
+  -- Idempotency replay is scoped to the authenticated owner and exact licence.
   if exists (select 1 from public.license_usage where idempotency_key = p_idempotency_key) then
-    select lu.id, de.id, case when v_license.purchased_credits is null then null else v_license.purchased_credits - v_license.used_credits end
+    select lu.id, de.id,
+      case when v_license.purchased_credits is null then null else v_license.purchased_credits - v_license.used_credits end
     into usage_id, entitlement_id, remaining_credits
     from public.license_usage lu
     left join public.download_entitlements de on de.license_usage_id = lu.id
-    where lu.idempotency_key = p_idempotency_key;
+    where lu.idempotency_key = p_idempotency_key
+      and lu.customer_id = v_user_id
+      and lu.license_id = p_license_id
+      and lu.asset_id = p_asset_id
+      and lu.design_id = p_design_id;
+    if not found then raise exception 'idempotency_key_conflict' using errcode = '23505'; end if;
     return next;
     return;
+  end if;
+
+  -- Never trust asset/design identifiers supplied by the browser.
+  if not exists (
+    select 1
+    from public.commerce_assets a
+    join public.commerce_products p on p.id = a.product_id
+    where a.id = p_asset_id
+      and a.active = true
+      and p.active = true
+      and p.slug = p_design_id
+      and (a.variant_id is null or exists (
+        select 1 from public.commerce_variants v
+        where v.id = a.variant_id and v.product_id = p.id and v.active = true
+      ))
+  ) then
+    raise exception 'asset_not_available_for_design' using errcode = 'P0001';
   end if;
 
   insert into public.license_usage (license_id, customer_id, asset_id, design_id, idempotency_key)
@@ -324,7 +352,7 @@ begin
   where id = p_license_id;
 
   insert into public.download_entitlements (customer_id, license_usage_id, asset_id, expires_at)
-  values (v_user_id, v_usage_id, p_asset_id, least(p_entitlement_expires_at, v_license.expires_at))
+  values (v_user_id, v_usage_id, p_asset_id, v_license.expires_at)
   returning id into v_entitlement_id;
 
   v_remaining := case when v_license.purchased_credits is null then null else v_license.purchased_credits - v_license.used_credits - 1 end;
@@ -336,6 +364,18 @@ end;
 $$;
 revoke all on function public.activate_license(uuid, uuid, text, text, timestamptz) from public;
 grant execute on function public.activate_license(uuid, uuid, text, text, timestamptz) to authenticated;
+
+-- Explicit client grants. RLS remains the row-level boundary; sensitive writes stay server-only.
+revoke all on public.profiles from anon, authenticated;
+grant select on public.profiles to authenticated;
+grant update (display_name, phone) on public.profiles to authenticated;
+
+grant select on public.commerce_products, public.commerce_variants, public.license_packages to anon, authenticated;
+revoke all on public.commerce_assets from anon, authenticated;
+grant select, insert, update, delete on public.carts, public.cart_items to authenticated;
+grant select on public.orders, public.order_items, public.customer_licenses, public.license_usage, public.download_entitlements to authenticated;
+revoke all on public.stripe_events, public.email_deliveries from anon, authenticated;
+revoke all on public.download_links from anon, authenticated;
 
 -- Defaults are intentionally inserts-only. Existing package rows are never changed.
 insert into public.license_packages (code, title, description, price_cents, credit_limit, catalogue_scope)
