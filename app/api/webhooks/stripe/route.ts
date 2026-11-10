@@ -56,6 +56,11 @@ async function sendEmailOnce(
   }
 }
 
+async function markStripeEventProcessed(db: ReturnType<typeof getSupabaseAdmin>, eventId: string) {
+  const { error } = await db.from("stripe_events").update({ processed_at: new Date().toISOString() }).eq("id", eventId);
+  if (error) throw error;
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   if (!signature) return NextResponse.json({ error: "Missing Stripe signature." }, { status: 400 });
@@ -68,12 +73,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
   }
 
+  const eventDb = getSupabaseAdmin();
+  const { error: eventInsertError } = await eventDb.from("stripe_events").upsert({
+    id: event.id,
+    event_type: event.type,
+    payload: event,
+  }, { onConflict: "id", ignoreDuplicates: true });
+  if (eventInsertError) {
+    console.error("Could not record Stripe event:", eventInsertError);
+    return NextResponse.json({ error: "Webhook event could not be recorded." }, { status: 500 });
+  }
+  const { data: eventRecord, error: eventLookupError } = await eventDb.from("stripe_events")
+    .select("processed_at").eq("id", event.id).single();
+  if (eventLookupError) return NextResponse.json({ error: "Webhook event status could not be checked." }, { status: 500 });
+  if (eventRecord?.processed_at) return NextResponse.json({ received: true, duplicate: true });
+
   if (event.type === "charge.refunded") {
     try {
       const charge = event.data.object as Stripe.Charge;
       const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
-      if (!paymentIntentId) return NextResponse.json({ received: true, ignored: true });
-      const db = getSupabaseAdmin();
+      if (!paymentIntentId) { await markStripeEventProcessed(db, event.id); return NextResponse.json({ received: true, ignored: true }); }
+      const db = eventDb;
       const { data: refundedOrder, error } = await db.from("orders")
         .update({ refunded_at: new Date().toISOString(), refund_amount: charge.amount_refunded, ...(charge.refunded ? { fulfillment_status: "refunded" } : {}), updated_at: new Date().toISOString() })
         .eq("stripe_payment_intent_id", paymentIntentId).select("id").maybeSingle();
@@ -95,6 +115,7 @@ export async function POST(request: Request) {
           }
         }
       }
+      await markStripeEventProcessed(db, event.id);
       return NextResponse.json({ received: true, refundProcessed: Boolean(refundedOrder?.id) });
     } catch (error) {
       console.error("Stripe refund processing failed:", error);
@@ -103,6 +124,7 @@ export async function POST(request: Request) {
   }
 
   if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
+    await markStripeEventProcessed(eventDb, event.id);
     return NextResponse.json({ received: true, ignored: true });
   }
 
@@ -143,11 +165,11 @@ export async function POST(request: Request) {
 
     const { data: existing, error: lookupError } = await supabase.from("orders").select("id,fulfillment_status,download_token_hash,download_expires_at").eq("stripe_checkout_session_id", session.id).maybeSingle();
     if (lookupError) throw lookupError;
-    if (existing?.fulfillment_status === "fulfilled") return NextResponse.json({ received: true, duplicate: true });
+    if (existing?.fulfillment_status === "fulfilled") { await markStripeEventProcessed(supabase, event.id); return NextResponse.json({ received: true, duplicate: true }); }
     if (existing?.fulfillment_status === "license_active") {
       const { data: existingLicences, error: licenceLookupError } = await supabase.from("customer_licenses").select("id").eq("order_id", existing.id).limit(1);
       if (licenceLookupError) throw licenceLookupError;
-      if (existingLicences?.length) return NextResponse.json({ received: true, duplicate: true });
+      if (existingLicences?.length) { await markStripeEventProcessed(supabase, event.id); return NextResponse.json({ received: true, duplicate: true }); }
     }
 
     let token: string | null = null;
@@ -281,6 +303,7 @@ export async function POST(request: Request) {
 
     const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: purchaseType === "design" ? "fulfilled" : "license_active", fulfilled_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("stripe_checkout_session_id", session.id);
     if (updateError) throw updateError;
+    await markStripeEventProcessed(supabase, event.id);
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Stripe fulfillment failed; Stripe should retry this webhook:", error);
