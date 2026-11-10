@@ -58,3 +58,7 @@ pnpm commerce:upload-assets "/path/to/extracted/artwork-pack"
 The script checks that the bucket is private and that all 16 source images exist before uploading. It creates four PNG sizes (1,200 / 2,000 / 3,200 / 4,000 px longest edge) in both formats, builds a ZIP collection for each format, uploads them to the private bucket, and registers each asset against its catalogue variant. It does not make any object public.
 
 This operation uploads/overwrites objects at the same named paths (`upsert: true`). Review the source pack and output paths before running. Do not run it with a production service-role key on a shared/public computer.
+
+## Supabase Auth URL configuration
+
+In the existing Supabase project, set the Authentication Site URL to the canonical ART TO INK HTTPS domain and add the matching account redirect URL (for example `https://art-to-ink.work.gd/account`). The account page requires email confirmation before a customer can claim previous purchases or use a licence. Confirm the email provider/rate limits in Supabase Auth before inviting customers.
