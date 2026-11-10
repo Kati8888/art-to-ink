@@ -145,7 +145,8 @@ $constraints$;
 
 create table if not exists public.customer_licenses (
   id uuid primary key default gen_random_uuid(),
-  customer_id uuid not null references auth.users(id) on delete restrict,
+  customer_id uuid references auth.users(id) on delete set null,
+  customer_email text not null,
   order_id uuid not null references public.orders(id) on delete restrict,
   license_package_id uuid not null references public.license_packages(id) on delete restrict,
   starts_at timestamptz not null,
