@@ -52,13 +52,12 @@ export async function POST(request: Request) {
       const license = LICENSES.find((item) => item.id === licenseId);
       if (!license) return NextResponse.json({ error: "Choose a valid licence." }, { status: 400 });
       const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
+        mode: "payment",
         line_items: [{
           quantity: 1,
           price_data: {
             currency: "eur",
             unit_amount: Math.round(license.price * 100),
-            recurring: { interval: "year" },
             product_data: {
               name: license.title,
               description: `${license.allowance}. ${license.audience}. ${license.description}`,
@@ -69,7 +68,6 @@ export async function POST(request: Request) {
         success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/`,
         metadata: { purchase_type: "license", license_id: license.id, intended_use_confirmed: "true" },
-        subscription_data: { metadata: { license_id: license.id } },
       });
       if (!session.url) throw new Error("Stripe did not return a checkout URL.");
       return contentType.includes("application/json")
