@@ -75,10 +75,10 @@ export async function POST(request: Request) {
       if (!paymentIntentId) return NextResponse.json({ received: true, ignored: true });
       const db = getSupabaseAdmin();
       const { data: refundedOrder, error } = await db.from("orders")
-        .update({ refunded_at: new Date().toISOString(), refund_amount: charge.amount_refunded, fulfillment_status: "refunded", updated_at: new Date().toISOString() })
+        .update({ refunded_at: new Date().toISOString(), refund_amount: charge.amount_refunded, ...(charge.refunded ? { fulfillment_status: "refunded" } : {}), updated_at: new Date().toISOString() })
         .eq("stripe_payment_intent_id", paymentIntentId).select("id").maybeSingle();
       if (error) throw error;
-      if (refundedOrder?.id) {
+      if (refundedOrder?.id && charge.refunded) {
         const revokedAt = new Date().toISOString();
         const { data: licences, error: licencesError } = await db.from("customer_licenses")
           .update({ status: "refunded", updated_at: revokedAt }).eq("order_id", refundedOrder.id).select("id");
