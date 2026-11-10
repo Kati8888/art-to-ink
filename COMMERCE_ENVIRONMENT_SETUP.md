@@ -18,6 +18,7 @@ This branch is prepared for the existing Supabase project and Brevo. Do not put 
 | `BREVO_FROM_EMAIL` | Sender address verified in Brevo |
 | `ADMIN_PASSWORD` | Strong unique administrator password |
 | `ADMIN_SESSION_SECRET` | Random secret, at least 32 characters |
+| `CRON_SECRET` | Random secret used to authenticate the daily licence-expiry reminder job |
 
 The current webhook code temporarily accepts `RESEND_FROM_EMAIL` as a fallback for the sender address, but new configuration should use `BREVO_FROM_EMAIL`.
 
