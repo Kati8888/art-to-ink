@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { getStripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -8,6 +9,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+    if (!token) return NextResponse.json({ error: "Sign in to access your purchases." }, { status: 401 });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !anonKey) throw new Error("Supabase authentication is not configured.");
+    const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: auth, error: authError } = await authClient.auth.getUser(token);
+    if (authError || !auth.user?.id || !auth.user.email || !auth.user.email_confirmed_at) {
+      return NextResponse.json({ error: "Verify your account email and sign in again." }, { status: 403 });
+    }
     const body = await request.json() as { sessionId?: unknown };
     const sessionId = typeof body.sessionId === "string" ? body.sessionId : "";
     if (!/^cs_(test|live)_/.test(sessionId)) {
@@ -30,11 +41,11 @@ export async function POST(request: Request) {
     const supabase = getSupabaseAdmin();
     const { data: order, error } = await supabase
       .from("orders")
-      .select("id,fulfillment_status,customer_email")
+      .select("id,customer_id,fulfillment_status,customer_email")
       .eq("stripe_checkout_session_id", sessionId)
       .maybeSingle();
     if (error) throw error;
-    if (!order || order.fulfillment_status !== "fulfilled") {
+    if (!order || order.customer_id !== auth.user.id || order.customer_email.toLowerCase() !== auth.user.email.toLowerCase() || order.fulfillment_status !== "fulfilled") {
       return NextResponse.json({ error: "Your secure download is still being prepared. Please try again shortly." }, { status: 409 });
     }
     if (order.customer_email.toLowerCase() !== verifiedEmail.toLowerCase()) {
