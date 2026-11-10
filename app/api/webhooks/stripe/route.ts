@@ -144,6 +144,7 @@ export async function POST(request: Request) {
     if (purchaseType !== "design" && purchaseType !== "license") throw new Error("Checkout Session is missing a valid purchase_type metadata value.");
     const baseOrder = {
       stripe_checkout_session_id: session.id,
+      customer_id: session.metadata?.customer_id ?? null,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
       stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
       customer_email: email,
@@ -303,6 +304,11 @@ export async function POST(request: Request) {
 
     const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: purchaseType === "design" ? "fulfilled" : "license_active", fulfilled_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("stripe_checkout_session_id", session.id);
     if (updateError) throw updateError;
+    const cartItemId = session.metadata?.cart_item_id;
+    if (cartItemId) {
+      const { error: clearCartError } = await supabase.from("cart_items").delete().eq("id", cartItemId);
+      if (clearCartError) throw clearCartError;
+    }
     await markStripeEventProcessed(supabase, event.id);
     return NextResponse.json({ received: true });
   } catch (error) {
