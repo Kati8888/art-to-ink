@@ -78,6 +78,23 @@ export default function AccountPage() {
     } finally { setActivationBusy(false); }
   }
 
+  async function renewOrderDownload(order: Record<string, unknown>) {
+    try {
+      const session = (await getSupabaseBrowser().auth.getSession()).data.session;
+      if (!session?.access_token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/download/issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ sessionId: order.stripe_checkout_session_id }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.url) throw new Error(result.error ?? "Could not issue a new download link.");
+      window.location.assign(result.url);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not issue a new download link.");
+    }
+  }
+
   async function downloadLicensedDesign() {
     try {
       const session = (await getSupabaseBrowser().auth.getSession()).data.session;
@@ -111,6 +128,7 @@ export default function AccountPage() {
           <strong>{String(order.product_slug ?? order.purchase_type ?? "Order")}</strong>
           <p style={{ color: "#aaa39a", fontSize: 13 }}>{String(order.created_at ?? "")} · {String(order.fulfillment_status ?? "")}</p>
           <p>{typeof order.amount_total === "number" ? `€${(order.amount_total / 100).toFixed(2)}` : ""} {String(order.currency ?? "").toUpperCase()}</p>
+          {order.purchase_type === "design" && order.fulfillment_status === "fulfilled" && <button onClick={() => void renewOrderDownload(order)} style={{ marginTop: 10, padding: 10, border: "1px solid #d5a957" }}>Get a fresh secure download link</button>}
         </article>)}</div> : <p style={{ color: "#aaa39a" }}>No purchases are linked yet.</p>}
         <h2 style={{ fontSize: 24, marginTop: 32 }}>Studio licences</h2>
         {(summary.licences ?? []).length ? <div style={{ display: "grid", gap: 12, marginTop: 12 }}>{summary.licences!.map((licence, i) => <article key={String(licence.id ?? i)} style={{ border: "1px solid #39342b", padding: 16 }}>
