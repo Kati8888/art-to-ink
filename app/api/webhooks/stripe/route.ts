@@ -238,7 +238,7 @@ export async function POST(request: Request) {
         .select("id").eq("stripe_checkout_session_id", session.id).single();
       if (licenceOrderError || !licenceOrder) throw licenceOrderError ?? new Error("Licence order record is missing.");
       const { error: createLicenceError } = await supabase.from("customer_licenses").upsert({
-        customer_id: null,
+        customer_id: session.metadata?.customer_id ?? null,
         customer_email: email.toLowerCase(),
         order_id: licenceOrder.id,
         license_package_id: packageRow.id,
