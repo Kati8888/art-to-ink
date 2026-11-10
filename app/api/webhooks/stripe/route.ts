@@ -110,6 +110,20 @@ export async function POST(request: Request) {
       const tokenHash = createHash("sha256").update(token).digest("hex");
       const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, download_token_hash: tokenHash, download_object_path: objectPath, download_expires_at: downloadExpiresAt }, { onConflict: "stripe_checkout_session_id" });
       if (orderError) throw orderError;
+      const { data: designOrder, error: designOrderError } = await supabase.from("orders").select("id").eq("stripe_checkout_session_id", session.id).single();
+      if (designOrderError || !designOrder) throw designOrderError ?? new Error("Design order record is missing.");
+      const { data: productRow, error: productRowError } = await supabase.from("commerce_products").select("id").eq("slug", purchasedDesign?.slug ?? productId).single();
+      if (productRowError || !productRow) throw productRowError ?? new Error("Design catalogue record is missing.");
+      const { data: variantRow, error: variantRowError } = await supabase.from("commerce_variants").select("id").eq("product_id", productRow.id).eq("variant_key", size).single();
+      if (variantRowError || !variantRow) throw variantRowError ?? new Error("Design size catalogue record is missing.");
+      const { error: itemError } = await supabase.from("order_items").upsert({
+        order_id: designOrder.id, product_id: productRow.id, variant_id: variantRow.id,
+        asset_id: null, license_package_id: null, quantity: 1,
+        unit_amount: session.amount_total ?? 0, currency: session.currency ?? "eur",
+        title_snapshot: purchasedDesign?.title ?? productId, variant_snapshot: size,
+        artwork_format_snapshot: format, storage_object_path_snapshot: objectPath,
+      }, { onConflict: "order_id,product_id,variant_id,license_package_id,artwork_format_snapshot" });
+      if (itemError) throw itemError;
       downloadUrl = `${safeSiteOrigin()}/api/download/${token}`;
     } else {
       const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, fulfillment_status: "license_active" }, { onConflict: "stripe_checkout_session_id" });
@@ -139,6 +153,14 @@ export async function POST(request: Request) {
         status: "active",
       }, { onConflict: "order_id,license_package_id", ignoreDuplicates: true });
       if (createLicenceError) throw createLicenceError;
+      const { error: licenceItemError } = await supabase.from("order_items").upsert({
+        order_id: licenceOrder.id, product_id: null, variant_id: null, asset_id: null,
+        license_package_id: packageRow.id, quantity: 1,
+        unit_amount: session.amount_total ?? 0, currency: session.currency ?? "eur",
+        title_snapshot: selectedLicense.title, variant_snapshot: null,
+        artwork_format_snapshot: null, storage_object_path_snapshot: null,
+      }, { onConflict: "order_id,product_id,variant_id,license_package_id,artwork_format_snapshot" });
+      if (licenceItemError) throw licenceItemError;
     }
 
     const from = process.env.BREVO_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL;
