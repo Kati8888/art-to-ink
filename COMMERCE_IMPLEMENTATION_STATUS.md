@@ -16,15 +16,17 @@ Working branch: `commerce-completion`
 - Added email-verified claiming of guest purchases into a customer account.
 - Added private admin commerce dashboard for orders, recorded paid totals, customer accounts, and licences.
 - Seeded catalogue product and size variant metadata in the migration without inventing storage assets.
+- Added a local upload script that checks the bucket is private, generates four sizes and ZIP collections, uploads the files, and registers their private paths.
+- Added a GitHub Actions workflow for TypeScript, lint, and production-build validation.
 - Kept Brevo as the transactional email provider.
 
 ## Still blocked / not complete
-- The migration has NOT been applied to Supabase.
+- The migration has NOT been applied to Supabase. It has passed a transactional dry-run against the live schema followed by an explicit rollback; a post-rollback check confirmed that none of its new tables were left behind.
 - Vercel production environment variables have not been independently verified.
-- The existing private bucket `art-to-ink-originals` currently contains no objects.
+- The existing private bucket `art-to-ink-originals` currently contains no objects; the upload script is prepared but has not been run because the original artwork pack is not available in the current workspace.
 - Secure assets cannot be registered until the matching original files are uploaded.
 - Checkout remains intentionally unavailable for any design/size/format without a verified private object.
-- No full production build or live Stripe/Brevo end-to-end test has been run.
+- No successful CI run, full production build, or live Stripe/Brevo end-to-end test has been confirmed.
 - Persistent cart and cart-based checkout still need implementation and testing.
 - Full refund lifecycle, licence expiry reminders, and full admin order actions still need implementation and testing.
 
