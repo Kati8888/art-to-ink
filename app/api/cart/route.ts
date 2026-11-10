@@ -57,8 +57,15 @@ export async function POST(request: Request) {
       const { data: pkg, error } = await db.from("license_packages").select("id,credit_limit,active").eq("code", code).eq("active", true).single();
       if (error || !pkg) return NextResponse.json({ error: "This licence package is not available." }, { status: 404 });
       if (pkg.credit_limit === null) return NextResponse.json({ error: "This licence package is not ready for sale because its usage limit has not been configured." }, { status: 409 });
-      const { error: addError } = await db.from("cart_items").upsert({ cart_id: cartId, license_package_id: pkg.id, quantity: 1 }, { onConflict: "cart_id,license_package_id" });
-      if (addError) throw addError;
+      const { data: priorItem, error: priorError } = await db.from("cart_items").select("id").eq("cart_id", cartId).eq("license_package_id", pkg.id).maybeSingle();
+      if (priorError) throw priorError;
+      if (priorItem) {
+        const { error: updateError } = await db.from("cart_items").update({ quantity: 1, updated_at: new Date().toISOString() }).eq("id", priorItem.id);
+        if (updateError) throw updateError;
+      } else {
+        const { error: addError } = await db.from("cart_items").insert({ cart_id: cartId, license_package_id: pkg.id, quantity: 1 });
+        if (addError) throw addError;
+      }
     } else if (body.type === "design") {
       const slug = typeof body.productSlug === "string" ? body.productSlug : "";
       const variantKey = typeof body.variantKey === "string" ? body.variantKey : "";
@@ -78,8 +85,15 @@ export async function POST(request: Request) {
       const { data: stored, error: storageError } = await db.storage.from(bucket).list(folder, { limit: 100, search: fileName });
       if (storageError) throw storageError;
       if (!(stored ?? []).some(file => file.name === fileName)) return NextResponse.json({ error: "The private artwork file is not present in storage." }, { status: 409 });
-      const { error: addError } = await db.from("cart_items").upsert({ cart_id: cartId, product_id: product.id, variant_id: variant.id, asset_id: asset.id, quantity: 1 }, { onConflict: "cart_id,product_id,variant_id,asset_id" });
-      if (addError) throw addError;
+      const { data: priorItem, error: priorError } = await db.from("cart_items").select("id").eq("cart_id", cartId).eq("product_id", product.id).eq("variant_id", variant.id).eq("asset_id", asset.id).maybeSingle();
+      if (priorError) throw priorError;
+      if (priorItem) {
+        const { error: updateError } = await db.from("cart_items").update({ quantity: 1, updated_at: new Date().toISOString() }).eq("id", priorItem.id);
+        if (updateError) throw updateError;
+      } else {
+        const { error: addError } = await db.from("cart_items").insert({ cart_id: cartId, product_id: product.id, variant_id: variant.id, asset_id: asset.id, quantity: 1 });
+        if (addError) throw addError;
+      }
     } else {
       return NextResponse.json({ error: "Invalid cart item." }, { status: 400 });
     }
