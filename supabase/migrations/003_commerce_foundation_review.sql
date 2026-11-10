@@ -314,8 +314,6 @@ begin
   where id = p_license_id and customer_id = v_user_id
   for update;
   if not found or v_license.status <> 'active' or v_license.expires_at <= now() then raise exception 'license_not_active' using errcode = 'P0001'; end if;
-  if v_license.purchased_credits is not null and v_license.used_credits >= v_license.purchased_credits then raise exception 'license_credits_exhausted' using errcode = 'P0001'; end if;
-
   -- Idempotency replay is scoped to the authenticated owner and exact licence.
   if exists (select 1 from public.license_usage where idempotency_key = p_idempotency_key) then
     select lu.id, de.id,
@@ -332,6 +330,8 @@ begin
     return next;
     return;
   end if;
+
+  if v_license.purchased_credits is not null and v_license.used_credits >= v_license.purchased_credits then raise exception 'license_credits_exhausted' using errcode = 'P0001'; end if;
 
   -- Never trust asset/design identifiers supplied by the browser.
   if not exists (
@@ -359,7 +359,7 @@ begin
   where id = p_license_id;
 
   insert into public.download_entitlements (customer_id, license_usage_id, asset_id, expires_at)
-  values (v_user_id, v_usage_id, p_asset_id, v_license.expires_at)
+  values (v_user_id, v_usage_id, p_asset_id, least(coalesce(p_entitlement_expires_at, v_license.expires_at), v_license.expires_at))
   returning id into v_entitlement_id;
 
   v_remaining := case when v_license.purchased_credits is null then null else v_license.purchased_credits - v_license.used_credits - 1 end;
