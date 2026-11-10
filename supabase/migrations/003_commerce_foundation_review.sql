@@ -385,6 +385,34 @@ grant select on public.orders, public.order_items, public.customer_licenses, pub
 revoke all on public.stripe_events, public.email_deliveries from anon, authenticated;
 revoke all on public.download_links from anon, authenticated;
 
+-- Catalogue records mirror the current public catalogue. Secure asset rows are
+-- intentionally NOT seeded until matching original files have been uploaded to
+-- the private Storage bucket and verified.
+insert into public.commerce_products (slug, title, description)
+values
+  ('brain-heart', 'Brain Heart', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('mrs-beer', 'MRS Beer', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('sea-dragons', 'Assimilation', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('lion-heart', 'Lion Heart', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('babicka-dedo', 'Grandparents — Babicka & Dedo', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('faces-within', 'Faces Within', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('goodbye-london', 'Goodbye London', 'Original tattoo artwork by Kateřina Pohnetalová.'),
+  ('war-inside', 'War Inside', 'Original tattoo artwork by Kateřina Pohnetalová.')
+on conflict (slug) do nothing;
+
+insert into public.commerce_variants (product_id, variant_key, label, price_cents, currency)
+select p.id, v.variant_key, v.label, v.price_cents, 'eur'
+from public.commerce_products p
+cross join (values
+  ('mini', 'Mini — 1,200 px', 900),
+  ('small', 'Small — 2,000 px', 1900),
+  ('detailed', 'Detailed — 3,200 px', 3900),
+  ('premium', 'Premium — 4,000 px', 7900),
+  ('collection', 'Complete Size Collection', 14900)
+) as v(variant_key, label, price_cents)
+where p.slug in ('brain-heart','mrs-beer','sea-dragons','lion-heart','babicka-dedo','faces-within','goodbye-london','war-inside')
+on conflict (product_id, variant_key) do nothing;
+
 -- Defaults are intentionally inserts-only. Existing package rows are never changed.
 insert into public.license_packages (code, title, description, price_cents, credit_limit, catalogue_scope)
 values
