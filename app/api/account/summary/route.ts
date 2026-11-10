@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     if (error || !data.user?.id) return NextResponse.json({ error: "Your session has expired. Please sign in again." }, { status: 401 });
     const admin = getSupabaseAdmin();
     const [orders, licenses] = await Promise.all([
-      admin.from("orders").select("id,customer_name,purchase_type,product_slug,variant,artwork_format,amount_total,currency,fulfillment_status,created_at,download_expires_at")
+      admin.from("orders").select("id,stripe_checkout_session_id,customer_name,purchase_type,product_slug,variant,artwork_format,amount_total,currency,fulfillment_status,created_at,download_expires_at")
         .eq("customer_id", data.user.id).order("created_at", { ascending: false }).limit(100),
       admin.from("customer_licenses").select("id,customer_email,license_package_id,starts_at,expires_at,purchased_credits,used_credits,status,license_packages(code,title)")
         .eq("customer_id", data.user.id).order("created_at", { ascending: false }).limit(100),
