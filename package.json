@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "prebuild": "node scripts/prepare-public-site.mjs",
     "predev": "node scripts/prepare-public-site.mjs",
-    "prepare:assimilation": "node scripts/prepare-assimilation-assets.mjs"
+    "prepare:assimilation": "node scripts/prepare-assimilation-assets.mjs",
+    "commerce:upload-assets": "node scripts/build-and-upload-commerce-assets.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
