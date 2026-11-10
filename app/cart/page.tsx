@@ -16,6 +16,8 @@ export default function CartPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [intendedUse, setIntendedUse] = useState("personal-tattoo");
+  const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
 
   const load = useCallback(async () => {
     const session = (await getSupabaseBrowser().auth.getSession()).data.session;
@@ -47,7 +49,7 @@ export default function CartPage() {
     try {
       const session = (await getSupabaseBrowser().auth.getSession()).data.session;
       if (!session?.access_token) throw new Error("Please sign in again.");
-      const response = await fetch("/api/cart/checkout", { method: "POST", headers: { Authorization: "Bearer " + session.access_token }, body: "{}" });
+      const response = await fetch("/api/cart/checkout", { method: "POST", headers: { Authorization: "Bearer " + session.access_token }, body: JSON.stringify({ intendedUse, intendedUseConfirmed }) });
       const data = await response.json();
       if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
       window.location.assign(data.url);
@@ -76,9 +78,22 @@ export default function CartPage() {
             </article>;
           })}
         </div>
+        {items.length === 1 && items[0].commerce_products && <section style={{ marginTop: 20, border: "1px solid #51432d", padding: 16 }}>
+          <label style={{ display: "block", fontSize: 13 }}>Intended use
+            <select value={intendedUse} onChange={e => setIntendedUse(e.target.value)} style={{ display: "block", width: "100%", padding: 10, marginTop: 8, background: "#171512", color: "#fff", border: "1px solid #39342b" }}>
+              <option value="personal-tattoo">Personal tattoo</option>
+              <option value="professional-client-tattoo">Tattooing a client</option>
+              <option value="personal-reference">Personal reference only</option>
+            </select>
+          </label>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 12, fontSize: 13, color: "#aaa39a" }}>
+            <input type="checkbox" checked={intendedUseConfirmed} onChange={e => setIntendedUseConfirmed(e.target.checked)} />
+            I confirm the intended use and agree to the applicable artwork licence terms.
+          </label>
+        </section>}
         <div style={{ borderTop: "1px solid #51432d", marginTop: 24, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <strong>Total saved: €{(total / 100).toFixed(2)}</strong>
-          <button disabled={busy} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>{busy ? "Opening checkout…" : "Secure checkout"}</button>
+          <button disabled={busy || (Boolean(items[0]?.commerce_products) && !intendedUseConfirmed)} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>{busy ? "Opening checkout…" : "Secure checkout"}</button>
         </div>
         {items.length > 1 && <p style={{ color: "#aaa39a", fontSize: 12, marginTop: 12 }}>The current secure checkout processes one item at a time. Other saved items remain in your cart.</p>}
       </>}
