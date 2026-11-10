@@ -93,7 +93,7 @@ export default function CartPage() {
         </section>}
         <div style={{ borderTop: "1px solid #51432d", marginTop: 24, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <strong>Total saved: €{(total / 100).toFixed(2)}</strong>
-          <button disabled={busy || (Boolean(items[0]?.commerce_products) && !intendedUseConfirmed)} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>{busy ? "Opening checkout…" : "Secure checkout"}</button>
+          <button disabled={busy || (items.length === 1 && Boolean(items[0]?.commerce_products) && !intendedUseConfirmed)} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>{busy ? "Opening checkout…" : "Secure checkout"}</button>
         </div>
         {items.length > 1 && <p style={{ color: "#aaa39a", fontSize: 12, marginTop: 12 }}>The current secure checkout processes one item at a time. Other saved items remain in your cart.</p>}
       </>}
