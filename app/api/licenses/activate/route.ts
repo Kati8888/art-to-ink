@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     const licenseId = typeof body.licenseId === "string" ? body.licenseId : "";
     const designSlug = typeof body.designSlug === "string" ? body.designSlug : "";
     const variantKey = typeof body.variantKey === "string" ? body.variantKey : "detailed";
-    const format = body.format === "blackAndWhite" ? "blackAndWhite" : "colour";
+    if (body.format !== "colour" && body.format !== "blackAndWhite") return NextResponse.json({ error: "Choose a valid artwork format." }, { status: 400 });
+    const format = body.format;
     const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey : "";
     if (!/^[a-z0-9-]{2,80}$/.test(designSlug) || !["mini","small","detailed","premium","collection"].includes(variantKey) || idempotencyKey.length < 16 || idempotencyKey.length > 120) {
       return NextResponse.json({ error: "Invalid design, size or activation request." }, { status: 400 });
@@ -29,7 +30,8 @@ export async function POST(request: Request) {
     if (productError || !product) return NextResponse.json({ error: "This design is not available in the licence catalogue." }, { status: 404 });
     const { data: variant, error: variantError } = await admin.from("commerce_variants").select("id").eq("product_id", product.id).eq("variant_key", variantKey).eq("active", true).maybeSingle();
     if (variantError) throw variantError;
-    const { data: asset, error: assetError } = await admin.from("commerce_assets").select("id").eq("product_id", product.id).eq("artwork_format", format).eq("active", true).eq("variant_id", variant?.id ?? null).maybeSingle();
+    if (!variant) return NextResponse.json({ error: "This size is not available for the selected design." }, { status: 404 });
+    const { data: asset, error: assetError } = await admin.from("commerce_assets").select("id").eq("product_id", product.id).eq("artwork_format", format).eq("active", true).eq("variant_id", variant.id).maybeSingle();
     if (assetError) throw assetError;
     if (!asset) return NextResponse.json({ error: "The requested secure artwork file is not available." }, { status: 404 });
     const { data, error } = await userClient.rpc("activate_license", {
