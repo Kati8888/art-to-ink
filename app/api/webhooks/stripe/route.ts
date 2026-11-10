@@ -41,6 +41,10 @@ async function sendEmailOnce(
       delivery_key: deliveryKey, order_id: orderId, email_type: emailType, recipient_email: recipientEmail,
     });
     if (error && error.code !== "23505") throw error;
+    const { data: afterInsert, error: afterInsertError } = await db.from("email_deliveries")
+      .select("sent_at").eq("delivery_key", deliveryKey).maybeSingle();
+    if (afterInsertError) throw afterInsertError;
+    if (afterInsert?.sent_at) return;
   }
   try {
     const result = await send();
