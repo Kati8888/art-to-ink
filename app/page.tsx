@@ -16,6 +16,7 @@ export default function HomePage() {
           <a href="#artist">The artist</a>
           <a href="/vy">Vy · Customer tattoos</a>
           <a href="/account">My account</a>
+          <a href="/cart">Cart</a>
         </div>
         <details className="mobile-menu">
           <summary aria-label="Open navigation menu"><span></span><span></span><span></span></summary>
@@ -25,6 +26,7 @@ export default function HomePage() {
             <a href="#artist">The artist</a>
             <a href="/vy">Vy · Customer tattoos</a>
             <a href="/account">My account</a>
+            <a href="/cart">Cart</a>
           </div>
         </details>
         <div className="nav-tools" aria-label="Language and quick links">
