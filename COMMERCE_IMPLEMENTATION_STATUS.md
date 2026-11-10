@@ -14,7 +14,9 @@ Working branch: `commerce-completion`
 - Added server endpoints for licence activation and short-lived private file delivery.
 - Added idempotent order-item snapshots and tracked customer/owner transactional email delivery through Brevo.
 - Added email-verified claiming of guest purchases into a customer account.
-- Added private admin commerce dashboard for orders, recorded paid totals, customer accounts, and licences.
+- Added private admin commerce dashboard for orders, recorded paid totals, customer accounts, licences, and configurable package credit limits.
+- Added a persistent authenticated cart with single-item checkout and automatic cart clearing after verified payment.
+- Added daily 30-day and 7-day licence expiry reminders through Brevo, protected by `CRON_SECRET`.
 - Seeded catalogue product and size variant metadata in the migration without inventing storage assets.
 - Added a local upload script that checks the bucket is private, generates four sizes and ZIP collections, uploads the files, and registers their private paths.
 - Added a GitHub Actions workflow for TypeScript, lint, and production-build validation.
