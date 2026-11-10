@@ -116,7 +116,7 @@ export default function AccountPage() {
         {(summary.licences ?? []).length ? <div style={{ display: "grid", gap: 12, marginTop: 12 }}>{summary.licences!.map((licence, i) => <article key={String(licence.id ?? i)} style={{ border: "1px solid #39342b", padding: 16 }}>
           <strong>{String((licence.license_packages as {title?:string}|null)?.title ?? "Studio licence")}</strong>
           <p style={{ color: "#aaa39a", fontSize: 13 }}>Valid until {String(licence.expires_at ?? "")} · {String(licence.status ?? "")}</p>
-          <p>{String(licence.used_credits ?? 0)} / {String(licence.purchased_credits ?? "Unlimited")} credits used</p>
+          <p>{String(licence.used_credits ?? 0)} / {String(licence.purchased_credits ?? "Limit not configured")} credits used</p>
         </article>)}</div> : <p style={{ color: "#aaa39a" }}>No licences linked yet.</p>}
         {(summary.licences ?? []).length > 0 && <section style={{ marginTop: 32, border: "1px solid #51432d", padding: 18 }}>
           <h2 style={{ fontSize: 24 }}>Activate a design with your licence</h2>
@@ -124,7 +124,7 @@ export default function AccountPage() {
           <form onSubmit={activateDesign} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
             <label>Licence<select required value={licenseId} onChange={e => setLicenseId(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}>
               <option value="">Choose an active licence</option>
-              {(summary.licences ?? []).filter(l => l.status === "active" && Date.parse(String(l.expires_at)) > Date.now()).map(l => <option key={String(l.id)} value={String(l.id)}>{String((l.license_packages as {title?:string}|null)?.title ?? "Studio licence")} · {String(l.used_credits ?? 0)}/{String(l.purchased_credits ?? "∞")}</option>)}
+              {(summary.licences ?? []).filter(l => l.status === "active" && l.purchased_credits !== null && Date.parse(String(l.expires_at)) > Date.now()).map(l => <option key={String(l.id)} value={String(l.id)}>{String((l.license_packages as {title?:string}|null)?.title ?? "Studio licence")} · {String(l.used_credits ?? 0)}/{String(l.purchased_credits ?? "not configured")}</option>)}
             </select></label>
             <label>Design<select required value={designSlug} onChange={e => setDesignSlug(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}><option value="">Choose a design</option>{[["brain-heart","Brain Heart"],["mrs-beer","MRS Beer"],["sea-dragons","Assimilation"],["lion-heart","Lion Heart"],["babicka-dedo","Grandparents"],["faces-within","Faces Within"],["goodbye-london","Goodbye London"],["war-inside","War Inside"]].map(([slug,title]) => <option key={slug} value={slug}>{title}</option>)}</select></label>
             <label>File size<select value={variantKey} onChange={e => setVariantKey(e.target.value)} style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #39342b" }}>{["mini","small","detailed","premium","collection"].map(v => <option key={v} value={v}>{v}</option>)}</select></label>
