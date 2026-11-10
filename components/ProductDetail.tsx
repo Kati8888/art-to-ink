@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { TattooDesign, DesignSize } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type MediaView = keyof TattooDesign["media"];
 
@@ -46,6 +47,26 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
+
+  async function addToCart() {
+    setError("");
+    setBusy(true);
+    try {
+      const session = (await getSupabaseBrowser().auth.getSession()).data.session;
+      if (!session?.access_token) throw new Error("Please sign in or create a customer account before saving items to your cart.");
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
+        body: JSON.stringify({ type: "design", productSlug: product.slug, variantKey: size, format: artworkFormat }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "This item could not be added to your cart.");
+      window.location.assign("/cart");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "This item could not be added to your cart.");
+      setBusy(false);
+    }
+  }
 
   async function checkout() {
     setError("");
@@ -236,6 +257,15 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
             >
               {busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
             </button>
+            <button
+              type="button"
+              disabled={busy || checkingDelivery || !deliveryReady}
+              onClick={addToCart}
+              className="mt-3 w-full border border-zinc-600 py-3 text-xs font-medium uppercase tracking-widest text-white hover:border-white disabled:opacity-60"
+            >
+              Add to saved cart
+            </button>
+            <p className="mt-2 text-xs text-zinc-500">Saved carts require a verified customer account. You can still use direct checkout above as a guest.</p>
           </div>
         </div>
       </section>
