@@ -68,6 +68,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
   }
 
+  if (event.type === "charge.refunded") {
+    try {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+      if (!paymentIntentId) return NextResponse.json({ received: true, ignored: true });
+      const db = getSupabaseAdmin();
+      const { data: refundedOrder, error } = await db.from("orders")
+        .update({ refunded_at: new Date().toISOString(), refund_amount: charge.amount_refunded, fulfillment_status: "refunded", updated_at: new Date().toISOString() })
+        .eq("stripe_payment_intent_id", paymentIntentId).select("id").maybeSingle();
+      if (error) throw error;
+      if (refundedOrder?.id) {
+        await Promise.all([
+          db.from("customer_licenses").update({ status: "refunded", updated_at: new Date().toISOString() }).eq("order_id", refundedOrder.id),
+          db.from("download_entitlements").update({ revoked_at: new Date().toISOString() }).eq("order_id", refundedOrder.id),
+        ]);
+      }
+      return NextResponse.json({ received: true, refundProcessed: Boolean(refundedOrder?.id) });
+    } catch (error) {
+      console.error("Stripe refund processing failed:", error);
+      return NextResponse.json({ error: "Refund status could not be synchronized." }, { status: 500 });
+    }
+  }
+
   if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
     return NextResponse.json({ received: true, ignored: true });
   }
@@ -89,6 +112,7 @@ export async function POST(request: Request) {
     const baseOrder = {
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+      stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
       customer_email: email,
       customer_name: session.metadata?.customer_name ?? session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
       customer_phone: session.metadata?.customer_phone ?? null,
