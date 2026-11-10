@@ -79,10 +79,21 @@ export async function POST(request: Request) {
         .eq("stripe_payment_intent_id", paymentIntentId).select("id").maybeSingle();
       if (error) throw error;
       if (refundedOrder?.id) {
-        await Promise.all([
-          db.from("customer_licenses").update({ status: "refunded", updated_at: new Date().toISOString() }).eq("order_id", refundedOrder.id),
-          db.from("download_entitlements").update({ revoked_at: new Date().toISOString() }).eq("order_id", refundedOrder.id),
-        ]);
+        const revokedAt = new Date().toISOString();
+        const { data: licences, error: licencesError } = await db.from("customer_licenses")
+          .update({ status: "refunded", updated_at: revokedAt }).eq("order_id", refundedOrder.id).select("id");
+        if (licencesError) throw licencesError;
+        await db.from("download_entitlements").update({ revoked_at: revokedAt }).eq("order_id", refundedOrder.id);
+        const licenceIds = (licences ?? []).map(item => item.id);
+        if (licenceIds.length) {
+          const { data: usages, error: usageError } = await db.from("license_usage").select("id").in("license_id", licenceIds);
+          if (usageError) throw usageError;
+          const usageIds = (usages ?? []).map(item => item.id);
+          if (usageIds.length) {
+            const { error: revokeError } = await db.from("download_entitlements").update({ revoked_at: revokedAt }).in("license_usage_id", usageIds);
+            if (revokeError) throw revokeError;
+          }
+        }
       }
       return NextResponse.json({ received: true, refundProcessed: Boolean(refundedOrder?.id) });
     } catch (error) {
