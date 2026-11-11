@@ -5,6 +5,7 @@ import ProductDetail from "@/components/ProductDetail";
 import ArtworkInteractions from "@/components/ArtworkInteractions";
 import type { TattooDesign } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
+import { designCartItem, useCart } from "@/components/CartProvider";
 
 type MediaState = "colour" | "bw" | "skin";
 const mediaLabels: Record<MediaState, string> = { colour: "Original / Colour", bw: "Black & White", skin: "On Skin" };
@@ -33,6 +34,8 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [busy, setBusy] = useState(false);
   const [deliveryReady, setDeliveryReady] = useState(false);
   const [checkingDelivery, setCheckingDelivery] = useState(true);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
   const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
   useEffect(() => {
     let cancelled = false;
@@ -86,7 +89,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
         <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
         {error && <p className="error-text" role="alert">{error}</p>}
         {checkingDelivery ? <p className="notice" role="status">Checking secure file availability…</p> : !deliveryReady ? <p className="notice" role="status">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
-        <button type="button" className="button" disabled={busy || checkingDelivery || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
+        <div className="purchase-actions"><button type="button" className="button" disabled={checkingDelivery || !deliveryReady} onClick={() => { addItem(designCartItem(design, size, artworkFormat)); setAdded(true); window.setTimeout(() => setAdded(false), 1800); }}>{checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : "Add to cart"}</button><button type="button" className="button secondary" disabled={busy || checkingDelivery || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : `Buy now · ${formatEuro(design.sizes[size].price)}`}</button></div>{added && <p className="cart-feedback" role="status">Added to cart. <a href="/cart">View cart</a></p>}
       </div>
     </div>
     <ArtworkInteractions designId={design.id} designTitle={design.title} />

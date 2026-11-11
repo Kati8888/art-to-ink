@@ -2,6 +2,8 @@
 
 ## Completed in this pass
 
+- Added a responsive, persisted customer cart at `/cart` with live header count, duplicate normalization, quantity controls, removal, empty/loading/error states, totals, and server-backed checkout submission.
+- Added artwork and licence add-to-cart actions without enabling unavailable artwork.
 - Updated `/api/checkout` to accept one or more cart items in a single Stripe Checkout Session.
 - Added server-side validation against the live `commerce_products`, `commerce_variants`, `commerce_assets`, and `license_packages` records.
 - Checkout totals come only from Supabase prices; client-provided prices are ignored.
@@ -16,8 +18,9 @@
 
 - `git diff --check`: passed before this implementation pass.
 - `pnpm typecheck`: passed.
-- `pnpm lint`: passed with four existing `no-img-element` warnings; no errors.
-- `pnpm build`: passed. Next build reported the same four image warnings plus five existing CSS optimizer warnings for escaped `@media` text in the generated storefront stylesheet.
+- `pnpm lint`: passed with five image warnings; no errors.
+- `pnpm build`: passed. Next build reported the same five image warnings plus existing CSS optimizer warnings for escaped `@media` text in the generated storefront stylesheet.
+- Browser verification: `/cart` rendered at the requested desktop dark viewport, and a persisted cart item survived reload and rendered in the checkout state.
 - Live payment/webhook and Brevo delivery: not executed; doing so would create external payment/email side effects.
 
 ## Exact remaining blockers

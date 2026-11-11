@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://art-to-ink.vercel.app"),
 };
 
+import { CartProvider } from "@/components/CartProvider";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body><CartProvider>{children}</CartProvider></body></html>;
 }
