@@ -15,7 +15,7 @@ const sharedSizes = {
 
 export const tattooDesigns: TattooDesign[] = [
   {
-    id: "sea-dragons", title: "Assimilation — Seahorses", slug: "sea-dragons",
+    id: "sea-dragons", title: "Assimilation — Seahorses", slug: "assimilation-seahorses",
     category: "Original Tattoo Artwork",
     description: "The linked seahorse artwork from the public ART TO INK gallery.",
     gridImage: asset("01-seahorses-colour-transparent-original.png"),
@@ -39,7 +39,7 @@ export const tattooDesigns: TattooDesign[] = [
     }, sizes: sharedSizes,
   },
   {
-    id: "goodbye-london", title: "Good Bye, London", slug: "goodbye-london",
+    id: "goodbye-london", title: "Good Bye, London", slug: "good-bye-london",
     category: "Original Tattoo Artwork",
     description: "A red-coated figure set against the expressive London-inspired background.",
     gridImage: source("Snímek obrazovky 2026-10-15 092238.png"),
@@ -88,7 +88,7 @@ export const tattooDesigns: TattooDesign[] = [
   },
   {
     // Retain the existing product key to avoid silently changing order references.
-    id: "faces-within", title: "Aura of Pete", slug: "faces-within",
+    id: "faces-within", title: "Aura of Pete", slug: "aura-of-pete",
     category: "Original Tattoo Artwork",
     description: "The golden female figure shown as Aura of Pete in the public gallery.",
     gridImage: source("Zlaté srdce ženy a lva (1).png"),
