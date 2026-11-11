@@ -55,7 +55,7 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
     if (typeof object.size === "number") headers.set("Content-Length", String(object.size));
     return new Response(object.body, { status: 200, headers });
   } catch (error) {
-    console.error("Secure R2 download failed:", error);
+    console.error("Secure private KV download failed:", error);
     return NextResponse.json({ error: "The secure download is temporarily unavailable." }, { status: 503 });
   }
 }
