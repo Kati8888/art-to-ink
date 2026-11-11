@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 
 type Dashboard = {
   orders?: Array<Record<string, unknown>>;
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
 
   return <main style={{ minHeight: "100vh", background: "#090908", color: "#f7f3eb", padding: "36px 20px" }}>
     <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-      <a href="/" style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</a>
+      <Link href="/ style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</Link>
       <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 400, fontSize: 42, margin: "20px 0 8px" }}>Commerce dashboard</h1>
       <p style={{ color: "#aaa39a" }}>Private overview of paid orders, customers and annual studio licences.</p>
       {error && <p role="alert" style={{ border: "1px solid #a33", color: "#ffbaba", padding: 12 }}>{error}</p>}
