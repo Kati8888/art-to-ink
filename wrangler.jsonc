@@ -14,10 +14,10 @@
   "observability": {
     "enabled": true
   },
-  "r2_buckets": [
+  "kv_namespaces": [
     {
       "binding": "ARTWORK_FILES",
-      "bucket_name": "ART_TO_INK_FILES"
+      "id": "de03271ad6ff4435959f9e7d2581984a"
     }
   ]
 }
