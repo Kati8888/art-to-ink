@@ -9,7 +9,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -27,6 +27,15 @@ jobs:
           version: 9.15.9
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+      - name: Commit refreshed pnpm lockfile
+        run: |
+          if ! git diff --quiet -- pnpm-lock.yaml; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            git commit -m "chore: sync pnpm lockfile [skip ci]"
+            git push
+          fi
       - name: TypeScript validation
         run: pnpm typecheck
       - name: ESLint
