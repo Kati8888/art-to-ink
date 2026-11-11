@@ -122,7 +122,7 @@ create table if not exists public.license_packages (
   price_cents bigint not null check (price_cents >= 0),
   currency text not null default 'eur',
   credit_limit integer,
-  catalogue_scope text not null default 'selected',
+  catalogue_scope text not null default 'selected' check (catalogue_scope in ('selected', 'catalogue')),
   validity_months integer not null default 12 check (validity_months > 0),
   active boolean not null default true,
   stripe_price_id text unique,
@@ -130,12 +130,34 @@ create table if not exists public.license_packages (
   updated_at timestamptz not null default now()
 );
 
-alter table public.cart_items
-  add constraint cart_items_license_package_fk
-  foreign key (license_package_id) references public.license_packages(id) on delete restrict;
-alter table public.order_items
-  add constraint order_items_license_package_fk
-  foreign key (license_package_id) references public.license_packages(id) on delete set null;
+alter table public.license_packages
+  drop constraint if exists license_packages_catalogue_credit_ck;
+alter table public.license_packages
+  add constraint license_packages_catalogue_credit_ck
+  check ((catalogue_scope = 'catalogue' and credit_limit is null)
+      or (catalogue_scope = 'selected' and credit_limit is not null and credit_limit > 0));
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'cart_items_license_package_fk'
+      and conrelid = 'public.cart_items'::regclass
+  ) then
+    alter table public.cart_items
+      add constraint cart_items_license_package_fk
+      foreign key (license_package_id) references public.license_packages(id) on delete restrict;
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'order_items_license_package_fk'
+      and conrelid = 'public.order_items'::regclass
+  ) then
+    alter table public.order_items
+      add constraint order_items_license_package_fk
+      foreign key (license_package_id) references public.license_packages(id) on delete set null;
+  end if;
+end $$;
 
 create table if not exists public.customer_licenses (
   id uuid primary key default gen_random_uuid(),
