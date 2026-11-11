@@ -173,9 +173,9 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               <label className="flex items-start gap-3 text-sm text-zinc-300"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} className="mt-1 accent-white" /><span>I confirm the intended use above and agree to the applicable design licence terms.</span></label>
             </div>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
-            {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
-            <button type="button" disabled={busy || checkingDelivery || !deliveryReady || !intendedUseConfirmed} onClick={addToCart} className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60">
-              {busy ? "Adding to cart…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : "Add to cart — " + formatEuro(product.sizes[size].price)}
+            {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet ready for secure delivery. You can save it in your cart, but payment will stay unavailable until the file is uploaded.</p> : null}
+            <button type="button" disabled={busy || !intendedUseConfirmed} onClick={addToCart} className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60">
+              {busy ? "Adding to cart…" : "Add to cart — " + formatEuro(product.sizes[size].price)}
             </button>
             <p className="mt-3 text-xs text-zinc-500">No account or personal details needed yet. You will enter your contact details when your full order is ready.</p>
           </div>
