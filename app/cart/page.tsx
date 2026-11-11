@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type CartItem = {
@@ -60,7 +61,7 @@ export default function CartPage() {
 
   return <main style={{ minHeight: "100vh", background: "#090908", color: "#f7f3eb", padding: "48px 20px" }}>
     <div style={{ maxWidth: 850, margin: "0 auto" }}>
-      <a href="/" style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</a>
+      <Link href="/" style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</Link>
       <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 400, fontSize: 44, margin: "22px 0 8px" }}>Your saved cart</h1>
       <p style={{ color: "#aaa39a" }}>Your cart is saved to your customer account.</p>
       {message && <p role="alert" style={{ marginTop: 18, border: "1px solid #8b3838", padding: 12, color: "#ffbcbc" }}>{message}</p>}
@@ -97,7 +98,7 @@ export default function CartPage() {
         </div>
         {items.length > 1 && <p style={{ color: "#aaa39a", fontSize: 12, marginTop: 12 }}>The current secure checkout processes one item at a time. Other saved items remain in your cart.</p>}
       </>}
-      <p style={{ marginTop: 32 }}><a href="/" style={{ color: "#d5a957" }}>Continue browsing artwork</a></p>
+      <p style={{ marginTop: 32 }}><Link href="/" style={{ color: "#d5a957" }}>Continue browsing artwork</Link></p>
     </div>
   </main>;
 }
