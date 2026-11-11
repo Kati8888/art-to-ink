@@ -11,8 +11,14 @@
 - Licence checkout uses one-time Stripe payment mode and live package prices/credit limits.
 - Added Stripe line-item metadata for order-item snapshots.
 - Updated the Stripe webhook to retrieve expanded line items, create/upsert the order and `order_items`, record Stripe event idempotency, and send a Brevo confirmation email.
-- Brevo sender selection uses `BREVO_FROM_EMAIL` when present and the existing `RESEND_FROM_EMAIL` fallback; no second email service was added.
+- Brevo sender selection requires the configured `BREVO_FROM_EMAIL`; the recipient is always the checkout email, and delivery rows are recorded idempotently with failure details.
 - Artwork downloads remain disabled because live `commerce_assets` is empty and the private bucket contains no originals.
+
+## Catalogue mapping status
+
+The canonical website catalogue currently contains eight designs: Brain Heart, MRS Beer, Assimilation, Lion Heart, Grandparents — Babicka & Dedo, Faces Within, Goodbye London, and War Inside. Each exposes the existing five website size offers (`mini`, `small`, `detailed`, `premium`, and `collection`) and both `colour` and `blackAndWhite` selections in the UI; checkout resolves the selected design, size, format, active Supabase product, active variant, and active private asset server-side. Order snapshots and confirmation emails preserve the selected variant and artwork format per line item.
+
+The live Supabase product/variant/asset rows and private storage were not fabricated or changed in this pass. Any design missing an active product, one of the five active variants, a matching active colour asset, a matching active black-and-white asset, or a verified private object remains unavailable and is rejected by availability/checkout checks rather than being sold.
 
 ## Targeted verification
 

@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const firstDesign = lines.map(lineMetadata).find((item) => item.item_type === "design");
     const firstLicense = lines.map(lineMetadata).find((item) => item.item_type === "license");
     const purchaseType = firstDesign ? "design" : "license";
-    const safeVariant = firstDesign?.variant_key && ["mini", "small", "detailed", "premium"].includes(firstDesign.variant_key) ? firstDesign.variant_key : "detailed";
+    const safeVariant = firstDesign?.variant_key && ["mini", "small", "detailed", "premium", "collection"].includes(firstDesign.variant_key) ? firstDesign.variant_key : "detailed";
     const orderPayload = {
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
@@ -123,18 +123,41 @@ export async function POST(request: Request) {
       downloadUrl = `${siteOrigin()}/api/download/${token}`;
     }
 
-    const from = process.env.BREVO_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL;
-    if (!from) throw new Error("Missing BREVO_FROM_EMAIL or RESEND_FROM_EMAIL server environment variable.");
+    const from = requiredEnv("BREVO_FROM_EMAIL");
     const title = firstDesign?.product_slug ?? firstLicense?.license_code ?? "ART TO INK order";
-    const downloadMessage = downloadUrl ? `Your private download link expires in seven days: ${downloadUrl}` : "Your secure artwork files are still being verified; no download is available yet.";
-    await sendTransactionalEmail({
-      sender: { email: from, name: "ART TO INK" },
-      to: [email],
-      subject: `ART TO INK order confirmed · ${title}`,
-      htmlContent: `<p>Thank you for your ART TO INK purchase.</p><p><strong>Order:</strong> ${escapeHtml(session.id)}</p><p><strong>Items:</strong> ${lines.length}</p><p>${escapeHtml(downloadMessage)}</p><p>Your purchase grants only the rights stated in the applicable licence. Please do not resell or redistribute source files.</p>`,
-      textContent: `Thank you for your ART TO INK purchase. Order ${session.id}. Items: ${lines.length}. ${downloadMessage}`,
-      messageId: `art-to-ink-customer-${session.id}`,
+    const purchaseLines = lines.map((line) => {
+      const item = lineMetadata(line);
+      const format = item.artwork_format === "blackAndWhite" ? "Black & White" : item.artwork_format === "colour" ? "Colour" : null;
+      const variant = item.variant_key ? ` · ${item.variant_key}` : "";
+      const detail = [format, variant.replace(/^ · /, "")].filter(Boolean).join(" · ");
+      const unit = new Intl.NumberFormat("en-IE", { style: "currency", currency: (line.price?.currency ?? session.currency ?? "eur").toUpperCase() }).format((line.price?.unit_amount ?? 0) / 100);
+      return { html: `<li>${escapeHtml(line.description ?? "ART TO INK purchase")} — ${escapeHtml(detail || "Licence")} × ${line.quantity ?? 1} · ${escapeHtml(unit)}</li>`, text: `${line.description ?? "ART TO INK purchase"}${detail ? ` — ${detail}` : ""} x ${line.quantity ?? 1} · ${unit}` };
     });
+    const itemHtml = purchaseLines.map((line) => line.html).join("");
+    const itemText = purchaseLines.map((line) => line.text).join("; ");
+    const downloadMessage = downloadUrl ? `Your private download link expires in seven days: ${downloadUrl}` : "Your secure artwork files are still being verified; no download is available yet.";
+    const deliveryKey = `order-confirmation:${session.id}`;
+    const { data: existingDelivery, error: deliveryLookupError } = await supabase.from("email_deliveries").select("id,sent_at").eq("delivery_key", deliveryKey).maybeSingle();
+    if (deliveryLookupError) throw deliveryLookupError;
+    if (!existingDelivery?.sent_at) {
+      const { error: deliveryPendingError } = await supabase.from("email_deliveries").upsert({ delivery_key: deliveryKey, customer_id: null, order_id: order.id, email_type: "order_confirmation", recipient_email: email, sent_at: null, error_message: null }, { onConflict: "delivery_key" });
+      if (deliveryPendingError) throw deliveryPendingError;
+      try {
+        await sendTransactionalEmail({
+          sender: { email: from, name: "ART TO INK" },
+          to: [email],
+          subject: `ART TO INK order confirmed · ${title}`,
+          htmlContent: `<p>Thank you for your ART TO INK purchase.</p><p><strong>Order:</strong> ${escapeHtml(session.id)}</p><ul>${itemHtml}</ul><p>${escapeHtml(downloadMessage)}</p><p>Your purchase grants only the rights stated in the applicable licence. Please do not resell or redistribute source files.</p>`,
+          textContent: `Thank you for your ART TO INK purchase. Order ${session.id}. Items: ${itemText}. ${downloadMessage}`,
+          messageId: `art-to-ink-customer-${session.id}`,
+        });
+        const { error: deliverySentError } = await supabase.from("email_deliveries").update({ sent_at: new Date().toISOString(), error_message: null }).eq("delivery_key", deliveryKey);
+        if (deliverySentError) throw deliverySentError;
+      } catch (emailError) {
+        await supabase.from("email_deliveries").update({ error_message: emailError instanceof Error ? emailError.message.slice(0, 500) : "Unknown email delivery error" }).eq("delivery_key", deliveryKey);
+        throw emailError;
+      }
+    }
 
     const finalStatus = downloadUrl && !firstLicense ? "fulfilled" : "processing";
     const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: finalStatus, fulfilled_at: finalStatus === "fulfilled" ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", order.id);
