@@ -1,115 +1,66 @@
-# ART TO INK — Cloudflare-only commerce setup
+# ART TO INK — Cloudflare-only, no-R2 commerce setup
 
-The storefront commerce code is being migrated away from Supabase. The target architecture uses Cloudflare D1, a private Cloudflare R2 bucket, Stripe Checkout, and the existing Brevo transactional email integration.
+The storefront is being migrated away from Supabase and R2. The current low-cost architecture uses:
+- Cloudflare D1 for products, orders, Stripe event IDs and download-token records.
+- A private Cloudflare Workers KV namespace for artwork files. KV is not a public URL; the Worker serves files only after validating a hashed, expiring order token.
+- Stripe Checkout for guest payments.
+- Brevo for transactional delivery email.
 
-## Cloudflare resources
+## Cloudflare resources already created
 
-Resource names and bindings:
-- D1 database: `ART_TO_INK_DB`, binding `DB`
-- R2 bucket: `ART_TO_INK_FILES`, binding `ARTWORK_FILES`
+Account resources:
+- D1 database: `ART_TO_INK_DB`
+- D1 binding: `DB`
+- KV namespace: `ART_TO_INK_PRIVATE_FILES`
+- KV namespace ID: `de03271ad6ff4435959f9e7d2581984a`
+- Worker KV binding: `ARTWORK_FILES`
 
-The R2 binding is declared in `wrangler.jsonc`. Create the bucket in the same Cloudflare account as the Worker:
+The Worker settings have been updated to include both `DB` and `ARTWORK_FILES`. The D1 schema and initial catalogue are provisioned. Current D1 state: 8 products, 80 variants, 0 variants enabled for purchase.
 
-```sh
-npx wrangler r2 bucket create ART_TO_INK_FILES
-```
+## Free-tier limits and safeguards
 
-Create the D1 database:
+Cloudflare KV has a free allowance and overage pricing may apply if account usage exceeds it. Check the current Cloudflare Workers KV pricing and account usage before uploading. Each KV value has a 25 MiB maximum. The uploader resizes individual files and stops if any file exceeds 24 MiB. Do not enable public access or expose KV keys in client-side code.
 
-```sh
-npx wrangler d1 create ART_TO_INK_DB
-```
+## Prepare and upload artwork
 
-Wrangler prints a real database UUID. Add this exact value to `wrangler.jsonc` (do not use a placeholder):
+Use the prepared package `ART_TO_INK_web_catalogue_ready.zip`. Extract it so the directory `ART_TO_INK_web_catalogue_ready` contains the eight product folders, each with `colour/original.png` and `black-and-white/original.png`.
 
-```jsonc
-"d1_databases": [
-  {
-    "binding": "DB",
-    "database_name": "ART_TO_INK_DB",
-    "database_id": "PASTE_THE_REAL_UUID_FROM_WRANGLER"
-  }
-]
-```
-
-Apply the schema and initial product catalogue:
+Install project dependencies and authenticate Wrangler to the same Cloudflare account, then run:
 
 ```sh
-npx wrangler d1 execute ART_TO_INK_DB --remote --file=migrations/0001_cloudflare_commerce.sql
-npx wrangler d1 execute ART_TO_INK_DB --remote --file=migrations/0002_seed_initial_catalogue.sql
+ART_TO_INK_KV_NAMESPACE_ID=de03271ad6ff4435959f9e7d2581984a node scripts/upload-private-artwork-kv.mjs ./ART_TO_INK_web_catalogue_ready
 ```
 
-## Server-side Worker variables and secrets
+The uploader writes four private PNG sizes per format and product. It does not activate the products in D1. Five of the eight image pairings are marked medium confidence in the package README; review those matches before enabling their product variants.
 
-Set secrets with Wrangler or the Cloudflare dashboard. Never commit them to Git or paste them into chat.
+## Stripe and email secrets
 
-Required:
+Set secrets in the Cloudflare Worker settings, not in Git:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `BREVO_API_KEY`
 
-Set a non-secret Worker variable:
-- `BREVO_FROM_EMAIL` — a sender address verified in Brevo
-- `NEXT_PUBLIC_SITE_URL` — the canonical HTTPS storefront URL
+Set non-secret Worker variables:
+- `BREVO_FROM_EMAIL` — verified sender in Brevo
+- `NEXT_PUBLIC_SITE_URL` — canonical HTTPS storefront URL
 
-For example:
-
-```sh
-npx wrangler secret put STRIPE_SECRET_KEY
-npx wrangler secret put STRIPE_WEBHOOK_SECRET
-npx wrangler secret put BREVO_API_KEY
-```
-
-Set `BREVO_FROM_EMAIL` and `NEXT_PUBLIC_SITE_URL` in Worker Variables in the Cloudflare dashboard.
-
-## Stripe webhook
-
-Configure a Stripe webhook endpoint at:
-
-```
-https://YOUR_CANONICAL_DOMAIN/api/webhooks/stripe
-```
-
-Subscribe to:
+Subscribe the Stripe webhook at `https://YOUR_DOMAIN/api/webhooks/stripe` to:
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
 - `charge.refunded`
 
-Copy the endpoint signing secret into the Cloudflare Worker secret `STRIPE_WEBHOOK_SECRET`. Use Stripe test mode first.
+Use Stripe test mode first.
 
-## Private artwork files
+## Release gate
 
-The R2 bucket must remain private. Do not enable public bucket access or publish paid originals under `/public`.
+Do not enable live purchases until:
+1. The KV binding is present in the deployed Worker.
+2. Correct files exist in KV for each enabled variant.
+3. Product slug-to-artwork matching is approved.
+4. Stripe secrets and webhook are configured.
+5. A multi-item guest checkout succeeds in Stripe test mode.
+6. The webhook creates expiring private links and the delivery email arrives.
+7. Expired links, refunded orders, duplicate webhooks and missing files fail safely.
+8. The latest production Worker build is verified.
 
-The code checks for the exact R2 object before creating a Stripe Checkout Session. The initial catalogue expects object keys such as:
-
-```
-sea-dragons/sea-dragons-colour-1200.png
-sea-dragons/sea-dragons-blackAndWhite-1200.png
-sea-dragons/sea-dragons-colour-2000.png
-sea-dragons/sea-dragons-blackAndWhite-2000.png
-...
-sea-dragons/sea-dragons-colour-complete-collection.zip
-```
-
-Equivalent keys are defined for the eight seeded products in `lib/secure-assets.ts`. Upload only the correct licensed original files. Do not upload gallery previews as paid originals unless they are the actual deliverables.
-
-## Price catalogue
-
-The seed migration uses the existing storefront prices: EUR 9, 19, 39, 79 and 149 for the four sizes and the complete-size ZIP package. The collection ZIP must exist in private R2 before it can be purchased. All checkout prices are loaded from D1, not from browser-submitted values.
-
-## Important release gate
-
-The schema and application code are groundwork; they do not create Cloudflare resources or upload the original artwork. Do not enable live payments until all of these are verified:
-
-1. The D1 database and binding `DB` exist in the production Worker.
-2. The private R2 bucket and binding `ARTWORK_FILES` exist.
-3. Product/variant seed data is applied.
-4. Every item marked purchasable has the correct private R2 object.
-5. Stripe test-mode checkout succeeds for a multi-item guest order.
-6. The Stripe webhook signature is verified and the D1 order becomes fulfilled.
-7. The email arrives with working, expiring private download links.
-8. Expired links, refunded orders, duplicate webhooks, and missing files fail safely.
-9. The production build and Cloudflare deployment succeed.
-
-No paid Cloudflare feature is required by this design. Check the current account limits before uploading large artwork files or enabling production traffic.
+R2 and Supabase are not required by this architecture. No paid upgrade has been enabled. KV has usage limits; monitor the account so usage does not exceed the included allowance.
