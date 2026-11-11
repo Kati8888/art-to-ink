@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { TattooDesign, DesignSize } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type MediaView = keyof TattooDesign["media"];
 
@@ -20,9 +19,6 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
   const [intendedUse, setIntendedUse] = useState("personal-tattoo");
   const [placementNote, setPlacementNote] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [deliveryReady, setDeliveryReady] = useState(false);
   const [checkingDelivery, setCheckingDelivery] = useState(true);
@@ -52,62 +48,18 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
     setError("");
     setBusy(true);
     try {
-      const session = (await getSupabaseBrowser().auth.getSession()).data.session;
-      if (!session?.access_token) throw new Error("Please sign in or create a customer account before saving items to your cart.");
-      const response = await fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
-        body: JSON.stringify({ type: "design", productSlug: product.slug, variantKey: size, format: artworkFormat }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "This item could not be added to your cart.");
+      const key = "art-to-ink-guest-cart";
+      const current = JSON.parse(window.localStorage.getItem(key) ?? "[]") as Array<{ productSlug: string; variantKey: DesignSize; format: "colour" | "blackAndWhite"; quantity: number }>;
+      const existing = current.find((item) => item.productSlug === product.slug && item.variantKey === size && item.format === artworkFormat);
+      if (existing) existing.quantity = Math.min(20, existing.quantity + 1);
+      else current.push({ productSlug: product.slug, variantKey: size, format: artworkFormat, quantity: 1 });
+      window.localStorage.setItem(key, JSON.stringify(current));
       window.location.assign("/cart");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "This item could not be added to your cart.");
+    } catch {
+      setError("The item could not be added to your cart. Please enable browser storage and try again.");
       setBusy(false);
     }
   }
-
-  async function checkout() {
-    setError("");
-    if (!intendedUseConfirmed) {
-      setError("Please confirm the intended use before checkout.");
-      return;
-    }
-    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) {
-      setError("Please enter your name, phone number and email so we can contact you if delivery fails.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "design",
-          productId: product.id,
-          variantId: "var_" + size,
-          artworkFormat,
-          customerIntent: intendedUse,
-          intendedUseConfirmed: true,
-          intendedUse,
-          placementNote: placementNote.trim().slice(0, 500),
-          customerName: customerName.trim().slice(0, 120),
-          customerPhone: customerPhone.trim().slice(0, 40),
-          customerEmail: customerEmail.trim().slice(0, 254),
-        }),
-      });
-      const data: { url?: string; error?: string } = await response.json();
-      if (!response.ok || !data.url) {
-        throw new Error(data.error ?? "Checkout could not be started.");
-      }
-      window.location.assign(data.url);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Checkout could not be started.");
-      setBusy(false);
-    }
-  }
-
   function getCurrentImage(): string {
     if (activeView === "colour" && product.checkoutImage) return product.checkoutImage;
     return product.media[activeView];
@@ -209,63 +161,23 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
 
           <div>
             <div className="mb-5 border border-zinc-800 bg-zinc-950 p-4">
-              <h3 className="mb-3 text-xs uppercase tracking-widest text-zinc-400">Order contact details</h3>
-              <p className="mb-3 text-xs text-zinc-500">We use these details for your order and to contact you if the payment or download delivery has a problem.</p>
-              <label className="mb-3 block text-sm text-zinc-300">Full name<input required autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={120} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
-              <label className="mb-3 block text-sm text-zinc-300">Email address<input required type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
-              <label className="block text-sm text-zinc-300">Phone number<input required type="tel" autoComplete="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={40} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
+              <h3 className="mb-3 text-xs uppercase tracking-widest text-zinc-400">Order details</h3>
+              <label className="mb-4 block text-sm text-zinc-300">Intended use
+                <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white">
+                  <option value="personal-tattoo">Personal tattoo</option><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference only</option>
+                </select>
+              </label>
+              <label className="mb-4 block text-sm text-zinc-300">Optional placement note
+                <textarea value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} maxLength={500} rows={2} placeholder="e.g. outer forearm (optional)" className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white placeholder:text-zinc-600" />
+              </label>
+              <label className="flex items-start gap-3 text-sm text-zinc-300"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} className="mt-1 accent-white" /><span>I confirm the intended use above and agree to the applicable design licence terms.</span></label>
             </div>
-            <label className="mb-4 block text-sm text-zinc-300">
-              Intended use
-              <select
-                value={intendedUse}
-                onChange={(event) => setIntendedUse(event.target.value)}
-                className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white"
-              >
-                <option value="personal-tattoo">Personal tattoo</option>
-                <option value="professional-client-tattoo">Tattooing a client</option>
-                <option value="personal-reference">Personal reference only</option>
-              </select>
-            </label>
-            <label className="mb-4 block text-sm text-zinc-300">
-              Optional placement note
-              <textarea
-                value={placementNote}
-                onChange={(event) => setPlacementNote(event.target.value)}
-                maxLength={500}
-                rows={2}
-                placeholder="e.g. outer forearm (optional)"
-                className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white placeholder:text-zinc-600"
-              />
-            </label>
-            <label className="mb-4 flex items-start gap-3 text-sm text-zinc-300">
-              <input
-                type="checkbox"
-                checked={intendedUseConfirmed}
-                onChange={(event) => setIntendedUseConfirmed(event.target.checked)}
-                className="mt-1 accent-white"
-              />
-              <span>I confirm the intended use above and agree to the applicable design licence terms.</span>
-            </label>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
             {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
-            <button
-              type="button"
-              disabled={busy || checkingDelivery || !deliveryReady}
-              onClick={checkout}
-              className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60"
-            >
-              {busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
+            <button type="button" disabled={busy || checkingDelivery || !deliveryReady || !intendedUseConfirmed} onClick={addToCart} className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60">
+              {busy ? "Adding to cart…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : "Add to cart — " + formatEuro(product.sizes[size].price)}
             </button>
-            <button
-              type="button"
-              disabled={busy || checkingDelivery || !deliveryReady}
-              onClick={addToCart}
-              className="mt-3 w-full border border-zinc-600 py-3 text-xs font-medium uppercase tracking-widest text-white hover:border-white disabled:opacity-60"
-            >
-              Add to saved cart
-            </button>
-            <p className="mt-2 text-xs text-zinc-500">Saved carts require a verified customer account. You can still use direct checkout above as a guest.</p>
+            <p className="mt-3 text-xs text-zinc-500">No account or personal details needed yet. You will enter your contact details when your full order is ready.</p>
           </div>
         </div>
       </section>
