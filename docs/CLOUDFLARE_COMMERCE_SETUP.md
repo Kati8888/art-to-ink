@@ -1,63 +1,115 @@
-# ART TO INK — Cloudflare-only commerce setup (no Supabase)
+# ART TO INK — Cloudflare-only commerce setup
 
-This branch is being migrated away from Supabase. Do not configure or re-enable Supabase.
+The storefront commerce code is being migrated away from Supabase. The target architecture uses Cloudflare D1, a private Cloudflare R2 bucket, Stripe Checkout, and the existing Brevo transactional email integration.
 
-## Target architecture
+## Cloudflare resources
 
-- Next.js storefront on the existing Cloudflare Worker / OpenNext deployment.
-- Cloudflare D1 binding: `DB` for catalogue publication metadata, paid orders, Stripe event idempotency, download entitlements, and email delivery records.
-- Cloudflare R2 binding: `ARTWORK_FILES` for private original artwork and customer downloads.
-- Stripe Checkout for payment collection.
-- Existing transactional email provider integration, configured only with server-side secrets.
-- Public preview images remain in the existing public asset paths; private purchase files must be stored in R2 and must never be served from a public URL.
+Resource names and bindings:
+- D1 database: `ART_TO_INK_DB`, binding `DB`
+- R2 bucket: `ART_TO_INK_FILES`, binding `ARTWORK_FILES`
 
-## Resource names
+The R2 binding is declared in `wrangler.jsonc`. Create the bucket in the same Cloudflare account as the Worker:
 
-- D1 database: `ART_TO_INK_DB` (binding name `DB`)
-- R2 bucket: `ART_TO_INK_FILES` (binding name `ARTWORK_FILES`)
+```sh
+npx wrangler r2 bucket create ART_TO_INK_FILES
+```
 
-Create these resources in the Cloudflare dashboard or with Wrangler. Creating resources can require accepting Cloudflare's current terms; do not enable paid features or exceed free-tier limits.
+Create the D1 database:
 
-## D1 schema
+```sh
+npx wrangler d1 create ART_TO_INK_DB
+```
 
-Apply `migrations/0001_cloudflare_commerce.sql` to the D1 database:
+Wrangler prints a real database UUID. Add this exact value to `wrangler.jsonc` (do not use a placeholder):
+
+```jsonc
+"d1_databases": [
+  {
+    "binding": "DB",
+    "database_name": "ART_TO_INK_DB",
+    "database_id": "PASTE_THE_REAL_UUID_FROM_WRANGLER"
+  }
+]
+```
+
+Apply the schema and initial product catalogue:
 
 ```sh
 npx wrangler d1 execute ART_TO_INK_DB --remote --file=migrations/0001_cloudflare_commerce.sql
+npx wrangler d1 execute ART_TO_INK_DB --remote --file=migrations/0002_seed_initial_catalogue.sql
 ```
 
-Before using remote commands, confirm that Wrangler is authenticated to the correct Cloudflare account and that the named database exists.
+## Server-side Worker variables and secrets
 
-## Required Worker bindings
+Set secrets with Wrangler or the Cloudflare dashboard. Never commit them to Git or paste them into chat.
 
-Configure the D1 and R2 bindings in the existing `wrangler.jsonc` after Cloudflare returns the actual D1 database ID. Never invent a database ID.
-
-Expected binding names:
-- D1: `DB`
-- R2: `ARTWORK_FILES`
-
-Do not make the R2 bucket public. Serve paid downloads through a server route that checks a one-time/expiring token hash in D1 and streams the matching private R2 object.
-
-## Server-side secrets
-
-Keep all secrets in Cloudflare Worker secrets, never in Git:
+Required:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `NEXT_PUBLIC_SITE_URL`
-- transactional email provider API key and verified sender address
+- `BREVO_API_KEY`
 
-Never commit real credentials or ask the shop owner to paste them into chat.
+Set a non-secret Worker variable:
+- `BREVO_FROM_EMAIL` — a sender address verified in Brevo
+- `NEXT_PUBLIC_SITE_URL` — the canonical HTTPS storefront URL
+
+For example:
+
+```sh
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
+npx wrangler secret put BREVO_API_KEY
+```
+
+Set `BREVO_FROM_EMAIL` and `NEXT_PUBLIC_SITE_URL` in Worker Variables in the Cloudflare dashboard.
+
+## Stripe webhook
+
+Configure a Stripe webhook endpoint at:
+
+```
+https://YOUR_CANONICAL_DOMAIN/api/webhooks/stripe
+```
+
+Subscribe to:
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `charge.refunded`
+
+Copy the endpoint signing secret into the Cloudflare Worker secret `STRIPE_WEBHOOK_SECRET`. Use Stripe test mode first.
+
+## Private artwork files
+
+The R2 bucket must remain private. Do not enable public bucket access or publish paid originals under `/public`.
+
+The code checks for the exact R2 object before creating a Stripe Checkout Session. The initial catalogue expects object keys such as:
+
+```
+sea-dragons/sea-dragons-colour-1200.png
+sea-dragons/sea-dragons-blackAndWhite-1200.png
+sea-dragons/sea-dragons-colour-2000.png
+sea-dragons/sea-dragons-blackAndWhite-2000.png
+...
+sea-dragons/sea-dragons-colour-complete-collection.zip
+```
+
+Equivalent keys are defined for the eight seeded products in `lib/secure-assets.ts`. Upload only the correct licensed original files. Do not upload gallery previews as paid originals unless they are the actual deliverables.
+
+## Price catalogue
+
+The seed migration uses the existing storefront prices: EUR 9, 19, 39, 79 and 149 for the four sizes and the complete-size ZIP package. The collection ZIP must exist in private R2 before it can be purchased. All checkout prices are loaded from D1, not from browser-submitted values.
 
 ## Important release gate
 
-Checkout must remain disabled until all of the following are implemented and tested:
-1. Server-side price and product validation from the canonical catalogue.
-2. A Stripe Checkout Session for every valid cart item in one payment.
-3. A signed Stripe webhook with event idempotency stored in D1.
-4. Paid order persistence in D1.
-5. Private R2 object existence checks before payment is offered.
-6. Expiring download token hashes stored in D1 and private R2 streaming.
-7. Idempotent customer email delivery with retry-safe state.
-8. Test-mode payment, webhook retry, expired link, missing file, and multi-item order tests.
+The schema and application code are groundwork; they do not create Cloudflare resources or upload the original artwork. Do not enable live payments until all of these are verified:
 
-The SQL migration is infrastructure groundwork only. It does not by itself make checkout or delivery operational.
+1. The D1 database and binding `DB` exist in the production Worker.
+2. The private R2 bucket and binding `ARTWORK_FILES` exist.
+3. Product/variant seed data is applied.
+4. Every item marked purchasable has the correct private R2 object.
+5. Stripe test-mode checkout succeeds for a multi-item guest order.
+6. The Stripe webhook signature is verified and the D1 order becomes fulfilled.
+7. The email arrives with working, expiring private download links.
+8. Expired links, refunded orders, duplicate webhooks, and missing files fail safely.
+9. The production build and Cloudflare deployment succeed.
+
+No paid Cloudflare feature is required by this design. Check the current account limits before uploading large artwork files or enabling production traffic.
