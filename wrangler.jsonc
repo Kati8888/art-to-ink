@@ -19,5 +19,12 @@
       "binding": "ARTWORK_FILES",
       "id": "de03271ad6ff4435959f9e7d2581984a"
     }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ART_TO_INK_DB",
+      "database_id": "bb48b765-c807-433a-bb89-0ffbf9905285"
+    }
   ]
 }
