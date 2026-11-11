@@ -136,7 +136,7 @@ export async function POST(request: Request) {
       messageId: `art-to-ink-customer-${session.id}`,
     });
 
-    const finalStatus = downloadUrl || firstLicense ? "fulfilled" : "processing";
+    const finalStatus = downloadUrl && !firstLicense ? "fulfilled" : "processing";
     const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: finalStatus, fulfilled_at: finalStatus === "fulfilled" ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", order.id);
     if (updateError) throw updateError;
     const { error: eventUpdateError } = await supabase.from("stripe_events").update({ processed_at: new Date().toISOString() }).eq("id", event.id);
