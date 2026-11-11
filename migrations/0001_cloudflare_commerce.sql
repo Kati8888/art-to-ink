@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS orders (
   amount_total INTEGER NOT NULL,
   currency TEXT NOT NULL,
   items_json TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'paid' CHECK (status IN ('paid', 'fulfilled', 'refunded', 'fulfillment_failed')),
+  status TEXT NOT NULL DEFAULT 'paid' CHECK (status IN ('pending', 'paid', 'fulfilled', 'refunded', 'fulfillment_failed')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fulfilled_at TEXT
 );
