@@ -129,7 +129,7 @@ export async function POST(request: Request) {
         row.variant_key === item.variantKey && row.artwork_format === item.format);
       if (!variant) throw new Error("A purchased variant could not be resolved.");
       const stored = await files.head(variant.r2_object_key);
-      if (!stored || stored.size <= 0) throw new Error(`Paid artwork is missing from private R2 storage: ${variant.r2_object_key}`);
+      if (!stored || stored.size <= 0) throw new Error(`Paid artwork is missing from private KV storage: ${variant.r2_object_key}`);
       for (let quantity = 0; quantity < item.quantity; quantity += 1) {
         const token = randomBytes(32).toString("base64url");
         downloadRows.push({
