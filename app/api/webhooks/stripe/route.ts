@@ -30,6 +30,14 @@ function lineMetadata(line: Stripe.LineItem): Record<string, string> {
   return product.metadata ?? {};
 }
 
+function deterministicUuid(seed: string): string {
+  const bytes = createHash("sha256").update(seed).digest("hex").slice(0, 32).split("").map((value, index, all) => index % 2 === 0 ? Number.parseInt(value + all[index + 1], 16) : null).filter((value): value is number => value !== null);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map((value) => value.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   if (!signature) return NextResponse.json({ error: "Missing Stripe signature." }, { status: 400 });
@@ -87,6 +95,7 @@ export async function POST(request: Request) {
     const orderItems = lines.map((line) => {
       const item = lineMetadata(line);
       return {
+        id: deterministicUuid(`${session.id}:${line.price?.id ?? "price"}:${line.description ?? "item"}:${item.variant_key ?? ""}:${item.artwork_format ?? ""}`),
         order_id: order.id,
         product_id: item.product_id || null,
         variant_id: item.variant_id || null,
