@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     if (item.license_package_id) {
       const { data: pkg, error } = await db.from("license_packages")
-        .select("id,code,title,price_cents,currency,credit_limit,active")
+        .select("id,code,title,description,price_cents,currency,credit_limit,active")
         .eq("id", item.license_package_id).eq("active", true).single();
       if (error || !pkg) return NextResponse.json({ error: "This licence package is no longer available." }, { status: 409 });
       if (pkg.credit_limit === null) return NextResponse.json({ error: "This licence package is not ready for sale until its usage limit has been configured." }, { status: 409 });
