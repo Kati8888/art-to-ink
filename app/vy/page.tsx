@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 
 type Photo = { id: string; caption: string | null; imageUrl: string };
 
@@ -40,14 +41,14 @@ export default function VyPage() {
 
   return <main className="customer-page">
     <header className="customer-header">
-      <a href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></a>
-      <a className="customer-back" href="/">Back to the website ↗</a>
+      <Link href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></Link>
+      <a className="customer-back" href="/">Back to the website ↗</Link>
     </header>
     <section className="customer-hero">
       <p className="customer-kicker">REAL PEOPLE · REAL TATTOOS</p>
       <h1>You. Your skin. Your story.</h1>
       <p>Got a tattoo based on an ART TO INK design? Show us how it looks on you. Every photo is reviewed before it appears in the gallery.</p>
-      <a className="customer-gold-button" href="#upload">Upload Your Photo ↓</a>
+      <a className="customer-gold-button" href="#upload">Upload Your Photo ↓</Link>
     </section>
     <section className="customer-gallery">
       <div className="customer-section-heading"><div><p className="customer-kicker">COMMUNITY GALLERY</p><h2>Your Photos</h2></div><span>{photos.length} {photos.length === 1 ? "photo" : "photos"}</span></div>
@@ -68,7 +69,7 @@ export default function VyPage() {
         {status && <p className="customer-status" role="status">{status}</p>}
       </form>
     </section>
-    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <a href="/">Back to the main website ↑</a></footer>
+    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <Link href="/">Back to the main website ↑</Link></footer>
     <style jsx>{`
       .customer-page{min-height:100vh;background:#080807;color:#f4ecdf;font:15px/1.6 Arial,sans-serif}
       .customer-header{height:88px;border-bottom:1px solid #493a27;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1200px)/2))}
