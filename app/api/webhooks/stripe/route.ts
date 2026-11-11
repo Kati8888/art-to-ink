@@ -94,10 +94,10 @@ export async function POST(request: Request) {
 
   if (event.type === "charge.refunded") {
     try {
+      const db = eventDb;
       const charge = event.data.object as Stripe.Charge;
       const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
       if (!paymentIntentId) { await markStripeEventProcessed(db, event.id); return NextResponse.json({ received: true, ignored: true }); }
-      const db = eventDb;
       const { data: refundedOrder, error } = await db.from("orders")
         .update({ refunded_at: new Date().toISOString(), refund_amount: charge.amount_refunded, ...(charge.refunded ? { fulfillment_status: "refunded" } : {}), updated_at: new Date().toISOString() })
         .eq("stripe_payment_intent_id", paymentIntentId).select("id").maybeSingle();
@@ -146,6 +146,8 @@ export async function POST(request: Request) {
     const email = session.customer_details?.email ?? session.customer_email!;
     const purchaseType = session.metadata?.purchase_type;
     if (purchaseType !== "design" && purchaseType !== "license") throw new Error("Checkout Session is missing a valid purchase_type metadata value.");
+    const purchasedProductId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
+    const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === purchasedProductId || item.slug === purchasedProductId) : undefined;
     const baseOrder = {
       stripe_checkout_session_id: session.id,
       customer_id: session.metadata?.customer_id ?? null,
@@ -181,7 +183,7 @@ export async function POST(request: Request) {
     let downloadExpiresAt: string | null = null;
     let downloadUrl: string | null = null;
     if (purchaseType === "design") {
-      const productId = session.metadata?.productId ?? session.metadata?.product_slug;
+      const productId = purchasedProductId;
       const rawVariantId = session.metadata?.variantId ?? session.metadata?.size;
       const size = (rawVariantId?.replace(/^var_/, "") ?? "") as DesignSize;
       const format = (session.metadata?.artworkFormat ?? "colour") as ArtworkFormat;
@@ -264,7 +266,6 @@ export async function POST(request: Request) {
     const from = process.env.BREVO_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL;
     if (!from) throw new Error("Missing BREVO_FROM_EMAIL server environment variable.");
     const productId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
-    const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === productId || item.slug === productId) : undefined;
     const format = session.metadata?.artworkFormat === "blackAndWhite" ? "blackAndWhite" : "colour";
     const variantKey = (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "detailed") as DesignSize;
     const variantInfo = purchasedDesign?.sizes[variantKey];
