@@ -22,7 +22,6 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -55,7 +54,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
       `Placement note: ${placementNote.trim() || "—"}`,
       "",
       "Please confirm availability, final price and payment/delivery details before I pay.",
-    ].join("\\n");
+    ].join("\n");
     window.location.href = `mailto:katerina.pohnetalova@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
