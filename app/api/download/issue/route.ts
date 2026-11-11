@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-    if (!token) return NextResponse.json({ error: "Sign in to access your purchases." }, { status: 401 });
+    const authToken = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    if (!authToken) return NextResponse.json({ error: "Sign in to access your purchases." }, { status: 401 });
     const supabaseUrl = process.env.SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !anonKey) throw new Error("Supabase authentication is not configured.");
     const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: auth, error: authError } = await authClient.auth.getUser(token);
+    const { data: auth, error: authError } = await authClient.auth.getUser(authToken);
     if (authError || !auth.user?.id || !auth.user.email || !auth.user.email_confirmed_at) {
       return NextResponse.json({ error: "Verify your account email and sign in again." }, { status: 403 });
     }
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The order could not be verified." }, { status: 403 });
     }
 
-    const token = randomBytes(32).toString("base64url");
-    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const downloadToken = randomBytes(32).toString("base64url");
+    const tokenHash = createHash("sha256").update(downloadToken).digest("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const { error: insertError } = await supabase.from("download_links").insert({
       order_id: order.id,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     if (origin.protocol !== "https:" && origin.hostname !== "localhost") {
       throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS.");
     }
-    return NextResponse.json({ url: `${origin.origin}/api/download/${token}`, expiresAt });
+    return NextResponse.json({ url: `${origin.origin}/api/download/${downloadToken}`, expiresAt });
   } catch (error) {
     console.error("Download link issuance failed:", error);
     return NextResponse.json({ error: "A secure download link could not be issued. Please try again shortly." }, { status: 503 });
