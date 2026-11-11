@@ -199,14 +199,13 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               <span>I confirm the intended use above and agree to the applicable design licence terms.</span>
             </label>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
-            {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
+            <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This is an order request only. No payment is taken on this website; availability and delivery are confirmed by email.</p>
             <button
               type="button"
-              disabled={busy || checkingDelivery || !deliveryReady}
               onClick={checkout}
-              className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60"
+              className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200"
             >
-              {busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
+              Request by email — {formatEuro(product.sizes[size].price)}
             </button>
           </div>
         </div>
