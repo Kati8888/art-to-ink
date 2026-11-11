@@ -3,7 +3,9 @@
   "name": "art-to-ink",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-11",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -11,5 +13,11 @@
   "workers_dev": true,
   "observability": {
     "enabled": true
-  }
+  },
+  "r2_buckets": [
+    {
+      "binding": "ARTWORK_FILES",
+      "bucket_name": "ART_TO_INK_FILES"
+    }
+  ]
 }
