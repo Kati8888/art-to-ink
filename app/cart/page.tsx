@@ -42,7 +42,7 @@ export default function CartPage() {
       setMessage("Please enter your name, email address and phone number.");
       return;
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setMessage("Please enter a valid email address.");
       return;
     }
