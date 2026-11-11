@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { DESIGN_SIZE_ORDER, type DesignSize } from "@/lib/products";
 import { getSecureDownloadObject, type ArtworkFormat } from "@/lib/secure-assets";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getCommerceBindings } from "@/lib/cloudflare-commerce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,22 +20,16 @@ export async function GET(request: Request) {
   }
 
   const objectPath = getSecureDownloadObject(productId, size, format);
-  const bucket = process.env.SUPABASE_DOWNLOAD_BUCKET;
-  if (!objectPath || !bucket || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!objectPath) {
     return NextResponse.json({ available: false }, { headers: { "Cache-Control": "no-store" } });
   }
 
   try {
-    const separator = objectPath.lastIndexOf("/");
-    const folder = separator >= 0 ? objectPath.slice(0, separator) : "";
-    const fileName = separator >= 0 ? objectPath.slice(separator + 1) : objectPath;
-    const { data, error } = await getSupabaseAdmin().storage.from(bucket).list(folder, {
-      limit: 100,
-      search: fileName,
+    const { files } = await getCommerceBindings();
+    const stored = await files.head(objectPath);
+    return NextResponse.json({ available: Boolean(stored && stored.size > 0) }, {
+      headers: { "Cache-Control": "no-store" },
     });
-    if (error) throw error;
-    const available = (data ?? []).some((item) => item.name === fileName);
-    return NextResponse.json({ available }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ available: false }, { headers: { "Cache-Control": "no-store" } });
   }
