@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type Summary = { email?: string; orders?: Array<Record<string, unknown>>; licences?: Array<Record<string, unknown>> };
@@ -117,7 +118,7 @@ export default function AccountPage() {
 
   return <main style={{ minHeight: "100vh", background: "#090908", color: "#f7f3eb", padding: "48px 20px" }}>
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
-      <a href="/" style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</a>
+      <Link href="/" style={{ color: "#d5a957", letterSpacing: 3, fontSize: 12 }}>ART TO INK</Link>
       <h1 style={{ fontFamily: "Georgia,serif", fontWeight: 400, fontSize: 42, margin: "24px 0 8px" }}>Your account</h1>
       <p style={{ color: "#aaa39a" }}>Sign in to see your orders, downloads and annual studio licences.</p>
       {summary ? <section style={{ marginTop: 32 }}>
@@ -162,7 +163,7 @@ export default function AccountPage() {
         <button disabled={busy} type="submit" style={{ padding: 14, background: "#d5a957", color: "#090908", fontWeight: 700 }}>{busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}</button>
       </form>}
       {message && <p role="status" style={{ marginTop: 20, color: "#d5a957" }}>{message}</p>}
-      <p style={{ marginTop: 36 }}><a href="/" style={{ color: "#d5a957" }}>Back to ART TO INK</a></p>
+      <p style={{ marginTop: 36 }}><Link href="/" style={{ color: "#d5a957" }}>Back to ART TO INK</Link></p>
     </div>
   </main>;
 }
