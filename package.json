@@ -11,7 +11,10 @@
     "prebuild": "node scripts/prepare-public-site.mjs",
     "predev": "node scripts/prepare-public-site.mjs",
     "prepare:assimilation": "node scripts/prepare-assimilation-assets.mjs",
-    "commerce:upload-assets": "node scripts/build-and-upload-commerce-assets.mjs"
+    "commerce:upload-assets": "node scripts/build-and-upload-commerce-assets.mjs",
+    "cf:build": "node scripts/prepare-public-site.mjs && opennextjs-cloudflare build",
+    "cf:preview": "pnpm run cf:build && opennextjs-cloudflare preview",
+    "cf:deploy": "pnpm run cf:build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
@@ -29,6 +32,8 @@
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.0",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@opennextjs/cloudflare": "^1.13.0",
+    "wrangler": "^4.50.0"
   }
 }
