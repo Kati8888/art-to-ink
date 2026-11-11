@@ -51,7 +51,7 @@ The script stops before uploading if any expected image is missing, and reports 
 
 ## After upload
 1. Verify the bucket is private and all 16 objects are present.
-2. Add/verify the Vercel production environment variables: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DOWNLOAD_BUCKET`, `NEXT_PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL`.
+2. Add/verify the Vercel production environment variables: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DOWNLOAD_BUCKET`, `NEXT_PUBLIC_SITE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BREVO_API_KEY`, and `RESEND_FROM_EMAIL`.
 3. Verify the `orders` table and required columns exist.
 4. Add the matching object paths to `lib/secure-assets.ts` only after files exist. The checkout endpoint checks private storage before creating a Stripe session, so a missing object must never result in a payment.
 5. Test with Stripe test mode and a Resend test recipient before enabling live payments.

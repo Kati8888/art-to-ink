@@ -1,12 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { Resend } from "resend";
+import { sendTransactionalEmail } from "@/lib/brevo";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getStripe } from "@/lib/stripe";
-import { getSecureDownloadObject, type ArtworkFormat } from "@/lib/secure-assets";
-import { DESIGN_SIZE_ORDER, LICENSES, type DesignSize } from "@/lib/products";
-import { tattooDesigns } from "@/lib/mock-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,11 +14,28 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-function safeSiteOrigin(): string {
-  const raw = requiredEnv("NEXT_PUBLIC_SITE_URL");
-  const url = new URL(raw);
+function siteOrigin(): string {
+  const url = new URL(requiredEnv("NEXT_PUBLIC_SITE_URL"));
   if (url.protocol !== "https:" && url.hostname !== "localhost") throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS.");
   return url.origin;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] ?? character));
+}
+
+function lineMetadata(line: Stripe.LineItem): Record<string, string> {
+  const product = line.price?.product;
+  if (!product || typeof product === "string" || product.deleted) return {};
+  return product.metadata ?? {};
+}
+
+function deterministicUuid(seed: string): string {
+  const bytes = createHash("sha256").update(seed).digest("hex").slice(0, 32).split("").map((value, index, all) => index % 2 === 0 ? Number.parseInt(value + all[index + 1], 16) : null).filter((value): value is number => value !== null);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map((value) => value.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 export async function POST(request: Request) {
@@ -29,137 +43,139 @@ export async function POST(request: Request) {
   if (!signature) return NextResponse.json({ error: "Missing Stripe signature." }, { status: 400 });
   let event: Stripe.Event;
   try {
-    const rawBody = await request.text();
-    event = getStripe().webhooks.constructEvent(rawBody, signature, requiredEnv("STRIPE_WEBHOOK_SECRET"));
+    event = getStripe().webhooks.constructEvent(await request.text(), signature, requiredEnv("STRIPE_WEBHOOK_SECRET"));
   } catch (error) {
     console.error("Stripe webhook signature verification failed:", error);
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
   }
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") return NextResponse.json({ received: true, ignored: true });
 
-  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
-    return NextResponse.json({ received: true, ignored: true });
-  }
-
-  const session = event.data.object as Stripe.Checkout.Session;
-  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
-    return NextResponse.json({ received: true, awaitingPayment: true });
-  }
-  if (!session.customer_details?.email && !session.customer_email) {
-    console.error("Completed Checkout Session has no customer email:", session.id);
-    return NextResponse.json({ error: "Customer email missing from completed session." }, { status: 500 });
-  }
-
+  const sessionEvent = event.data.object as Stripe.Checkout.Session;
+  if (sessionEvent.payment_status !== "paid" && sessionEvent.payment_status !== "no_payment_required") return NextResponse.json({ received: true, awaitingPayment: true });
   try {
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(sessionEvent.id, { expand: ["line_items.data.price.product"] });
+    const email = session.customer_details?.email ?? session.customer_email;
+    if (!email) throw new Error("Completed Checkout Session has no customer email.");
     const supabase = getSupabaseAdmin();
-    const email = session.customer_details?.email ?? session.customer_email!;
-    const purchaseType = session.metadata?.purchase_type;
-    if (purchaseType !== "design" && purchaseType !== "license") throw new Error("Checkout Session is missing a valid purchase_type metadata value.");
-    const baseOrder = {
+    const { data: existingEvent, error: eventLookupError } = await supabase.from("stripe_events").select("id,processed_at").eq("id", event.id).maybeSingle();
+    if (eventLookupError) throw eventLookupError;
+    if (existingEvent?.processed_at) return NextResponse.json({ received: true, duplicate: true });
+    const { error: eventInsertError } = await supabase.from("stripe_events").upsert({ id: event.id, event_type: event.type, payload: event, processed_at: null }, { onConflict: "id" });
+    if (eventInsertError) throw eventInsertError;
+
+    const lines = session.line_items?.data ?? [];
+    if (!lines.length) throw new Error("Completed Checkout Session has no line items.");
+    const metadata = session.metadata ?? {};
+    const firstDesign = lines.map(lineMetadata).find((item) => item.item_type === "design");
+    const firstLicense = lines.map(lineMetadata).find((item) => item.item_type === "license");
+    const purchaseType = firstDesign ? "design" : "license";
+    const safeVariant = firstDesign?.variant_key && ["mini", "small", "detailed", "premium", "collection"].includes(firstDesign.variant_key) ? firstDesign.variant_key : "detailed";
+    const orderPayload = {
       stripe_checkout_session_id: session.id,
       stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
       customer_email: email,
-      customer_name: session.metadata?.customer_name ?? session.customer_details?.name ?? session.custom_fields?.find((field) => field.key === "customer_name")?.text?.value ?? null,
-      customer_phone: session.metadata?.customer_phone ?? null,
+      customer_name: metadata.customer_name ?? session.customer_details?.name ?? null,
+      customer_phone: metadata.customer_phone ?? null,
       purchase_type: purchaseType,
-      product_slug: session.metadata?.productId ?? session.metadata?.product_slug ?? null,
-      variant: (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? null),
-      artwork_format: session.metadata?.artworkFormat ?? null,
-      license_id: session.metadata?.license_id ?? null,
+      product_slug: firstDesign?.product_slug ?? null,
+      variant: firstDesign ? safeVariant : null,
+      license_id: firstLicense?.license_code ?? null,
       amount_total: session.amount_total,
       currency: session.currency,
-      intended_use: session.metadata?.customerIntent ?? session.metadata?.intended_use ?? null,
-      intended_use_confirmed: session.metadata?.intended_use_confirmed === "true",
-      placement_note: session.custom_fields?.find((field) => field.key === "placement_note")?.text?.value || session.metadata?.placementNote || session.metadata?.placement_note || null,
+      intended_use: metadata.customer_intent ?? null,
+      intended_use_confirmed: metadata.intended_use_confirmed === "true",
+      placement_note: metadata.placement_note ?? null,
       fulfillment_status: "processing",
       updated_at: new Date().toISOString(),
     };
+    const { data: order, error: orderError } = await supabase.from("orders").upsert(orderPayload, { onConflict: "stripe_checkout_session_id" }).select("id,fulfillment_status").single();
+    if (orderError) throw orderError;
 
-    const { data: existing, error: lookupError } = await supabase.from("orders").select("id,fulfillment_status,download_token_hash,download_expires_at").eq("stripe_checkout_session_id", session.id).maybeSingle();
-    if (lookupError) throw lookupError;
-    if (existing?.fulfillment_status === "fulfilled" || existing?.fulfillment_status === "license_active") return NextResponse.json({ received: true, duplicate: true });
+    const orderItems = lines.map((line) => {
+      const item = lineMetadata(line);
+      return {
+        id: deterministicUuid(`${session.id}:${line.price?.id ?? "price"}:${line.description ?? "item"}:${item.variant_key ?? ""}:${item.artwork_format ?? ""}`),
+        order_id: order.id,
+        product_id: item.product_id || null,
+        variant_id: item.variant_id || null,
+        asset_id: item.asset_id || null,
+        license_package_id: item.license_id || null,
+        quantity: line.quantity ?? 1,
+        unit_amount: line.price?.unit_amount ?? 0,
+        currency: line.price?.currency ?? session.currency ?? "eur",
+        title_snapshot: line.description ?? "ART TO INK purchase",
+        variant_snapshot: item.variant_key ?? null,
+        artwork_format_snapshot: item.artwork_format ?? null,
+        storage_object_path_snapshot: item.storage_object_path ?? null,
+      };
+    });
+    const { error: itemError } = await supabase.from("order_items").upsert(orderItems, { onConflict: "id" });
+    if (itemError) throw itemError;
 
-    let token: string | null = null;
-    let downloadExpiresAt: string | null = null;
     let downloadUrl: string | null = null;
-    if (purchaseType === "design") {
-      const productId = session.metadata?.productId ?? session.metadata?.product_slug;
-      const rawVariantId = session.metadata?.variantId ?? session.metadata?.size;
-      const size = (rawVariantId?.replace(/^var_/, "") ?? "") as DesignSize;
-      const format = (session.metadata?.artworkFormat ?? "colour") as ArtworkFormat;
-      if (!productId || !DESIGN_SIZE_ORDER.includes(size) || !["colour", "blackAndWhite"].includes(format)) {
-        throw new Error("Verified Checkout Session is missing valid product, variant, or format metadata.");
-      }
-      const objectPath = getSecureDownloadObject(productId, size, format);
-      if (!objectPath || objectPath.startsWith("/") || objectPath.split("/").includes("..")) {
-        throw new Error("Secure download object is not configured for this product variant.");
-      }
+    const hasMissingArtwork = lines.some((line) => lineMetadata(line).item_type === "design" && !lineMetadata(line).storage_object_path);
+    if (firstDesign && !hasMissingArtwork) {
+      const firstPath = firstDesign.storage_object_path;
       const bucket = requiredEnv("SUPABASE_DOWNLOAD_BUCKET");
-      const slash = objectPath.lastIndexOf("/");
-      const folder = slash >= 0 ? objectPath.slice(0, slash) : "";
-      const fileName = slash >= 0 ? objectPath.slice(slash + 1) : objectPath;
+      const slash = firstPath.lastIndexOf("/");
+      const folder = slash >= 0 ? firstPath.slice(0, slash) : "";
+      const fileName = slash >= 0 ? firstPath.slice(slash + 1) : firstPath;
       const { data: storedFiles, error: storageError } = await supabase.storage.from(bucket).list(folder, { limit: 100, search: fileName });
       if (storageError) throw storageError;
       if (!(storedFiles ?? []).some((file) => file.name === fileName)) throw new Error("Purchased artwork is not present in private storage.");
-      token = randomBytes(32).toString("base64url");
-      downloadExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const token = randomBytes(32).toString("base64url");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       const tokenHash = createHash("sha256").update(token).digest("hex");
-      const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, download_token_hash: tokenHash, download_object_path: objectPath, download_expires_at: downloadExpiresAt }, { onConflict: "stripe_checkout_session_id" });
-      if (orderError) throw orderError;
-      downloadUrl = `${safeSiteOrigin()}/api/download/${token}`;
-    } else {
-      const { error: orderError } = await supabase.from("orders").upsert({ ...baseOrder, fulfillment_status: "license_active" }, { onConflict: "stripe_checkout_session_id" });
-      if (orderError) throw orderError;
+      const { error: deliveryError } = await supabase.from("orders").update({ download_token_hash: tokenHash, download_object_path: firstPath, download_expires_at: expiresAt }).eq("id", order.id);
+      if (deliveryError) throw deliveryError;
+      downloadUrl = `${siteOrigin()}/api/download/${token}`;
     }
 
-    const resend = new Resend(requiredEnv("RESEND_API_KEY"));
-    const from = requiredEnv("RESEND_FROM_EMAIL");
-    const productId = session.metadata?.productId ?? session.metadata?.product_slug ?? "";
-    const purchasedDesign = purchaseType === "design" ? tattooDesigns.find((item) => item.id === productId || item.slug === productId) : undefined;
-    const format = session.metadata?.artworkFormat === "blackAndWhite" ? "blackAndWhite" : "colour";
-    const variantKey = (session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "detailed") as DesignSize;
-    const variantInfo = purchasedDesign?.sizes[variantKey];
-    const licenseId = session.metadata?.license_id ?? "";
-    const license = LICENSES.find((item) => item.id === licenseId);
-    const subject = purchaseType === "design"
-      ? `Your ${purchasedDesign?.title ?? "ART TO INK"} artwork is ready`
-      : "Your ART TO INK studio licence — payment confirmed";
-    const html = purchaseType === "design"
-      ? `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · ORIGINAL ARTWORK</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Your artwork is ready.</h1><p>Thank you for supporting original artwork by Kateřina Pohnetalová. Your payment has been confirmed.</p><h2 style="font-family:Georgia,serif;font-weight:400">${purchasedDesign?.title ?? "Your selected design"}</h2>${purchasedDesign ? `<p><img src="${purchasedDesign.media[format]}" alt="${purchasedDesign.title} tattoo artwork preview" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0"/></p>` : ""}<p><strong>Package:</strong> ${variantInfo?.label ?? variantKey}<br/><strong>File:</strong> ${format === "colour" ? "Colour" : "Black & white"}</p><p>${variantInfo?.details ?? "Digital artwork file."}</p><p>Your private download link expires in seven days. If it expires before you download the file, reply to this email and we can help.</p><p><a href="${downloadUrl}" style="display:inline-block;padding:15px 22px;background:#d5a957;color:#080807;text-decoration:none;font-weight:bold">DOWNLOAD YOUR ARTWORK</a></p><p style="font-size:13px;color:#655b4d">Your purchase grants only the rights stated in the applicable licence. Please do not resell, redistribute, or publicly share the source file.</p><p>With gratitude,<br/>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`
-      : `<!doctype html><html><body style="margin:0;background:#f5f0e7;color:#17130d;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f0e7;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fffdf8;border:1px solid #e4d6bd"><tr><td style="padding:32px"><p style="font-size:12px;letter-spacing:3px;color:#9a762f">ART TO INK · STUDIO LICENSING</p><h1 style="font-family:Georgia,serif;font-weight:400;font-size:32px">Thank you for choosing ART TO INK.</h1><p>Your payment has been confirmed. Keep this email as your purchase record.</p><h2 style="font-family:Georgia,serif;font-weight:400">${license?.title ?? "Studio licence"}</h2><p><strong>Annual price:</strong> €${license?.price ?? "—"}<br/><strong>Scope:</strong> ${license?.allowance ?? "As specified in your licence"}<br/><strong>Team/location:</strong> ${license?.audience ?? "As specified in your licence"}</p><p>This licence is non-exclusive and does not transfer copyright. Use is limited to the stated designs, artist count, and studio location. Source files may not be resold or redistributed.</p><p>For your records, payment reference: ${session.id}</p><p>If you need to register the artists using the licence or clarify its scope, reply to this email before using the artwork commercially.</p><p>Kateřina Pohnetalová<br/>ART TO INK</p><p style="font-size:12px"><a href="${safeSiteOrigin()}" style="color:#806126">Visit ART TO INK</a></p></td></tr></table></td></tr></table></body></html>`;
-    const { error: emailError } = await resend.emails.send({
-      from, to: email, subject, html,
-      text: purchaseType === "design"
-        ? `Your ART TO INK artwork is ready. Design: ${purchasedDesign?.title ?? productId}. Package: ${variantInfo?.label ?? variantKey}. Format: ${format === "colour" ? "Colour" : "Black & white"}. Your private download link expires in seven days: ${downloadUrl}. Thank you, Kateřina Pohnetalová, ART TO INK.`
-        : `Your ART TO INK studio licence payment is confirmed. Licence: ${license?.title ?? licenseId}. Annual price: €${license?.price ?? "—"}. Scope: ${license?.allowance ?? "see licence terms"}. This licence is non-exclusive and does not transfer copyright. Payment reference: ${session.id}. Reply to this email for registration or questions.`
-    }, { idempotencyKey: `art-to-ink-customer-${session.id}` });
-    if (emailError) throw new Error(`Transactional customer email failed: ${emailError.message}`);
-
-    // Send the shop owner a separate order notification without exposing the secure download token.
-    try {
-      const ownerEmail = "katerina.pohnetalova@seznam.cz";
-      const amount = typeof session.amount_total === "number" ? (session.amount_total / 100).toFixed(2) : "not available";
-      const currency = (session.currency ?? "eur").toUpperCase();
-      const item = purchaseType === "license"
-        ? `Studio licence: ${session.metadata?.license_id ?? "ART TO INK licence"}`
-        : `${session.metadata?.product_slug ?? session.metadata?.productId ?? "Tattoo artwork"} · ${session.metadata?.variantId?.replace(/^var_/, "") ?? session.metadata?.size ?? "design"} · ${session.metadata?.artworkFormat === "blackAndWhite" ? "black & white" : "colour"}`;
-      const ownerHtml = `<div style="font-family:Arial,sans-serif;color:#17130d;max-width:600px;margin:auto"><h1>New paid order · ART TO INK</h1><p>A Stripe payment has been confirmed.</p><p><strong>Item:</strong> ${item}</p><p><strong>Amount:</strong> ${amount} ${currency}</p><p><strong>Customer:</strong> ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"} (${email})</p><p><strong>Phone:</strong> ${session.metadata?.customer_phone ?? "Not provided"}</p><p><strong>Intended use:</strong> ${session.metadata?.customerIntent ?? session.metadata?.intended_use ?? "not specified"}</p><p><strong>Checkout session:</strong> ${session.id}</p></div>`;
-      const { error: ownerEmailError } = await resend.emails.send({
-        from,
-        to: ownerEmail,
-        subject: `Nová zaplacená objednávka ART TO INK · ${amount} ${currency}`,
-        html: ownerHtml,
-        text: `Nová zaplacená objednávka ART TO INK. Položka: ${item}. Částka: ${amount} ${currency}. Zákazník: ${session.metadata?.customer_name ?? session.customer_details?.name ?? "Not provided"}. E-mail: ${email}. Telefon: ${session.metadata?.customer_phone ?? "Not provided"}. Session: ${session.id}.`,
-      }, { idempotencyKey: `art-to-ink-owner-order-${session.id}` });
-      if (ownerEmailError) console.error("ART TO INK owner notification failed:", ownerEmailError.message);
-    } catch (ownerNotificationError) {
-      console.error("ART TO INK owner notification failed:", ownerNotificationError);
+    const from = requiredEnv("BREVO_FROM_EMAIL");
+    const title = firstDesign?.product_slug ?? firstLicense?.license_code ?? "ART TO INK order";
+    const purchaseLines = lines.map((line) => {
+      const item = lineMetadata(line);
+      const format = item.artwork_format === "blackAndWhite" ? "Black & White" : item.artwork_format === "colour" ? "Colour" : null;
+      const variant = item.variant_key ? ` · ${item.variant_key}` : "";
+      const detail = [format, variant.replace(/^ · /, "")].filter(Boolean).join(" · ");
+      const unit = new Intl.NumberFormat("en-IE", { style: "currency", currency: (line.price?.currency ?? session.currency ?? "eur").toUpperCase() }).format((line.price?.unit_amount ?? 0) / 100);
+      return { html: `<li>${escapeHtml(line.description ?? "ART TO INK purchase")} — ${escapeHtml(detail || "Licence")} × ${line.quantity ?? 1} · ${escapeHtml(unit)}</li>`, text: `${line.description ?? "ART TO INK purchase"}${detail ? ` — ${detail}` : ""} x ${line.quantity ?? 1} · ${unit}` };
+    });
+    const itemHtml = purchaseLines.map((line) => line.html).join("");
+    const itemText = purchaseLines.map((line) => line.text).join("; ");
+    const downloadMessage = downloadUrl ? `Your private download link expires in seven days: ${downloadUrl}` : "Your secure artwork files are still being verified; no download is available yet.";
+    const deliveryKey = `order-confirmation:${session.id}`;
+    const { data: existingDelivery, error: deliveryLookupError } = await supabase.from("email_deliveries").select("id,sent_at").eq("delivery_key", deliveryKey).maybeSingle();
+    if (deliveryLookupError) throw deliveryLookupError;
+    if (!existingDelivery?.sent_at) {
+      const { error: deliveryPendingError } = await supabase.from("email_deliveries").upsert({ delivery_key: deliveryKey, customer_id: null, order_id: order.id, email_type: "order_confirmation", recipient_email: email, sent_at: null, error_message: null }, { onConflict: "delivery_key" });
+      if (deliveryPendingError) throw deliveryPendingError;
+      try {
+        await sendTransactionalEmail({
+          sender: { email: from, name: "ART TO INK" },
+          to: [email],
+          subject: `ART TO INK order confirmed · ${title}`,
+          htmlContent: `<p>Thank you for your ART TO INK purchase.</p><p><strong>Order:</strong> ${escapeHtml(session.id)}</p><ul>${itemHtml}</ul><p>${escapeHtml(downloadMessage)}</p><p>Your purchase grants only the rights stated in the applicable licence. Please do not resell or redistribute source files.</p>`,
+          textContent: `Thank you for your ART TO INK purchase. Order ${session.id}. Items: ${itemText}. ${downloadMessage}`,
+          messageId: `art-to-ink-customer-${session.id}`,
+        });
+        const { error: deliverySentError } = await supabase.from("email_deliveries").update({ sent_at: new Date().toISOString(), error_message: null }).eq("delivery_key", deliveryKey);
+        if (deliverySentError) throw deliverySentError;
+      } catch (emailError) {
+        await supabase.from("email_deliveries").update({ error_message: emailError instanceof Error ? emailError.message.slice(0, 500) : "Unknown email delivery error" }).eq("delivery_key", deliveryKey);
+        throw emailError;
+      }
     }
 
-    const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: purchaseType === "design" ? "fulfilled" : "license_active", fulfilled_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("stripe_checkout_session_id", session.id);
+    const finalStatus = downloadUrl && !firstLicense ? "fulfilled" : "processing";
+    const { error: updateError } = await supabase.from("orders").update({ fulfillment_status: finalStatus, fulfilled_at: finalStatus === "fulfilled" ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", order.id);
     if (updateError) throw updateError;
+    const { error: eventUpdateError } = await supabase.from("stripe_events").update({ processed_at: new Date().toISOString() }).eq("id", event.id);
+    if (eventUpdateError) throw eventUpdateError;
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Stripe fulfillment failed; Stripe should retry this webhook:", error);
-    return NextResponse.json({ error: "Payment was received, but fulfillment needs a retry. No public download URL was exposed." }, { status: 500 });
+    return NextResponse.json({ error: "Payment was received, but fulfillment needs a retry." }, { status: 500 });
   }
 }

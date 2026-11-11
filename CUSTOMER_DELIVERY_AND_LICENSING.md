@@ -77,7 +77,7 @@ These links do not yet cover every artwork/package combination, and no verified 
 
 - [ ] Upload and verify private high-resolution colour and B&W originals for all eight products.
 - [ ] Add and test every private object path in `lib/secure-assets.ts`.
-- [ ] Verify `SUPABASE_DOWNLOAD_BUCKET`, Supabase service credentials, `NEXT_PUBLIC_SITE_URL`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL` in the production environment.
+- [ ] Verify `SUPABASE_DOWNLOAD_BUCKET`, Supabase service credentials, `NEXT_PUBLIC_SITE_URL`, `STRIPE_WEBHOOK_SECRET`, `BREVO_API_KEY`, and `RESEND_FROM_EMAIL` in the production environment.
 - [ ] Verify the Stripe webhook endpoint is configured and receives `checkout.session.completed` events.
 - [ ] Verify annual licence prices are the intended recurring or one-time prices. Current checkout code uses Stripe subscription mode for licences, which normally renews automatically; do not advertise “no automatic renewal” until this is deliberately changed and tested.
 - [ ] Test successful payment, failed/cancelled payment, duplicate webhook, expired download link, and licence purchase with test-mode transactions.

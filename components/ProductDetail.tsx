@@ -22,23 +22,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [deliveryReady, setDeliveryReady] = useState(false);
-  const [checkingDelivery, setCheckingDelivery] = useState(true);
   const [error, setError] = useState("");
-  useEffect(() => {
-    let cancelled = false;
-    setCheckingDelivery(true);
-    setDeliveryReady(false);
-    const query = new URLSearchParams({ productId: product.id, size, artworkFormat });
-    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : { available: false })
-      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })
-      .catch(() => { if (!cancelled) setDeliveryReady(false); })
-      .finally(() => { if (!cancelled) setCheckingDelivery(false); });
-    return () => { cancelled = true; };
-  }, [product.id, size, artworkFormat]);
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -47,44 +31,31 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  async function checkout() {
+  function checkout() {
     setError("");
-    if (!intendedUseConfirmed) {
-      setError("Please confirm the intended use before checkout.");
-      return;
-    }
+    if (!intendedUseConfirmed) { setError("Please confirm the intended use before sending your request."); return; }
     if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) {
-      setError("Please enter your name, phone number and email so we can contact you if delivery fails.");
+      setError("Please enter your name, phone number and email.");
       return;
     }
-    setBusy(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "design",
-          productId: product.id,
-          variantId: "var_" + size,
-          artworkFormat,
-          customerIntent: intendedUse,
-          intendedUseConfirmed: true,
-          intendedUse,
-          placementNote: placementNote.trim().slice(0, 500),
-          customerName: customerName.trim().slice(0, 120),
-          customerPhone: customerPhone.trim().slice(0, 40),
-          customerEmail: customerEmail.trim().slice(0, 254),
-        }),
-      });
-      const data: { url?: string; error?: string } = await response.json();
-      if (!response.ok || !data.url) {
-        throw new Error(data.error ?? "Checkout could not be started.");
-      }
-      window.location.assign(data.url);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Checkout could not be started.");
-      setBusy(false);
-    }
+    const subject = `ART TO INK order request — ${product.title}`;
+    const body = [
+      "Hello Kateřina,",
+      "",
+      "I would like to request this artwork:",
+      `Design: ${product.title}`,
+      `Size: ${product.sizes[size].label}`,
+      `Price shown on website: ${formatEuro(product.sizes[size].price)}`,
+      `File format: ${artworkFormat === "colour" ? "Colour PNG" : "Black & White PNG"}`,
+      `Intended use: ${intendedUse}`,
+      `Name: ${customerName.trim()}`,
+      `Email: ${customerEmail.trim()}`,
+      `Phone: ${customerPhone.trim()}`,
+      `Placement note: ${placementNote.trim() || "—"}`,
+      "",
+      "Please confirm availability, final price and payment/delivery details before I pay.",
+    ].join("\n");
+    window.location.href = `mailto:katerina.pohnetalova@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   function getCurrentImage(): string {
@@ -189,7 +160,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
           <div>
             <div className="mb-5 border border-zinc-800 bg-zinc-950 p-4">
               <h3 className="mb-3 text-xs uppercase tracking-widest text-zinc-400">Order contact details</h3>
-              <p className="mb-3 text-xs text-zinc-500">We use these details for your order and to contact you if the payment or download delivery has a problem.</p>
+              <p className="mb-3 text-xs text-zinc-500">We use these details to respond to your order request and arrange payment and file delivery.</p>
               <label className="mb-3 block text-sm text-zinc-300">Full name<input required autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} maxLength={120} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
               <label className="mb-3 block text-sm text-zinc-300">Email address<input required type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} maxLength={254} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
               <label className="block text-sm text-zinc-300">Phone number<input required type="tel" autoComplete="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} maxLength={40} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white" /></label>
@@ -227,14 +198,13 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
               <span>I confirm the intended use above and agree to the applicable design licence terms.</span>
             </label>
             {error && <p role="alert" className="mb-3 text-sm text-red-300">{error}</p>}
-            {checkingDelivery ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">Checking secure file availability…</p> : !deliveryReady ? <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
+            <p role="status" className="mb-3 border border-zinc-700 p-3 text-sm text-zinc-400">This is an order request only. No payment is taken on this website; availability and delivery are confirmed by email.</p>
             <button
               type="button"
-              disabled={busy || checkingDelivery || !deliveryReady}
               onClick={checkout}
-              className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200 disabled:opacity-60"
+              className="w-full bg-white py-4 text-sm font-medium uppercase tracking-widest text-black hover:bg-zinc-200"
             >
-              {busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Continue to checkout — ${formatEuro(product.sizes[size].price)}`}
+              Request by email — {formatEuro(product.sizes[size].price)}
             </button>
           </div>
         </div>

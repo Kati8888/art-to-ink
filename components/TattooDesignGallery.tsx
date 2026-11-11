@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ProductDetail from "@/components/ProductDetail";
 import ArtworkInteractions from "@/components/ArtworkInteractions";
 import type { TattooDesign } from "@/lib/products";
 import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
+import { designCartItem, useCart } from "@/components/CartProvider";
 
 type MediaState = "colour" | "bw" | "skin";
 const mediaLabels: Record<MediaState, string> = { colour: "Original / Colour", bw: "Black & White", skin: "On Skin" };
@@ -30,40 +31,31 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [deliveryReady, setDeliveryReady] = useState(false);
-  const [checkingDelivery, setCheckingDelivery] = useState(true);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
   const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
-  useEffect(() => {
-    let cancelled = false;
-    setCheckingDelivery(true);
-    setDeliveryReady(false);
-    const query = new URLSearchParams({ productId: design.id, size, artworkFormat });
-    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : { available: false })
-      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })
-      .catch(() => { if (!cancelled) setDeliveryReady(false); })
-      .finally(() => { if (!cancelled) setCheckingDelivery(false); });
-    return () => { cancelled = true; };
-  }, [design.id, size, artworkFormat]);
-
-  async function checkout() {
+  function checkout() {
     setError("");
-    if (!intendedUseConfirmed) { setError("Please confirm the intended use before checkout."); return; }
-    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) { setError("Please enter your name, phone number and email so we can contact you if delivery fails."); return; }
-    setBusy(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "design", productSlug: design.slug, size, artworkFormat, intendedUseConfirmed, intendedUse, placementNote, customerName: customerName.trim().slice(0, 120), customerPhone: customerPhone.trim().slice(0, 40), customerEmail: customerEmail.trim().slice(0, 254) }),
-      });
-      const data: { url?: string; error?: string } = await response.json();
-      if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
-      window.location.assign(data.url);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Checkout could not be started.");
-      setBusy(false);
-    }
+    if (!intendedUseConfirmed) { setError("Please confirm the intended use before sending your request."); return; }
+    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) { setError("Please enter your name, phone number and email."); return; }
+    const subject = `ART TO INK order request — ${design.title}`;
+    const body = [
+      "Hello Kateřina,",
+      "",
+      "I would like to request this artwork:",
+      `Design: ${design.title}`,
+      `Size: ${design.sizes[size].label}`,
+      `Price shown on website: ${formatEuro(design.sizes[size].price)}`,
+      `File format: ${artworkFormat === "colour" ? "Colour PNG" : "Black & White PNG"}`,
+      `Intended use: ${intendedUse}`,
+      `Name: ${customerName.trim()}`,
+      `Email: ${customerEmail.trim()}`,
+      `Phone: ${customerPhone.trim()}`,
+      `Placement note: ${placementNote.trim() || "—"}`,
+      "",
+      "Please confirm availability, final price and payment/delivery details before I pay.",
+    ].join("\n");
+    window.location.href = `mailto:katerina.pohnetalova@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   return <article className="design-card">
@@ -85,8 +77,8 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
         <label>Optional placement note <textarea rows={2} maxLength={500} value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} placeholder="e.g. outer forearm (optional)" /></label>
         <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
         {error && <p className="error-text" role="alert">{error}</p>}
-        {checkingDelivery ? <p className="notice" role="status">Checking secure file availability…</p> : !deliveryReady ? <p className="notice" role="status">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
-        <button type="button" className="button" disabled={busy || checkingDelivery || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
+        <p className="notice" role="status">This is an order request only. No payment is taken on this website; availability and delivery are confirmed by email.</p>
+        <div className="purchase-actions"><button type="button" className="button" onClick={() => { addItem(designCartItem(design, size, artworkFormat)); setAdded(true); window.setTimeout(() => setAdded(false), 1800); }}>Add to cart</button><button type="button" className="button secondary" onClick={checkout}>Request by email · {formatEuro(design.sizes[size].price)}</button></div>{added && <p className="cart-feedback" role="status">Added to cart. <a href="/cart">View cart</a></p>}
       </div>
     </div>
     <ArtworkInteractions designId={design.id} designTitle={design.title} />

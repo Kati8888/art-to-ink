@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
 type Photo = { id: string; caption: string | null; imageUrl: string };
@@ -40,8 +41,8 @@ export default function VyPage() {
 
   return <main className="customer-page">
     <header className="customer-header">
-      <a href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></a>
-      <a className="customer-back" href="/">Back to the website ↗</a>
+      <Link href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></Link>
+      <Link className="customer-back" href="/">Back to the website ↗</Link>
     </header>
     <section className="customer-hero">
       <p className="customer-kicker">REAL PEOPLE · REAL TATTOOS</p>
@@ -68,7 +69,7 @@ export default function VyPage() {
         {status && <p className="customer-status" role="status">{status}</p>}
       </form>
     </section>
-    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <a href="/">Back to the main website ↑</a></footer>
+    <footer className="customer-footer">© ART TO INK · Kateřina Pohnetalová <Link href="/">Back to the main website ↑</Link></footer>
     <style jsx>{`
       .customer-page{min-height:100vh;background:#080807;color:#f4ecdf;font:15px/1.6 Arial,sans-serif}
       .customer-header{height:88px;border-bottom:1px solid #493a27;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1200px)/2))}
