@@ -71,7 +71,7 @@ export default function CartPage() {
         </div>
         <section style={{ marginTop: 30, border: "1px solid #51432d", padding: 20 }}>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 26, fontWeight: 400 }}>Checkout details</h2>
-          <p style={{ color: "#aaa39a", fontSize: 13, margin: "8px 0 18px" }}>Enter your details only when your complete order is ready.</p>
+          <p style={{ color: "#aaa39a", fontSize: 13, margin: "8px 0 18px" }}>The checkout form is being prepared. No payment is accepted until the private artwork files and automatic delivery are verified.</p>
           <div style={{ display: "grid", gap: 12 }}>
             <label>Full name<input autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #51432d" }} /></label>
             <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} required style={{ display: "block", width: "100%", padding: 12, marginTop: 6, background: "#171512", color: "#fff", border: "1px solid #51432d" }} /></label>
@@ -80,7 +80,7 @@ export default function CartPage() {
         </section>
         <div style={{ borderTop: "1px solid #51432d", marginTop: 24, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <strong>Total: {formatEuro(total)}</strong>
-          <button disabled={busy || !items.length || !name.trim() || !email.includes("@") || !phone.trim()} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>Continue to secure payment</button>
+          <button disabled={true} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>Secure checkout is being prepared</button>
         </div>
       </>}
       <p style={{ marginTop: 32 }}><Link href="/gallery" style={{ color: "#d5a957" }}>← Continue browsing artwork</Link></p>
