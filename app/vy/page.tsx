@@ -42,13 +42,13 @@ export default function VyPage() {
   return <main className="customer-page">
     <header className="customer-header">
       <Link href="/" className="customer-brand">ART <em>TO</em> INK<span>KATEŘINA POHNETALOVÁ</span></Link>
-      <a className="customer-back" href="/">Back to the website ↗</Link>
+      <Link className="customer-back" href="/">Back to the website ↗</Link>
     </header>
     <section className="customer-hero">
       <p className="customer-kicker">REAL PEOPLE · REAL TATTOOS</p>
       <h1>You. Your skin. Your story.</h1>
       <p>Got a tattoo based on an ART TO INK design? Show us how it looks on you. Every photo is reviewed before it appears in the gallery.</p>
-      <a className="customer-gold-button" href="#upload">Upload Your Photo ↓</Link>
+      <a className="customer-gold-button" href="#upload">Upload Your Photo ↓</a>
     </section>
     <section className="customer-gallery">
       <div className="customer-section-heading"><div><p className="customer-kicker">COMMUNITY GALLERY</p><h2>Your Photos</h2></div><span>{photos.length} {photos.length === 1 ? "photo" : "photos"}</span></div>
