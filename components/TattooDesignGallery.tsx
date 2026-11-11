@@ -1,94 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ProductDetail from "@/components/ProductDetail";
 import ArtworkInteractions from "@/components/ArtworkInteractions";
 import type { TattooDesign } from "@/lib/products";
-import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
-
-type MediaState = "colour" | "bw" | "skin";
-const mediaLabels: Record<MediaState, string> = { colour: "Original / Colour", bw: "Black & White", skin: "On Skin" };
-const mediaKey: Record<MediaState, keyof TattooDesign["media"]> = { colour: "colour", bw: "blackAndWhite", skin: "onSkin" };
 
 export function TattooDesignGallery({ designs }: { designs: TattooDesign[] }) {
   const [activeProduct, setActiveProduct] = useState<TattooDesign | null>(null);
+
   if (designs.length === 0) {
     return <div className="empty-catalogue" role="status"><strong>New original designs are being prepared.</strong><p>We publish a design only after its original artwork, black-and-white version and on-skin preview have all been checked to match.</p></div>;
   }
-  return <><div className="design-grid">{designs.map((design) => <DesignCard key={design.id} design={design} onOpen={() => setActiveProduct(design)} />)}</div>{activeProduct && <ProductDetail key={activeProduct.id} product={activeProduct} onClose={() => setActiveProduct(null)} />}</>;
-}
 
-function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => void }) {
-  const [state, setState] = useState<MediaState>("colour");
-  const [size, setSize] = useState<(typeof DESIGN_SIZE_ORDER)[number]>("detailed");
-  const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
-  const [intendedUse, setIntendedUse] = useState("professional-client-tattoo");
-  const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
-
-  const [placementNote, setPlacementNote] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [deliveryReady, setDeliveryReady] = useState(false);
-  const [checkingDelivery, setCheckingDelivery] = useState(true);
-  const currentMedia = state === "colour" ? (design.gridImage ?? design.media[mediaKey[state]]) : design.media[mediaKey[state]];
-  useEffect(() => {
-    let cancelled = false;
-    setCheckingDelivery(true);
-    setDeliveryReady(false);
-    const query = new URLSearchParams({ productId: design.id, size, artworkFormat });
-    fetch(`/api/design-availability?${query.toString()}`, { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : { available: false })
-      .then((data: { available?: boolean }) => { if (!cancelled) setDeliveryReady(data.available === true); })
-      .catch(() => { if (!cancelled) setDeliveryReady(false); })
-      .finally(() => { if (!cancelled) setCheckingDelivery(false); });
-    return () => { cancelled = true; };
-  }, [design.id, size, artworkFormat]);
-
-  async function checkout() {
-    setError("");
-    if (!intendedUseConfirmed) { setError("Please confirm the intended use before checkout."); return; }
-    if (!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()) { setError("Please enter your name, phone number and email so we can contact you if delivery fails."); return; }
-    setBusy(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "design", productSlug: design.slug, size, artworkFormat, intendedUseConfirmed, intendedUse, placementNote, customerName: customerName.trim().slice(0, 120), customerPhone: customerPhone.trim().slice(0, 40), customerEmail: customerEmail.trim().slice(0, 254) }),
-      });
-      const data: { url?: string; error?: string } = await response.json();
-      if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
-      window.location.assign(data.url);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Checkout could not be started.");
-      setBusy(false);
-    }
-  }
-
-  return <article className="design-card">
-    <div className="design-card-media">
-      {/* Consistent image frame; show the full artwork without cropping or stretching. */}
-      <button type="button" onClick={onOpen} aria-label={`View ${design.title} details`} className="block w-full text-left"><div className="relative block w-full h-[350px] min-h-[350px] overflow-hidden bg-zinc-900"><img className={`absolute inset-0 block w-full h-full ${design.id === "lion-heart" ? "lion-heart-primary object-contain scale-[1.12]" : "object-contain object-center p-2"} ${design.id === "sea-dragons" ? "assimilation-artwork" : ""}`} src={currentMedia} alt={`${design.title} — ${mediaLabels[state]}`} /></div></button>
-      <div className="gallery-tabs" role="group" aria-label={`${design.title} image view`}>
-        {(Object.keys(mediaLabels) as MediaState[]).map((item) => <button key={item} type="button" className="gallery-tab" aria-pressed={state === item} onClick={() => setState(item)}>{mediaLabels[item]}</button>)}
+  return (
+    <>
+      <div className="design-grid">
+        {designs.map((design) => (
+          <article key={design.id} className="design-card">
+            <button
+              type="button"
+              onClick={() => setActiveProduct(design)}
+              aria-label={`View ${design.title} artwork and options`}
+              className="block w-full text-left"
+            >
+              <div className="relative block w-full h-[350px] min-h-[350px] overflow-hidden bg-zinc-900">
+                <img
+                  src={design.gridImage ?? design.media.colour}
+                  alt={`${design.title} — tattoo design collection`}
+                  className={`absolute inset-0 block w-full h-full ${design.id === "lion-heart" ? "lion-heart-primary object-contain scale-[1.12]" : "object-cover object-center"} ${design.id === "sea-dragons" ? "assimilation-artwork" : ""}`}
+                />
+              </div>
+              <div className="design-card-copy">
+                <span className="eyebrow">Tattoo design collection</span>
+                <h3>{design.title}</h3>
+                <p>{design.description}</p>
+                <span className="block border-t border-zinc-800 pt-4">View artwork <span aria-hidden="true">↗</span></span>
+              </div>
+            </button>
+            <ArtworkInteractions designId={design.id} designTitle={design.title} />
+          </article>
+        ))}
       </div>
-    </div>
-    <div className="design-card-copy">
-      <button type="button" onClick={onOpen} className="text-left"><span className="eyebrow">Original tattoo artwork</span><h3>{design.title}</h3><p>{design.description}</p></button>
-      <div className="purchase-form">
-        <label>Artwork size and file <select value={size} onChange={(event) => setSize(event.target.value as typeof size)}>{DESIGN_SIZE_ORDER.map((key) => <option key={key} value={key}>{design.sizes[key].label} — {formatEuro(design.sizes[key].price)}</option>)}</select></label>
-        <p className="muted" style={{ margin: 0 }}>{design.sizes[size].details}</p>
-        <label>File format <select value={artworkFormat} onChange={(event) => setArtworkFormat(event.target.value as "colour" | "blackAndWhite")}><option value="colour">Colour PNG</option><option value="blackAndWhite">Black &amp; white PNG</option></select></label>
-        <fieldset className="order-contact-fields"><legend>Order contact details</legend><p>We use these details for your order and to contact you if payment or delivery has a problem.</p><label>Full name <input required autoComplete="name" value={customerName} onChange={(event) => setCustomerName(event.target.value)} maxLength={120} /></label><label>Email address <input required type="email" autoComplete="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} maxLength={254} /></label><label>Phone number <input required type="tel" autoComplete="tel" value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} maxLength={40} /></label></fieldset>
-        <label>Intended use <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)}><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference</option></select></label>
-        <label>Optional placement note <textarea rows={2} maxLength={500} value={placementNote} onChange={(event) => setPlacementNote(event.target.value)} placeholder="e.g. outer forearm (optional)" /></label>
-        <label className="checkbox-line"><input type="checkbox" checked={intendedUseConfirmed} onChange={(event) => setIntendedUseConfirmed(event.target.checked)} /><span>I confirm the intended use above and agree to the design licence terms.</span></label>
-        {error && <p className="error-text" role="alert">{error}</p>}
-        {checkingDelivery ? <p className="notice" role="status">Checking secure file availability…</p> : !deliveryReady ? <p className="notice" role="status">This exact size and file format is not yet available for secure delivery. Checkout is disabled; no payment will be taken.</p> : null}
-        <button type="button" className="button" disabled={busy || checkingDelivery || !deliveryReady} onClick={checkout}>{busy ? "Opening secure checkout…" : checkingDelivery ? "Checking secure files…" : !deliveryReady ? "Unavailable · secure file not uploaded" : `Buy design · ${formatEuro(design.sizes[size].price)}`}</button>
-      </div>
-    </div>
-    <ArtworkInteractions designId={design.id} designTitle={design.title} />
-  </article>;
+      {activeProduct && (
+        <ProductDetail
+          key={activeProduct.id}
+          product={activeProduct}
+          onClose={() => setActiveProduct(null)}
+        />
+      )}
+    </>
+  );
 }
