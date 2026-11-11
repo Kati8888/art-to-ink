@@ -37,7 +37,33 @@ export default function CartPage() {
   }, 0), [items]);
 
   async function checkout() {
-    setMessage("Secure guest checkout is not activated yet. We are completing and testing the Stripe order and delivery connection before accepting payments.");
+    setMessage("");
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      setMessage("Please enter your name, email address and phone number.");
+      return;
+    }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) {
+      setMessage("Please enter a valid email address.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const response = await fetch("/api/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, items }),
+      });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        setMessage(result.error ?? "Secure checkout is not available yet. Please try again later.");
+        return;
+      }
+      window.location.assign(result.url);
+    } catch {
+      setMessage("We could not connect to secure checkout. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return <main style={{ minHeight: "100vh", background: "#090908", color: "#f7f3eb", padding: "48px 20px" }}>
@@ -80,7 +106,7 @@ export default function CartPage() {
         </section>
         <div style={{ borderTop: "1px solid #51432d", marginTop: 24, paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <strong>Total: {formatEuro(total)}</strong>
-          <button disabled={true} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700 }}>Secure checkout is being prepared</button>
+          <button disabled={busy || items.length === 0} onClick={() => void checkout()} style={{ padding: "14px 22px", background: "#d5a957", color: "#090908", fontWeight: 700, opacity: busy ? 0.65 : 1 }}>{busy ? "Connecting to Stripe…" : "Continue to secure payment"}</button>
         </div>
       </>}
       <p style={{ marginTop: 32 }}><Link href="/gallery" style={{ color: "#d5a957" }}>← Continue browsing artwork</Link></p>
