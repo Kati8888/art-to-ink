@@ -54,7 +54,7 @@ function DesignCard({ design, onOpen }: { design: TattooDesign; onOpen: () => vo
       `Placement note: ${placementNote.trim() || "—"}`,
       "",
       "Please confirm availability, final price and payment/delivery details before I pay.",
-    ].join("\\n");
+    ].join("\n");
     window.location.href = `mailto:katerina.pohnetalova@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
