@@ -82,8 +82,8 @@ export default function CartPage() {
             const price = design.sizes[item.variantKey].price;
             return <article key={item.productSlug + item.variantKey + item.format} style={{ border: "1px solid #51432d", padding: 18, display: "flex", gap: 16, justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-                <img src={item.format === "colour" ? design.media.colour : design.media.blackAndWhite} alt="" style={{ width: 76, height: 76, objectFit: "cover" }} />
-                <div><strong>{design.title}</strong><p style={{ color: "#aaa39a", fontSize: 13, marginTop: 6 }}>{design.sizes[item.variantKey].label} · {item.format === "colour" ? "Colour" : "Black & White"}</p></div>
+                <img src={item.format === "colour" ? design.media.colour : design.media.blackAndWhite} alt="" style={{ width: 104, height: 104, objectFit: "contain", background: "#050505", border: "1px solid #51432d", padding: 4 }} />
+                <div><strong>{design.title}</strong><p style={{ color: "#aaa39a", fontSize: 13, marginTop: 6 }}>{design.sizes[item.variantKey].label} · {item.format === "colour" ? "Colour version" : "Black & White version"}</p></div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <strong>{formatEuro(price * item.quantity)}</strong>
