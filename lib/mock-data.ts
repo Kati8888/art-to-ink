@@ -91,12 +91,12 @@ export const tattooDesigns: TattooDesign[] = [
     id: "faces-within", title: "Aura of Pete", slug: "aura-of-pete",
     category: "Original Tattoo Artwork",
     description: "The golden female figure shown as Aura of Pete in the public gallery.",
-    gridImage: source("Zlaté srdce ženy a lva (1).png"),
-    checkoutImage: source("Zlaté srdce ženy a lva (1).png"),
+    gridImage: source("Zrcadlový tanec ve zlatém šeru.png"),
+    checkoutImage: source("Zrcadlový tanec ve zlatém šeru.png"),
     media: {
-      colour: source("Zlaté srdce ženy a lva (1).png"),
+      colour: source("Zrcadlový tanec ve zlatém šeru.png"),
       blackAndWhite: source("Srdce ženy a lva_ tattoo portfolio (1).png"),
-      onSkin: source("Zlaté srdce ženy a lva (1).png"),
+      onSkin: source("Zrcadlový tanec ve zlatém šeru.png"),
     }, sizes: sharedSizes,
   },
   {
