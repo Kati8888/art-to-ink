@@ -112,12 +112,12 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
             ))}
           </div>
           <p className="mb-2 text-xs uppercase tracking-widest text-zinc-400">{activeLabel}</p>
-          <div className="w-full aspect-square overflow-hidden border border-zinc-800 bg-white flex items-center justify-center">
+          <div className="w-full aspect-square overflow-hidden border border-zinc-800 bg-black flex items-center justify-center">
             <img
               key={getCurrentImage()}
               src={getCurrentImage()}
               alt={`${product.title} — ${activeLabel}`}
-              className="w-full h-full object-contain" style={{ filter: "brightness(1.28) contrast(1.06)" }}
+              className="w-full h-full object-contain bg-black"
             />
           </div>
         </div>
