@@ -3,28 +3,41 @@ import type { DesignSize } from "@/lib/products";
 export type ArtworkFormat = "colour" | "blackAndWhite";
 
 /**
- * Private size-specific objects created by scripts/build-and-upload-commerce-assets.mjs.
- * Complete Size Collection remains unavailable until a ZIP has been prepared and uploaded.
+ * Private object paths must match scripts/upload-private-artwork-kv.mjs and the
+ * existing catalogue IDs. Keep the public product ID separate from the storage
+ * folder name: several legacy product IDs intentionally differ.
  */
-const slugs = ["brain-heart", "mrs-beer", "sea-dragons", "lion-heart", "babicka-dedo", "faces-within", "goodbye-london", "war-inside"];
-const sizes: Partial<Record<DesignSize, number>> = { mini: 1200, small: 2000, detailed: 3200, premium: 4000 };
+const storageSlugByProductId: Record<string, string> = {
+  "sea-dragons": "assimilation-seahorses",
+  "mrs-beer": "mrs-beer",
+  "goodbye-london": "good-bye-london",
+  "war-inside": "war-inside",
+  "brain-heart": "brain-heart",
+  "lion-heart": "lion-heart",
+  "faces-within": "aura-of-pete",
+  "war-mask": "war-mask",
+};
 
-const secureDownloadObjects: Record<string, Partial<Record<DesignSize, Record<ArtworkFormat, string>>>> = {};
-for (const slug of slugs) {
-  const variants: Partial<Record<DesignSize, Record<ArtworkFormat, string>>> = {};
-  for (const [size, pixels] of Object.entries(sizes) as Array<[DesignSize, number]>) {
-    variants[size] = {
-      colour: `${slug}/${slug}-colour-${pixels}.png`,
-      blackAndWhite: `${slug}/${slug}-blackAndWhite-${pixels}.png`,
-    };
+const sizes: Partial<Record<DesignSize, number>> = {
+  mini: 1200,
+  small: 2000,
+  detailed: 3200,
+  premium: 4000,
+};
+
+export function getSecureDownloadObject(
+  productId: string,
+  size: DesignSize,
+  format: ArtworkFormat,
+): string | null {
+  const storageSlug = storageSlugByProductId[productId];
+  if (!storageSlug) return null;
+
+  if (size === "collection") {
+    return `${storageSlug}/${storageSlug}-${format}-complete-collection.zip`;
   }
-  variants.collection = {
-    colour: `${slug}/${slug}-colour-complete-collection.zip`,
-    blackAndWhite: `${slug}/${slug}-blackAndWhite-complete-collection.zip`,
-  };
-  secureDownloadObjects[slug] = variants;
-}
 
-export function getSecureDownloadObject(productId: string, size: DesignSize, format: ArtworkFormat): string | null {
-  return secureDownloadObjects[productId]?.[size]?.[format] ?? null;
+  const pixels = sizes[size];
+  if (!pixels) return null;
+  return `${storageSlug}/${storageSlug}-${format}-${pixels}.png`;
 }
