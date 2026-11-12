@@ -7,13 +7,11 @@ import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 type MediaView = keyof TattooDesign["media"];
 
 const mediaViews: { key: MediaView; label: string }[] = [
-  { key: "colour", label: "Colour" },
-  { key: "blackAndWhite", label: "Black & White" },
   { key: "onSkin", label: "On Skin" },
 ];
 
 export default function ProductDetail({ product, onClose }: { product: TattooDesign; onClose: () => void }) {
-  const [activeView, setActiveView] = useState<MediaView>("colour");
+  const [activeView, setActiveView] = useState<MediaView>("onSkin");
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
   const [size, setSize] = useState<DesignSize>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
@@ -61,7 +59,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
     }
   }
   function getCurrentImage(): string {
-    if (activeView === "colour" && product.checkoutImage) return product.checkoutImage;
+    if (activeView === "onSkin") return product.media.onSkin;
     return product.media[activeView];
   }
 
@@ -102,7 +100,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
                 key={view.key}
                 type="button"
                 aria-pressed={activeView === view.key}
-                onClick={() => { setActiveView(view.key); if (view.key === "colour" || view.key === "blackAndWhite") setArtworkFormat(view.key); }}
+                onClick={() => setActiveView(view.key)}
                 className={`border px-4 py-2 text-xs uppercase tracking-widest transition-colors ${
                   activeView === view.key
                     ? "border-white bg-white text-black"
@@ -114,10 +112,6 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
             ))}
           </div>
           <p className="mb-2 text-xs uppercase tracking-widest text-zinc-400">{activeLabel}</p>
-          <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Download file format">
-            <button type="button" aria-pressed={artworkFormat === "colour"} onClick={() => { setArtworkFormat("colour"); setActiveView("colour"); }} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Colour file</button>
-            <button type="button" aria-pressed={artworkFormat === "blackAndWhite"} onClick={() => { setArtworkFormat("blackAndWhite"); setActiveView("blackAndWhite"); }} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Black &amp; white file</button>
-          </div>
           <div className="w-full aspect-square overflow-hidden border border-zinc-800 bg-white flex items-center justify-center">
             <img
               key={getCurrentImage()}
@@ -162,6 +156,20 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
           <div>
             <div className="mb-5 border border-zinc-800 bg-zinc-950 p-4">
               <h3 className="mb-3 text-xs uppercase tracking-widest text-zinc-400">Order details</h3>
+              <fieldset className="mb-5">
+                <legend className="mb-2 block text-sm text-zinc-300">Artwork file version</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className={`cursor-pointer border p-3 text-sm ${artworkFormat === "colour" ? "border-white bg-zinc-900" : "border-zinc-700"}`}>
+                    <input type="radio" name={`format-${product.id}`} checked={artworkFormat === "colour"} onChange={() => setArtworkFormat("colour")} className="mr-2 accent-white" />
+                    Colour
+                  </label>
+                  <label className={`cursor-pointer border p-3 text-sm ${artworkFormat === "blackAndWhite" ? "border-white bg-zinc-900" : "border-zinc-700"}`}>
+                    <input type="radio" name={`format-${product.id}`} checked={artworkFormat === "blackAndWhite"} onChange={() => setArtworkFormat("blackAndWhite")} className="mr-2 accent-white" />
+                    Black &amp; White
+                  </label>
+                </div>
+                <p className="mt-2 text-xs text-zinc-500">Choose the file version you want to receive. The preview above shows the design on skin.</p>
+              </fieldset>
               <label className="mb-4 block text-sm text-zinc-300">Intended use
                 <select value={intendedUse} onChange={(event) => setIntendedUse(event.target.value)} className="mt-2 w-full border border-zinc-800 bg-zinc-900 p-3 text-white">
                   <option value="personal-tattoo">Personal tattoo</option><option value="professional-client-tattoo">Tattooing a client</option><option value="personal-reference">Personal reference only</option>
