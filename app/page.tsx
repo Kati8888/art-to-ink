@@ -17,7 +17,6 @@ export default function HomePage() {
           <a href="#artist">The artist</a>
           <a href="/vy">Vy · Customer tattoos</a>
           <a href="/account">My account</a>
-          <a href="/cart">Cart</a>
         </div>
         <details className="mobile-menu">
           <summary aria-label="Open navigation menu"><span></span><span></span><span></span></summary>
@@ -41,6 +40,10 @@ export default function HomePage() {
           </a>
           <a className="nav-icon" href="#artist" aria-label="Meet the artist" title="Meet the artist">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5.2 20c.4-3.6 3.1-5.8 6.8-5.8s6.4 2.2 6.8 5.8"/></svg>
+          </a>
+          <a className="cart-nav-card" href="/cart" aria-label="Open your cart">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 1.9-1.4L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+            <span>Your cart</span>
           </a>
         </div>
       </nav>
