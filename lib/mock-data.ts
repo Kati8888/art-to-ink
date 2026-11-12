@@ -90,13 +90,13 @@ export const tattooDesigns: TattooDesign[] = [
     // Retain the existing product key to avoid silently changing order references.
     id: "faces-within", title: "Aura of Pete", slug: "aura-of-pete",
     category: "Original Tattoo Artwork",
-    description: "The golden female figure shown as Aura of Pete in the public gallery.",
-    gridImage: source("Zrcadlový tanec ve zlatém šeru.png"),
-    checkoutImage: source("Zrcadlový tanec ve zlatém šeru.png"),
+    description: "The original golden woman-and-lion artwork, prepared for tattoo artists.",
+    gridImage: "https://raw.githubusercontent.com/Kati8888/art-to-ink/commerce-completion/Zlat%C3%A9%20srdce%20%C5%BEeny%20a%20lva%20(1).png",
+    checkoutImage: "https://raw.githubusercontent.com/Kati8888/art-to-ink/commerce-completion/Zlat%C3%A9%20srdce%20%C5%BEeny%20a%20lva%20(1).png",
     media: {
-      colour: source("Zrcadlový tanec ve zlatém šeru.png"),
+      colour: "https://raw.githubusercontent.com/Kati8888/art-to-ink/commerce-completion/Zlat%C3%A9%20srdce%20%C5%BEeny%20a%20lva%20(1).png",
       blackAndWhite: source("Srdce ženy a lva_ tattoo portfolio (1).png"),
-      onSkin: source("Zrcadlový tanec ve zlatém šeru.png"),
+      onSkin: "https://raw.githubusercontent.com/Kati8888/art-to-ink/commerce-completion/Zlat%C3%A9%20srdce%20%C5%BEeny%20a%20lva%20(1).png",
     }, sizes: sharedSizes,
   },
   {
