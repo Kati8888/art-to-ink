@@ -67,12 +67,12 @@ try {
   for (const size of sizes) {
    let pixels=size.pixels;
    let output;
-   while (pixels>=2400) {
-    output=await sharp(source).resize({width:pixels,height:pixels,fit:"inside",withoutEnlargement:false}).png({compressionLevel:9,adaptiveFiltering:true,palette:true,quality:100,effort:10}).toBuffer();
+   while (pixels>=600) {
+    output=await sharp(source).resize({width:pixels,height:pixels,fit:"inside",withoutEnlargement:false}).png({compressionLevel:9,adaptiveFiltering:true,palette:true,quality:90,effort:10,dither:0.8}).toBuffer();
     if(output.length<=24*1024*1024) break;
     pixels-=200;
    }
-   if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even at 2400px: "+slug+" "+format.key+" "+size.key);
+   if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even at 600px: "+slug+" "+format.key+" "+size.key);
    const key=`${slug}/${slug}-${format.key}-${pixels}.png`;
    const local=path.join(temp,`${slug}-${format.key}-${pixels}.png`); await writeFile(local,output);
    put(local,key,{contentType:"image/png",size:output.length,product:slug,format:format.key,size:size.key,requestedPixels:size.pixels,actualPixels:pixels});
