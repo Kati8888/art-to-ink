@@ -23,15 +23,15 @@ Cloudflare KV has a free allowance and overage pricing may apply if account usag
 
 ## Prepare and upload artwork
 
-Use the prepared package `ART_TO_INK_web_catalogue_ready.zip`. Extract it so the directory `ART_TO_INK_web_catalogue_ready` contains the eight product folders, each with `colour/original.png` and `black-and-white/original.png`.
+Use the prepared package `ART_TO_INK_16_artworks_matched.zip`. It already contains the eight product folders (`assimilation-seahorses`, `mrs-beer`, `good-bye-london`, `war-inside`, `brain-heart`, `lion-heart`, `aura-of-pete`, `war-mask`), each with `colour/original.png` and `black-and-white/original.png`. Extract it to a folder named `ART_TO_INK_16_artworks_matched`.
 
 Install project dependencies and authenticate Wrangler to the same Cloudflare account, then run:
 
 ```sh
-ART_TO_INK_KV_NAMESPACE_ID=de03271ad6ff4435959f9e7d2581984a node scripts/upload-private-artwork-kv.mjs ./ART_TO_INK_web_catalogue_ready
+pnpm install\nnpx wrangler login\nART_TO_INK_KV_NAMESPACE_ID=de03271ad6ff4435959f9e7d2581984a node scripts/upload-private-artwork-kv.mjs ./ART_TO_INK_16_artworks_matched
 ```
 
-The uploader writes four private PNG sizes per format and product. It does not activate the products in D1. Five of the eight image pairings are marked medium confidence in the package README; review those matches before enabling their product variants.
+The uploader writes four private PNG sizes per format and product. It does not activate the products in D1. The eight pairs are mapped to the existing website catalogue IDs. The uploader creates 80 private KV objects (four PNG sizes and one ZIP per format) and does not activate products for purchase.
 
 ## Stripe and email secrets
 
