@@ -57,9 +57,9 @@ function zip(files) {
 
 const wranglerCli = path.resolve("node_modules/wrangler/bin/wrangler.js");
 const temp=await mkdtemp(path.join(os.tmpdir(),"art-to-ink-private-"));
-let uploaded=0;
+let uploaded=0, skippedArchives=0;
 function put(local,key,metadata) {
-  execFileSync(process.execPath,[wranglerCli,"kv","key","put",key,`--path=${local}`,`--namespace-id=${namespaceId}`,`--metadata=${JSON.stringify(metadata)}`],{stdio:"inherit"});
+  execFileSync(process.execPath,[wranglerCli,"kv","key","put",key,`--path=${local}`,`--namespace-id=${namespaceId}`,`--metadata=${JSON.stringify(metadata)}`,"--remote"],{stdio:"inherit"});
 }
 try {
  for (const slug of products) for (const format of formats) {
@@ -73,11 +73,16 @@ try {
    variants.push({name:size.key+".png",data:output}); uploaded++;
    console.log("Uploaded "+key);
   }
-  const archive=zip(variants); if(archive.length>24*1024*1024) throw new Error("Collection ZIP exceeds KV limit: "+slug+" "+format.key);
+  const archive=zip(variants);
+  if(archive.length>24*1024*1024) {
+   skippedArchives++;
+   console.log("Skipped oversized collection ZIP (individual images uploaded): "+slug+" "+format.key);
+   continue;
+  }
   const zipKey=`${slug}/${slug}-${format.key}-complete-collection.zip`;
   const zipLocal=path.join(temp,`${slug}-${format.key}-complete-collection.zip`); await writeFile(zipLocal,archive);
   put(zipLocal,zipKey,{contentType:"application/zip",size:archive.length,product:slug,format:format.key,size:"collection"});
   uploaded++; console.log("Uploaded "+zipKey);
  }
 } finally { await rm(temp,{recursive:true,force:true}); }
-console.log(`Uploaded ${uploaded} private artwork files. Review all product matches before activating D1 variants.`);
+console.log(`Uploaded ${uploaded} private artwork files to REMOTE Cloudflare KV. Skipped oversized ZIP archives: ${skippedArchives}. Review product matches before activating D1 variants.`);
