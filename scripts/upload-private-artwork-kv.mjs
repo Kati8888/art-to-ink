@@ -55,14 +55,11 @@ function zip(files) {
   return Buffer.concat([...local,...central,end]);
 }
 
+const wranglerCli = path.resolve("node_modules/wrangler/bin/wrangler.js");
 const temp=await mkdtemp(path.join(os.tmpdir(),"art-to-ink-private-"));
 let uploaded=0;
 function put(local,key,metadata) {
-  const command = process.platform === "win32" ? "npx.cmd" : "npx";
-  execFileSync(command,["wrangler","kv","key","put",key,`--path=${local}`,`--namespace-id=${namespaceId}`,`--metadata=${JSON.stringify(metadata)}`],{
-    stdio:"inherit",
-    shell: process.platform === "win32",
-  });
+  execFileSync(process.execPath,[wranglerCli,"kv","key","put",key,`--path=${local}`,`--namespace-id=${namespaceId}`,`--metadata=${JSON.stringify(metadata)}`],{stdio:"inherit"});
 }
 try {
  for (const slug of products) for (const format of formats) {
