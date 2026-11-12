@@ -11,8 +11,7 @@ if (!root) throw new Error("Usage: node scripts/upload-private-artwork-kv.mjs <e
 if (!/^[a-f0-9]{32}$/.test(namespaceId)) throw new Error("Invalid Cloudflare KV namespace ID.");
 
 const products = [
-  "assimilation-seahorses", "mrs-beer", "war-mask", "lion-heart",
-  "good-bye-london", "brain-heart", "war-inside", "aura-of-pete",
+  "lion-heart", "good-bye-london", "brain-heart", "war-inside", "aura-of-pete",
 ];
 const formats = [
   { folder: "colour", key: "colour" },
