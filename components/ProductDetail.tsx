@@ -78,7 +78,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-modal-title"
-        className="relative my-4 w-full max-w-6xl border border-zinc-800 bg-black p-4 text-white shadow-2xl sm:p-6"
+        className="relative my-3 max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl overflow-y-auto overscroll-contain border border-zinc-800 bg-black p-4 text-white shadow-2xl sm:my-6 sm:max-h-[calc(100dvh-3rem)] sm:p-6"
       >
         <button
           type="button"
@@ -102,7 +102,7 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
                 key={view.key}
                 type="button"
                 aria-pressed={activeView === view.key}
-                onClick={() => setActiveView(view.key)}
+                onClick={() => { setActiveView(view.key); if (view.key === "colour" || view.key === "blackAndWhite") setArtworkFormat(view.key); }}
                 className={`border px-4 py-2 text-xs uppercase tracking-widest transition-colors ${
                   activeView === view.key
                     ? "border-white bg-white text-black"
@@ -115,8 +115,8 @@ export default function ProductDetail({ product, onClose }: { product: TattooDes
           </div>
           <p className="mb-2 text-xs uppercase tracking-widest text-zinc-400">{activeLabel}</p>
           <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Download file format">
-            <button type="button" aria-pressed={artworkFormat === "colour"} onClick={() => setArtworkFormat("colour")} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Colour file</button>
-            <button type="button" aria-pressed={artworkFormat === "blackAndWhite"} onClick={() => setArtworkFormat("blackAndWhite")} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Black &amp; white file</button>
+            <button type="button" aria-pressed={artworkFormat === "colour"} onClick={() => { setArtworkFormat("colour"); setActiveView("colour"); }} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Colour file</button>
+            <button type="button" aria-pressed={artworkFormat === "blackAndWhite"} onClick={() => { setArtworkFormat("blackAndWhite"); setActiveView("blackAndWhite"); }} className="border border-zinc-700 px-4 py-2 text-xs uppercase tracking-widest">Black &amp; white file</button>
           </div>
           <div className="w-full aspect-square overflow-hidden border border-zinc-800 bg-white flex items-center justify-center">
             <img
