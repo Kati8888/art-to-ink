@@ -67,16 +67,25 @@ try {
   for (const size of sizes) {
    let pixels=size.pixels;
    let output;
+   let extension="png", contentType="image/png";
    while (pixels>=600) {
     output=await sharp(source).resize({width:pixels,height:pixels,fit:"inside",withoutEnlargement:false}).png({compressionLevel:9,adaptiveFiltering:true,palette:true,quality:90,effort:10,dither:0.8}).toBuffer();
     if(output.length<=24*1024*1024) break;
     pixels-=200;
    }
-   if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even at 600px: "+slug+" "+format.key+" "+size.key);
-   const key=`${slug}/${slug}-${format.key}-${pixels}.png`;
-   const local=path.join(temp,`${slug}-${format.key}-${pixels}.png`); await writeFile(local,output);
-   put(local,key,{contentType:"image/png",size:output.length,product:slug,format:format.key,size:size.key,requestedPixels:size.pixels,actualPixels:pixels});
-   variants.push({name:size.key+".png",data:output}); uploaded++;
+   if(!output || output.length>24*1024*1024) {
+    pixels=size.pixels;
+    while(pixels>=600) {
+     output=await sharp(source).resize({width:pixels,height:pixels,fit:"inside",withoutEnlargement:false}).jpeg({quality:88,mozjpeg:true,progressive:true}).toBuffer();
+     if(output.length<=24*1024*1024) { extension="jpg"; contentType="image/jpeg"; break; }
+     pixels-=200;
+    }
+   }
+   if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even as JPEG at 600px: "+slug+" "+format.key+" "+size.key);
+   const key=`${slug}/${slug}-${format.key}-${pixels}.${extension}`;
+   const local=path.join(temp,`${slug}-${format.key}-${pixels}.${extension}`); await writeFile(local,output);
+   put(local,key,{contentType,size:output.length,product:slug,format:format.key,size:size.key,requestedPixels:size.pixels,actualPixels:pixels,encoding:extension});
+   variants.push({name:size.key+"."+extension,data:output}); uploaded++;
    console.log("Uploaded "+key+(pixels<size.pixels?" (optimized from "+size.pixels+"px)":""));
   }
   const archive=zip(variants);
