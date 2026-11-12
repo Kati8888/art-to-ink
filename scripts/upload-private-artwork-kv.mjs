@@ -65,13 +65,19 @@ try {
  for (const slug of products) for (const format of formats) {
   const source=originals.get(slug+":"+format.key); const variants=[];
   for (const size of sizes) {
-   const output=await sharp(source).resize({width:size.pixels,height:size.pixels,fit:"inside",withoutEnlargement:false}).png({compressionLevel:8}).toBuffer();
-   if(output.length>24*1024*1024) throw new Error("KV value too large: "+slug+" "+format.key+" "+size.key);
-   const key=`${slug}/${slug}-${format.key}-${size.pixels}.png`;
-   const local=path.join(temp,`${slug}-${format.key}-${size.pixels}.png`); await writeFile(local,output);
-   put(local,key,{contentType:"image/png",size:output.length,product:slug,format:format.key,size:size.key});
+   let pixels=size.pixels;
+   let output;
+   while (pixels>=2400) {
+    output=await sharp(source).resize({width:pixels,height:pixels,fit:"inside",withoutEnlargement:false}).png({compressionLevel:9,adaptiveFiltering:true,palette:true,quality:100,effort:10}).toBuffer();
+    if(output.length<=24*1024*1024) break;
+    pixels-=200;
+   }
+   if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even at 2400px: "+slug+" "+format.key+" "+size.key);
+   const key=`${slug}/${slug}-${format.key}-${pixels}.png`;
+   const local=path.join(temp,`${slug}-${format.key}-${pixels}.png`); await writeFile(local,output);
+   put(local,key,{contentType:"image/png",size:output.length,product:slug,format:format.key,size:size.key,requestedPixels:size.pixels,actualPixels:pixels});
    variants.push({name:size.key+".png",data:output}); uploaded++;
-   console.log("Uploaded "+key);
+   console.log("Uploaded "+key+(pixels<size.pixels?" (optimized from "+size.pixels+"px)":""));
   }
   const archive=zip(variants);
   if(archive.length>24*1024*1024) {
