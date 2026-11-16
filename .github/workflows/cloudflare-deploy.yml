@@ -1,0 +1,49 @@
+name: Deploy ART TO INK to Cloudflare
+
+on:
+  push:
+    branches:
+      - commerce-completion
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: art-to-ink-cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Add CLOUDFLARE_API_TOKEN in GitHub Settings > Secrets and variables > Actions before deploying."
+            exit 1
+          fi
+
+      - name: Build and deploy existing Cloudflare Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 10046d7d2bef418db3c71504cb052a1d
+        run: pnpm cf:deploy
