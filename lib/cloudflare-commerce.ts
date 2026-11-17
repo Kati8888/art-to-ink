@@ -11,7 +11,11 @@ export interface D1Database {
   prepare(query: string): D1Statement;
   batch<T = unknown>(statements: D1Statement[]): Promise<D1Result<T>[]>;
 }
-export interface KVObjectMetadata { contentType?: string; size?: number }
+export interface KVObjectMetadata {
+  contentType?: string;
+  byteSize?: number;
+  [key: string]: unknown;
+}
 export interface KVNamespace {
   get(key: string, type: "stream"): Promise<ReadableStream<Uint8Array> | null>;
   getWithMetadata(key: string, type: "stream"): Promise<{ value: ReadableStream<Uint8Array> | null; metadata: KVObjectMetadata | null }>;
@@ -31,15 +35,36 @@ function createPrivateFileStore(kv: KVNamespace): PrivateFileStore {
     async head(key) {
       const result = await kv.getWithMetadata(key, "stream");
       if (!result.value) return null;
-      const reader = result.value.getReader();
-      await reader.cancel();
-      if (!result.metadata || typeof result.metadata.size !== "number") return null;
-      return { key, size: result.metadata.size, httpMetadata: { contentType: result.metadata.contentType } };
+
+      // Older uploads stored the variant label under metadata.size, not the byte count.
+      // Prefer byteSize on corrected uploads; otherwise count the existing private stream.
+      let byteSize = typeof result.metadata?.byteSize === "number" ? result.metadata.byteSize : 0;
+      if (byteSize <= 0) {
+        const reader = result.value.getReader();
+        try {
+          while (true) {
+            const chunk = await reader.read();
+            if (chunk.done) break;
+            byteSize += chunk.value.byteLength;
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      } else {
+        await result.value.cancel();
+      }
+
+      if (byteSize <= 0) return null;
+      return { key, size: byteSize, httpMetadata: { contentType: result.metadata?.contentType } };
     },
     async get(key) {
       const result = await kv.getWithMetadata(key, "stream");
       if (!result.value) return null;
-      return { body: result.value, size: result.metadata?.size, httpMetadata: { contentType: result.metadata?.contentType } };
+      return {
+        body: result.value,
+        size: typeof result.metadata?.byteSize === "number" ? result.metadata.byteSize : undefined,
+        httpMetadata: { contentType: result.metadata?.contentType },
+      };
     },
   };
 }
