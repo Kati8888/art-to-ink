@@ -83,7 +83,7 @@ try {
    if(!output || output.length>24*1024*1024) throw new Error("Artwork cannot fit Cloudflare KV limit even as JPEG at 600px: "+slug+" "+format.key+" "+size.key);
    const key=`${slug}/${slug}-${format.key}-${pixels}.${extension}`;
    const local=path.join(temp,`${slug}-${format.key}-${pixels}.${extension}`); await writeFile(local,output);
-   put(local,key,{contentType,size:output.length,product:slug,format:format.key,size:size.key,requestedPixels:size.pixels,actualPixels:pixels,encoding:extension});
+   put(local,key,{contentType,byteSize:output.length,product:slug,format:format.key,variantSize:size.key,requestedPixels:size.pixels,actualPixels:pixels,encoding:extension});
    variants.push({name:size.key+"."+extension,data:output}); uploaded++;
    console.log("Uploaded "+key+(pixels<size.pixels?" (optimized from "+size.pixels+"px)":""));
   }
@@ -95,7 +95,7 @@ try {
   }
   const zipKey=`${slug}/${slug}-${format.key}-complete-collection.zip`;
   const zipLocal=path.join(temp,`${slug}-${format.key}-complete-collection.zip`); await writeFile(zipLocal,archive);
-  put(zipLocal,zipKey,{contentType:"application/zip",size:archive.length,product:slug,format:format.key,size:"collection"});
+  put(zipLocal,zipKey,{contentType:"application/zip",byteSize:archive.length,product:slug,format:format.key,variantSize:"collection"});
   uploaded++; console.log("Uploaded "+zipKey);
  }
 } finally { await rm(temp,{recursive:true,force:true}); }
