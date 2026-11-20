@@ -19,12 +19,12 @@ export const tattooDesigns: TattooDesign[] = [
     category: "Original Tattoo Artwork",
     description: "The linked seahorse artwork from the public ART TO INK gallery.",
     // The model photo is the gallery thumbnail; the clean original artwork opens first in the detail view.
-    gridImage: asset("assimilation-model.webp"),
+    gridImage: asset("seahorses-color-presentation.jpg"),
     checkoutImage: asset("01-seahorses-colour-transparent-original.png"),
     media: {
-      colour: asset("assimilation-original-lotus.webp"),
+      colour: asset("01-seahorses-colour-transparent-original.png"),
       blackAndWhite: asset("02-seahorses-black-white-transparent-original.png"),
-      onSkin: asset("assimilation-model.webp"),
+      onSkin: asset("seahorses-color-presentation.jpg"),
     }, sizes: sharedSizes,
   },
   {
