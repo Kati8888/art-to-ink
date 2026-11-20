@@ -7,11 +7,12 @@ import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 type MediaView = keyof TattooDesign["media"];
 
 const mediaViews: { key: MediaView; label: string }[] = [
+  { key: "colour", label: "Original Artwork" },
   { key: "onSkin", label: "On Skin" },
 ];
 
 export default function ProductDetail({ product, onClose }: { product: TattooDesign; onClose: () => void }) {
-  const [activeView, setActiveView] = useState<MediaView>("onSkin");
+  const [activeView, setActiveView] = useState<MediaView>("colour");
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
   const [size, setSize] = useState<DesignSize>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
