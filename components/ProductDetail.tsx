@@ -7,7 +7,7 @@ import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 type MediaView = keyof TattooDesign["media"];
 
 function getMediaViews(productId: string): { key: MediaView; label: string }[] {
-  if (productId === "assimilation-seahorses") {
+  if (productId === "sea-dragons") {
     return [
       { key: "colour", label: "Watermarked Artwork" },
       { key: "onSkin", label: "Model Photo" },
