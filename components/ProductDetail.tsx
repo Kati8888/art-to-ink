@@ -7,10 +7,10 @@ import { DESIGN_SIZE_ORDER, formatEuro } from "@/lib/products";
 type MediaView = keyof TattooDesign["media"];
 
 function getMediaViews(productId: string): { key: MediaView; label: string }[] {
-  if (productId === "sea-dragons") {
+  if (productId === "assimilation-seahorses") {
     return [
       { key: "onSkin", label: "On Model" },
-      { key: "colour", label: "Original Artwork" },
+      { key: "colour", label: "Watermarked Artwork" },
     ];
   }
   return [
@@ -21,7 +21,7 @@ function getMediaViews(productId: string): { key: MediaView; label: string }[] {
 
 export default function ProductDetail({ product, onClose }: { product: TattooDesign; onClose: () => void }) {
   const mediaViews = getMediaViews(product.id);
-  const [activeView, setActiveView] = useState<MediaView>(product.id === "sea-dragons" ? "onSkin" : "colour");
+  const [activeView, setActiveView] = useState<MediaView>("colour");
   const [artworkFormat, setArtworkFormat] = useState<"colour" | "blackAndWhite">("colour");
   const [size, setSize] = useState<DesignSize>("detailed");
   const [intendedUseConfirmed, setIntendedUseConfirmed] = useState(false);
