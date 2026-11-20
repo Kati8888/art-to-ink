@@ -18,12 +18,13 @@ export const tattooDesigns: TattooDesign[] = [
     id: "sea-dragons", title: "Assimilation — Seahorses", slug: "assimilation-seahorses",
     category: "Original Tattoo Artwork",
     description: "The linked seahorse artwork from the public ART TO INK gallery.",
-    gridImage: asset("01-seahorses-colour-transparent-original.png"),
-    checkoutImage: asset("01-seahorses-colour-transparent-original.png"),
+    // The model photo is the gallery thumbnail; the clean original artwork opens first in the detail view.
+    gridImage: asset("assimilation-model.webp"),
+    checkoutImage: asset("assimilation-artwork.webp"),
     media: {
-      colour: asset("01-seahorses-colour-transparent-original.png"),
+      colour: asset("assimilation-artwork.webp"),
       blackAndWhite: asset("02-seahorses-black-white-transparent-original.png"),
-      onSkin: asset("seahorses-color-presentation.jpg"),
+      onSkin: asset("assimilation-model.webp"),
     }, sizes: sharedSizes,
   },
   {
