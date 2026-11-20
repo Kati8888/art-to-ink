@@ -1,6 +1,7 @@
 import type { TattooDesign } from "@/lib/products";
 
 // Preview files are public artwork assets. No Supabase Storage is used here.
+// Assimilation previews are optimized WebP assets committed in public/assets.
 const asset = (path: string) => `/assets/${path}`;
 const source = (filename: string) =>
   `https://raw.githubusercontent.com/Kati8888/art-to-ink/commerce-completion/images/${encodeURIComponent(filename)}`;
