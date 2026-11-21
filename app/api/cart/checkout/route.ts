@@ -59,7 +59,15 @@ export async function POST(request: Request) {
     }
 
     const { db, files } = await getCommerceBindings();
-    const unique = [...new Map(items.map(item => [
+    // The public catalogue uses the stable UI slug "sea-dragons" for Assimilation,
+    // while the already-published private files and D1 catalogue use the legacy
+    // canonical storage/catalogue slug "assimilation-seahorses". Normalize before
+    // looking up variants and persist the canonical slug for webhook fulfillment.
+    const normalizedItems = items.map(item => ({
+      ...item,
+      productSlug: item.productSlug === "sea-dragons" ? "assimilation-seahorses" : item.productSlug,
+    }));
+    const unique = [...new Map(normalizedItems.map(item => [
       [item.productSlug, item.variantKey, item.format].join("|"), item,
     ])).values()];
     if (unique.length !== items.length) {
@@ -86,7 +94,7 @@ export async function POST(request: Request) {
       };
     }> = [];
 
-    for (const item of items) {
+    for (const item of normalizedItems) {
       const variant = published.find(row =>
         row.product_slug === item.productSlug &&
         row.variant_key === item.variantKey &&
@@ -147,7 +155,7 @@ export async function POST(request: Request) {
     await db.prepare(`INSERT INTO orders
       (id, stripe_checkout_session_id, customer_email, customer_name, customer_phone, amount_total, currency, items_json, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`)
-      .bind(orderId, session.id, email, name, phone, amount, currency, JSON.stringify(items))
+      .bind(orderId, session.id, email, name, phone, amount, currency, JSON.stringify(normalizedItems))
       .run();
 
     return NextResponse.json({ url: session.url });
